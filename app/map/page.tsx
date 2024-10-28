@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import RestaurantCard from '@/components/restuarant-card';
+import { RestaurantCardSkeleton } from '@/components/restuarant-card-skelenton';
 import { Place, Coordinates } from '@/types/places';
 
 const customIcon = new Icon({
@@ -43,26 +44,6 @@ function MapView({ center, zoom }: MapViewProps) {
   }, [center, zoom, map]);
   return null;
 }
-
-// function calculateDistance(
-//   lat1: number,
-//   lon1: number,
-//   lat2: number,
-//   lon2: number
-// ): string {
-//   const R = 6371;
-//   const dLat = ((lat2 - lat1) * Math.PI) / 180;
-//   const dLon = ((lon2 - lon1) * Math.PI) / 180;
-//   const a =
-//     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-//     Math.cos((lat1 * Math.PI) / 180) *
-//       Math.cos((lat2 * Math.PI) / 180) *
-//       Math.sin(dLon / 2) *
-//       Math.sin(dLon / 2);
-//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-//   const distance = R * c;
-//   return distance.toFixed(1);
-// }
 
 function assignMood(categories: { name: string }[]): string {
   const casualCategories = [
@@ -117,7 +98,7 @@ const moodTypes = [
 ];
 
 export default function DiscoveryMap() {
-  const [distance, setDistance] = useState<number>(5);
+  const [distance, setDistance] = useState<number>(2);
   const [center, setCenter] = useState<Coordinates>({
     latitude: 54.315,
     longitude: 10.132,
@@ -129,37 +110,52 @@ export default function DiscoveryMap() {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [moodFilter, setMoodFilter] = useState<string>('All');
   const [places, setPlaces] = useState<Place[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const maxDistanceMeters = distance * 1000; // Convert distance to meters for consistency
+    const getPlaces = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch('http://localhost:3000/api/places', {
+          next: { revalidate: 10 },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        const data = await response.json();
+        setCenter(data.context.geo_bounds.circle.center);
+        setPlaces(data.places);
+        setFilteredPlaces(data.places);
+      } catch (error) {
+        console.error('Error fetching places:', error);
+      } finally {
+        // Simulate a short loading time
+        setTimeout(() => setIsLoading(false), 500);
+      }
+    };
+    getPlaces();
+  }, []);
+
+  useEffect(() => {
+    setIsLoading(true);
+    const maxDistanceMeters = distance * 1000;
 
     const filtered = places.filter((place) => {
       const categoryMatch =
         categoryFilter === 'All' ||
         place.categories.some((cat) => cat.name === categoryFilter);
-
       const moodMatch =
         moodFilter === 'All' || assignMood(place.categories) === moodFilter;
-
       const withinDistance = place.distance <= maxDistanceMeters;
-
       return categoryMatch && moodMatch && withinDistance;
     });
 
-    setFilteredPlaces(filtered);
+    // Simulate a short loading time when filtering
+    setTimeout(() => {
+      setFilteredPlaces(filtered);
+      setIsLoading(false);
+    }, 300);
   }, [categoryFilter, moodFilter, distance, places]);
-
-  useEffect(() => {
-    const getPlaces = async () => {
-      const response = await fetch('http://localhost:3000/api/places');
-      const data = await response.json();
-      console.log(data);
-      setCenter(data.context.geo_bounds.circle.center);
-      setPlaces(data.places);
-      setFilteredPlaces(data.places);
-    };
-    getPlaces();
-  }, []);
 
   const categoryTypes = [
     'All',
@@ -296,28 +292,32 @@ export default function DiscoveryMap() {
         </div>
 
         <div className='overflow-y-auto h-[calc(100%-8rem)] md:h-[calc(100%-12rem)] p-4'>
-          {filteredPlaces.map((place) => (
-            <RestaurantCard
-              key={place.fsq_id}
-              name={place.name}
-              icon={
-                place.categories[0].icon.prefix +
-                'bg_64' +
-                place.categories[0].icon.suffix
-              }
-              category={place.categories[0].name}
-              distance={place.distance}
-              onFocus={() =>
-                focusOnPlace(
-                  place.geocodes.main.latitude,
-                  place.geocodes.main.longitude
-                )
-              }
-              isLiked={likedPlaces.has(place.fsq_id)}
-              onLike={(e) => toggleLike(place.fsq_id, e)}
-              mood={assignMood(place.categories)}
-            />
-          ))}
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, index) => (
+                <RestaurantCardSkeleton key={index} />
+              ))
+            : filteredPlaces.map((place) => (
+                <RestaurantCard
+                  key={place.fsq_id}
+                  name={place.name}
+                  icon={
+                    place.categories[0].icon.prefix +
+                    'bg_64' +
+                    place.categories[0].icon.suffix
+                  }
+                  category={place.categories[0].name}
+                  distance={place.distance}
+                  onFocus={() =>
+                    focusOnPlace(
+                      place.geocodes.main.latitude,
+                      place.geocodes.main.longitude
+                    )
+                  }
+                  isLiked={likedPlaces.has(place.fsq_id)}
+                  onLike={(e) => toggleLike(place.fsq_id, e)}
+                  mood={assignMood(place.categories)}
+                />
+              ))}
         </div>
       </div>
     </div>

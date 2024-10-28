@@ -2595,6 +2595,7 @@ export async function GET(
       context: data.context,
       message: 'Places found',
     };
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     return Response.json(res);
   }
 }
