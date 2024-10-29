@@ -24,6 +24,7 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 import RestaurantCard from '@/components/restuarant-card';
 import { RestaurantCardSkeleton } from '@/components/restuarant-card-skelenton';
 import { Place, Coordinates } from '@/types/places';
+import { useRouter } from 'next/navigation';
 
 const customIcon = new Icon({
   iconUrl:
@@ -98,6 +99,7 @@ const moodTypes = [
 ];
 
 export default function DiscoveryMap() {
+  const router = useRouter();
   const [distance, setDistance] = useState<number>(2);
   const [center, setCenter] = useState<Coordinates>({
     latitude: 54.315,
@@ -116,9 +118,12 @@ export default function DiscoveryMap() {
     const getPlaces = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:3000/api/places', {
-          next: { revalidate: 10 },
-        });
+        const response = await fetch(
+          'http://localhost:3000/api/places/search',
+          {
+            next: { revalidate: 10 },
+          }
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -183,8 +188,8 @@ export default function DiscoveryMap() {
   };
 
   return (
-    <div className='relative h-screen w-full overflow-hidden'>
-      <div className='absolute inset-0 z-0'>
+    <div className='relative h-screen w-full overflow-hidden '>
+      <div className='absolute inset-0 z-0 w-screen'>
         <MapContainer
           center={[center.latitude, center.longitude]}
           zoom={zoom}
@@ -316,6 +321,10 @@ export default function DiscoveryMap() {
                   isLiked={likedPlaces.has(place.fsq_id)}
                   onLike={(e) => toggleLike(place.fsq_id, e)}
                   mood={assignMood(place.categories)}
+                  goToPage={(e) => {
+                    e.stopPropagation();
+                    router.push(`/places/${place.fsq_id}`);
+                  }}
                 />
               ))}
         </div>

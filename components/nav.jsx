@@ -15,6 +15,8 @@ import {
   Utensils,
   Users,
   Menu,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   Sheet,
@@ -28,6 +30,8 @@ import { Button } from '@/components/ui/button';
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isTrayOpen, setIsTrayOpen] = useState(false);
+
   const NavItems = () => (
     <>
       <Button variant='ghost' asChild>
@@ -40,9 +44,16 @@ const Nav = () => {
           <User className='mr-2 h-4 w-4' /> Dashboard
         </Link>
       </Button>
-      <DropdownMenu>
+      <DropdownMenu open={isTrayOpen} onOpenChange={setIsTrayOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant='ghost'>Unique Features</Button>
+          <Button variant='ghost'>
+            {isTrayOpen ? (
+              <ChevronUp className='mr-2 h-4 w-4' />
+            ) : (
+              <ChevronDown className='mr-2 h-4 w-4' />
+            )}
+            Unique Features
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem asChild>

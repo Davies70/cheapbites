@@ -1,6 +1,8 @@
-export type Photo = {
+export interface Photo {
   id: string;
-  title: string;
-  url: string;
-  thumbnailUrl: string;
-};
+  created_at: string;
+  prefix: string;
+  suffix: string;
+  width: number;
+  height: number;
+}
