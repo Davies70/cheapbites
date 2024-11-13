@@ -1,4 +1,4 @@
-import { Photo } from '../../types/photo';
+import { Photo } from '../../types/images';
 import Image from 'next/image';
 
 const Photos = async () => {
