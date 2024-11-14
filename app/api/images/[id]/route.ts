@@ -1,7 +1,6 @@
 import { ImagesResponse } from '@/types/images';
 import { getDataFromCache, setDataToCache } from '../../cache';
 
-
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
@@ -12,6 +11,7 @@ export async function GET(
 
   const imagesParams = {
     fsq_id: id,
+    classifications: ['outdoor'],
   };
 
   const url = `https://api.foursquare.com/v3/places/${id}/photos?${imagesParams}`;
