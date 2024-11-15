@@ -213,68 +213,7 @@ export const data: FoursquareSearchResponse = {
       related_places: {},
       timezone: 'Europe/Berlin',
     },
-    {
-      fsq_id: '4c3dc18015cb1b8d03547cdc',
-      categories: [
-        {
-          id: 13003,
-          name: 'Bar',
-          short_name: 'Bar',
-          plural_name: 'Bars',
-          icon: {
-            prefix: 'https://ss3.4sqi.net/img/categories_v2/nightlife/pub_',
-            suffix: '.png',
-          },
-        },
-      ],
-      chains: [],
-      closed_bucket: 'VeryLikelyOpen',
-      distance: 143,
-      geocodes: {
-        drop_off: {
-          latitude: 54.315797,
-          longitude: 10.133266,
-        },
-        main: {
-          latitude: 54.316034,
-          longitude: 10.133334,
-        },
-        roof: {
-          latitude: 54.316034,
-          longitude: 10.133334,
-        },
-      },
-      link: '/v3/places/4c3dc18015cb1b8d03547cdc',
-      location: {
-        address: 'Raiffeisenstr. 2',
-        country: 'DE',
-        cross_street: 'Kaistr.',
-        formatted_address: 'Raiffeisenstr. 2 (Kaistr.), 24103 Kiel',
-        locality: 'Kiel',
-        postcode: '24103',
-        region: 'Schleswig-Holstein',
-      },
-      name: 'Deck 8',
-      related_places: {
-        parent: {
-          fsq_id: '4c1fdc8ab4e62d7f7848e093',
-          categories: [
-            {
-              id: 19014,
-              name: 'Hotel',
-              short_name: 'Hotel',
-              plural_name: 'Hotels',
-              icon: {
-                prefix: 'https://ss3.4sqi.net/img/categories_v2/travel/hotel_',
-                suffix: '.png',
-              },
-            },
-          ],
-          name: 'ATLANTIC Hotel Kiel',
-        },
-      },
-      timezone: 'Europe/Berlin',
-    },
+
     {
       fsq_id: '55e1c7d8498ed1bd5d139d27',
       categories: [

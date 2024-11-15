@@ -1,4 +1,4 @@
-import { ImagesResponse } from '@/types/images';
+import { ImageResponse } from '@/types/images';
 import { getDataFromCache, setDataToCache } from '../../cache';
 
 export async function GET(
@@ -18,7 +18,7 @@ export async function GET(
 
   const cacheKeyForImages = `images_${id}`;
 
-  let imagesRes: ImagesResponse = {
+  let imagesRes: ImageResponse = {
     ok: false,
     status: 404,
     message: 'Images not found',
@@ -26,7 +26,7 @@ export async function GET(
   };
 
   // Check if the data is already cached
-  const cachedData = getDataFromCache(cacheKeyForImages);
+  const cachedData = await getDataFromCache(cacheKeyForImages, 'images');
 
   if (cachedData) {
     return new Response(JSON.stringify(cachedData), {
@@ -42,13 +42,14 @@ export async function GET(
         },
       });
       if (response.ok) {
+        const data = await response.json();
         imagesRes = {
           ok: true,
           status: 200,
-          images: await response.json(),
+          images: data,
           message: 'Images found',
         };
-        setDataToCache(cacheKeyForImages, imagesRes);
+        await setDataToCache(cacheKeyForImages, imagesRes, 'images');
       }
     } catch (error) {
       console.error('Failed to fetch images:', error);

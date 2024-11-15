@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+datasource db {
+  provider = "sqlite"  // Using SQLite
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model PlaceCache {
+  key   String   @id
+  value String
+  ttl   DateTime  
+}
+
+model PlacesCache {
+  key   String   @id
+  value String
+  ttl   DateTime  
+}
+
+model ImageCache {
+  key   String   @id
+  value String
+  ttl   DateTime 
+}
+
+model ImagesCache {
+  key   String   @id
+  value String
+  ttl   DateTime 
+}
+
+model OtherCache {
+  key   String   @id
+  value String
+  ttl   DateTime 
+}
+

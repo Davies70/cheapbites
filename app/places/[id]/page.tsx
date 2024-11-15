@@ -17,25 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  Heart,
-  MapPin,
-  Star,
-  Clock,
-  Phone,
-  Globe,
-  Facebook,
-  Twitter,
-  Instagram,
-  DollarSign,
-  Utensils,
-  Users,
-  Wifi,
-  Music,
-  ExternalLink,
-  Edit,
-  Trash2,
-} from 'lucide-react';
+import { Heart, MapPin, Star, Clock, Phone, Globe, Facebook, Twitter, Instagram, DollarSign, Utensils, Users, Wifi, Music, ExternalLink, Edit, Trash2, Loader } from 'lucide-react';
 import { PlaceDetails } from '@/types/places';
 import { useParams } from 'next/navigation';
 
@@ -147,14 +129,14 @@ export default function Place() {
   if (!placeData) {
     return (
       <div className='flex justify-center items-center h-screen'>
-        Loading...
+        <Loader className='w-8 h-8 animate-spin text-primary' />
       </div>
     );
   }
 
   return (
     <div className='max-w-4xl mx-auto p-4 space-y-6'>
-      <div className='relative h-64 md:h-96 rounded-lg overflow-hidden'>
+      <div className='relative h-48 sm:h-64 md:h-96 rounded-lg overflow-hidden'>
         <Image
           src={`${placeData.photos[0].prefix}original${placeData.photos[0].suffix}`}
           alt={placeData.name}
@@ -163,7 +145,7 @@ export default function Place() {
         />
         <div className='absolute inset-0 bg-black bg-opacity-40 flex items-end'>
           <div className='p-4 text-white'>
-            <h1 className='text-2xl md:text-4xl font-bold'>{placeData.name}</h1>
+            <h1 className='text-xl sm:text-2xl md:text-4xl font-bold'>{placeData.name}</h1>
             <p className='text-sm md:text-base'>
               {placeData.categories[0].name}
             </p>
@@ -171,12 +153,13 @@ export default function Place() {
         </div>
       </div>
 
-      <div className='flex flex-wrap gap-2 justify-between items-center'>
-        <div className='flex gap-2'>
+      <div className='flex flex-col sm:flex-row sm:flex-wrap gap-2 justify-between items-center'>
+        <div className='flex gap-2 w-full sm:w-auto'>
           <Button
             variant={isLiked ? 'default' : 'outline'}
             size='sm'
             onClick={toggleLike}
+            className='flex-1 sm:flex-none'
           >
             <Heart
               className={`w-4 h-4 mr-2 ${isLiked ? 'fill-current' : ''}`}
@@ -187,6 +170,7 @@ export default function Place() {
             variant={isMustVisit ? 'default' : 'outline'}
             size='sm'
             onClick={toggleMustVisit}
+            className='flex-1 sm:flex-none'
           >
             <Star
               className={`w-4 h-4 mr-2 ${isMustVisit ? 'fill-current' : ''}`}
@@ -194,7 +178,7 @@ export default function Place() {
             {isMustVisit ? 'Must-Visit' : 'Add to Must-Visit'}
           </Button>
         </div>
-        <div className='flex gap-2'>
+        <div className='flex gap-2 mt-2 sm:mt-0'>
           <Button
             variant='outline'
             size='sm'
@@ -224,87 +208,99 @@ export default function Place() {
 
       <Card>
         <CardContent className='p-4 space-y-4'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center'>
-              <MapPin className='w-5 h-5 mr-2 text-gray-500' />
-              <p>{placeData.location.formatted_address}</p>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
+            <div className='flex items-center mb-2 sm:mb-0'>
+              <MapPin className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
+              <p className='text-sm'>{placeData.location.formatted_address}</p>
             </div>
-            <Button variant='outline' size='sm' onClick={openMap}>
+            <Button variant='outline' size='sm' onClick={openMap} className='w-full sm:w-auto'>
               <ExternalLink className='w-4 h-4 mr-2' />
               Open Map
             </Button>
           </div>
           <div className='flex items-center'>
-            <Clock className='w-5 h-5 mr-2 text-gray-500' />
-            <p>{placeData.hours?.display || 'Hours not available'}</p>
+            <Clock className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
+            <p className='text-sm'>{placeData.hours?.display || 'Hours not available'}</p>
+          </div>
+          {placeData.closed_bucket && (
+            <div className='flex items-center mt-2'>
+              <div className={`w-3 h-3 rounded-full mr-2 ${
+                placeData.closed_bucket === 'LikelyOpen' || placeData.closed_bucket === 'VeryLikelyOpen'
+                  ? 'bg-green-500'
+                  : 'bg-red-500'
+              }`}></div>
+              <p className='text-sm'>{placeData.closed_bucket.replace(/([A-Z])/g, ' $1').trim()}</p>
+            </div>
+          )}
+          <div className='flex items-center'>
+            <Phone className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
+            <p className='text-sm'>{placeData.tel || 'Phone not available'}</p>
           </div>
           <div className='flex items-center'>
-            <Phone className='w-5 h-5 mr-2 text-gray-500' />
-            <p>{placeData.tel || 'Phone not available'}</p>
-          </div>
-          <div className='flex items-center'>
-            <Globe className='w-5 h-5 mr-2 text-gray-500' />
+            <Globe className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
             {placeData.website ? (
               <a
                 href={placeData.website}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='text-blue-500 hover:underline'
+                className='text-sm text-blue-500 hover:underline break-all'
               >
                 {placeData.website}
               </a>
             ) : (
-              <p>Website not available</p>
+              <p className='text-sm'>Website not available</p>
             )}
           </div>
-          <div className='flex items-center'>
-            <DollarSign className='w-5 h-5 mr-2 text-gray-500' />
-            <p>{'$'.repeat(placeData.price || 0)}</p>
-          </div>
-          <div className='flex items-center'>
-            <Star
-              className={`w-5 h-5 mr-2 ${getRatingColor(
-                placeData.rating || 0
-              )}`}
-            />
-            <p className='font-bold'>{placeData.rating?.toFixed(1) || 'N/A'}</p>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center'>
+              <DollarSign className='w-5 h-5 mr-2 text-gray-500' />
+              <p className='text-sm'>{'$'.repeat(placeData.price || 0)}</p>
+            </div>
+            <div className='flex items-center'>
+              <Star
+                className={`w-5 h-5 mr-2 ${getRatingColor(
+                  placeData.rating || 0
+                )}`}
+              />
+              <p className='text-sm font-bold'>{placeData.rating?.toFixed(1) || 'N/A'}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className='p-4 space-y-4'>
-          <h2 className='text-xl font-semibold'>Features</h2>
-          <div className='grid grid-cols-2 gap-4'>
+          <h2 className='text-lg font-semibold'>Features</h2>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             {placeData.features?.payment?.credit_cards
               ?.accepts_credit_cards && (
               <div className='flex items-center'>
                 <DollarSign className='w-5 h-5 mr-2 text-gray-500' />
-                <p>Accepts Credit Cards</p>
+                <p className='text-sm'>Accepts Credit Cards</p>
               </div>
             )}
             {placeData.features?.services?.dine_in?.reservations && (
               <div className='flex items-center'>
                 <Users className='w-5 h-5 mr-2 text-gray-500' />
-                <p>Reservations</p>
+                <p className='text-sm'>Reservations</p>
               </div>
             )}
             {placeData.features?.amenities?.outdoor_seating && (
               <div className='flex items-center'>
                 <Utensils className='w-5 h-5 mr-2 text-gray-500' />
-                <p>Outdoor Seating</p>
+                <p className='text-sm'>Outdoor Seating</p>
               </div>
             )}
             {placeData.features?.amenities?.wifi !== 'n' && (
               <div className='flex items-center'>
                 <Wifi className='w-5 h-5 mr-2 text-gray-500' />
-                <p>Wi-Fi Available</p>
+                <p className='text-sm'>Wi-Fi Available</p>
               </div>
             )}
             {placeData.features?.amenities?.live_music && (
               <div className='flex items-center'>
                 <Music className='w-5 h-5 mr-2 text-gray-500' />
-                <p>Live Music</p>
+                <p className='text-sm'>Live Music</p>
               </div>
             )}
           </div>
@@ -313,7 +309,7 @@ export default function Place() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Your Review</CardTitle>
+          <CardTitle className='text-lg'>Your Review</CardTitle>
         </CardHeader>
         <CardContent className='space-y-4'>
           {userReview && !isEditing ? (
@@ -322,7 +318,7 @@ export default function Place() {
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`w-6 h-6 ${
+                    className={`w-5 h-5 ${
                       star <= userReview.rating
                         ? 'text-yellow-400 fill-current'
                         : 'text-gray-300'
@@ -330,18 +326,18 @@ export default function Place() {
                   />
                 ))}
               </div>
-              <p className='text-sm text-gray-600'>
+              <p className='text-xs text-gray-600'>
                 {new Date(userReview.createdAt).toLocaleDateString()}
               </p>
-              <p>{userReview.review}</p>
-              <div className='flex space-x-2'>
-                <Button variant='outline' size='sm' onClick={handleEditReview}>
+              <p className='text-sm'>{userReview.review}</p>
+              <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
+                <Button variant='outline' size='sm' onClick={handleEditReview} className='w-full sm:w-auto'>
                   <Edit className='w-4 h-4 mr-2' />
                   Edit Review
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant='outline' size='sm'>
+                    <Button variant='outline' size='sm' className='w-full sm:w-auto'>
                       <Trash2 className='w-4 h-4 mr-2' />
                       Delete Review
                     </Button>
@@ -384,9 +380,9 @@ export default function Place() {
                 value={tempReview}
                 onChange={(e) => setTempReview(e.target.value)}
                 rows={4}
-                className='w-full p-2 border rounded-md'
+                className='w-full p-2 border rounded-md text-sm'
               />
-              <Button onClick={handleReviewSubmit}>
+              <Button onClick={handleReviewSubmit} className='w-full sm:w-auto'>
                 {isEditing ? 'Update Review' : 'Submit Review'}
               </Button>
             </div>
@@ -400,31 +396,37 @@ export default function Place() {
           <TabsTrigger value='tips'>Tips</TabsTrigger>
         </TabsList>
         <TabsContent value='photos' className='mt-4'>
-          <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
-            {placeData.photos.map((photo) => (
-              <div
-                key={photo.id}
-                className='aspect-square rounded-lg overflow-hidden'
-              >
-                <Image
-                  src={`${photo.prefix}300x300${photo.suffix}`}
-                  alt={placeData.name}
-                  width={300}
-                  height={300}
-                  objectFit='cover'
-                />
-              </div>
-            ))}
-          </div>
+          {placeData.photos ? (
+            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4'>
+              {placeData.photos.map((photo) => (
+                <div
+                  key={photo.id}
+                  className='aspect-square rounded-lg overflow-hidden'
+                >
+                  <Image
+                    src={`${photo.prefix}300x300${photo.suffix}`}
+                    alt={placeData.name}
+                    width={300}
+                    height={300}
+                    objectFit='cover'
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className='flex justify-center items-center h-32'>
+              <Loader className='w-6 h-6 animate-spin text-primary' />
+            </div>
+          )}
         </TabsContent>
         <TabsContent value='tips' className='mt-4 space-y-4'>
           {placeData.tips?.map((tip, index) => (
             <Card key={index}>
               <CardContent className='p-4'>
-                <p className='text-sm text-gray-600 mb-2'>
+                <p className='text-xs text-gray-600 mb-2'>
                   {new Date(tip.created_at).toLocaleDateString()}
                 </p>
-                <p>{tip.text}</p>
+                <p className='text-sm'>{tip.text}</p>
               </CardContent>
             </Card>
           ))}

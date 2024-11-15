@@ -50,7 +50,7 @@ const FoodQuiz = () => {
           recommendations.
         </p>
         {!showQuiz ? (
-          <Button onClick={() => setShowQuiz(true)}>
+          <Button onClick={() => setShowQuiz(true)} className='w-full'>
             Take Food Preference Quiz
           </Button>
         ) : (

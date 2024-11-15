@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -20,11 +20,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import {
+  ChevronUp,
+  ChevronDown,
+  Loader,
+  Clock,
+  ExternalLink,
+} from 'lucide-react';
 import RestaurantCard from '@/components/restuarant-card';
 import { RestaurantCardSkeleton } from '@/components/restuarant-card-skelenton';
 import { Place, Coordinates } from '@/types/places';
 import { useRouter } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Image from 'next/image';
 
 const customIcon = new Icon({
   iconUrl:
@@ -33,12 +41,7 @@ const customIcon = new Icon({
   iconAnchor: [12, 41],
 });
 
-interface MapViewProps {
-  center: LatLngExpression;
-  zoom: number;
-}
-
-function MapView({ center, zoom }: MapViewProps) {
+function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);
@@ -113,36 +116,49 @@ export default function DiscoveryMap() {
   const [moodFilter, setMoodFilter] = useState<string>('All');
   const [places, setPlaces] = useState<Place[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const getPlaces = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/places/search', {
-          next: { revalidate: 10 },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const data = await response.json();
-        setCenter(data.context.geo_bounds.circle.center);
-        setPlaces(data.places);
-        setFilteredPlaces(data.places);
-      } catch (error) {
-        console.error('Error fetching places:', error);
-      } finally {
-        // Simulate a short loading time
-        setTimeout(() => setIsLoading(false), 500);
-      }
-    };
-    getPlaces();
+  const getPlaces = useCallback(async (latitude: number, longitude: number) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/places/search/${latitude}/${longitude}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch places data');
+      const data = await response.json();
+      setPlaces(data.places);
+      setFilteredPlaces(data.places);
+    } catch (error) {
+      console.error('Error fetching places:', error);
+      setError('Failed to fetch places. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    setIsLoading(true);
-    const maxDistanceMeters = distance * 1000;
+    const getUserLocation = async () => {
+      try {
+        const response = await fetch('/api/geolocation');
+        if (!response.ok) throw new Error('Failed to fetch user location');
+        const location = await response.json();
+        setCenter({
+          latitude: location.latitude,
+          longitude: location.longitude,
+        });
+        await getPlaces(location.latitude, location.longitude);
+      } catch (error) {
+        console.error('Error fetching user location:', error);
+        setError('Failed to get your location. Using default location.');
+      }
+    };
 
-    const filtered = places.filter((place) => {
+    getUserLocation();
+  }, [getPlaces]);
+
+  const filterPlaces = useCallback(() => {
+    const maxDistanceMeters = distance * 1000;
+    return places.filter((place) => {
       const categoryMatch =
         categoryFilter === 'All' ||
         place.categories.some((cat) => cat.name === categoryFilter);
@@ -151,27 +167,28 @@ export default function DiscoveryMap() {
       const withinDistance = place.distance <= maxDistanceMeters;
       return categoryMatch && moodMatch && withinDistance;
     });
+  }, [distance, categoryFilter, moodFilter, places]);
 
-    // Simulate a short loading time when filtering
-    setTimeout(() => {
-      setFilteredPlaces(filtered);
-      setIsLoading(false);
-    }, 300);
-  }, [categoryFilter, moodFilter, distance, places]);
+  useEffect(() => {
+    const filtered = filterPlaces();
+    setFilteredPlaces(filtered);
+  }, [filterPlaces]);
 
-  const categoryTypes = [
-    'All',
-    ...new Set(
-      places?.flatMap((place) => place.categories.map((cat) => cat.name))
-    ),
-  ];
+  const categoryTypes = useMemo(() => {
+    return [
+      'All',
+      ...new Set(
+        places?.flatMap((place) => place.categories.map((cat) => cat.name))
+      ),
+    ];
+  }, [places]);
 
-  const focusOnPlace = (latitude: number, longitude: number) => {
+  const focusOnPlace = useCallback((latitude: number, longitude: number) => {
     setCenter({ latitude, longitude });
     setZoom(16);
-  };
+  }, []);
 
-  const toggleLike = (id: string, e: React.MouseEvent) => {
+  const toggleLike = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setLikedPlaces((prev) => {
       const newSet = new Set(prev);
@@ -182,10 +199,64 @@ export default function DiscoveryMap() {
       }
       return newSet;
     });
-  };
+  }, []);
+
+  const CustomPopup = ({ place }: { place: Place }) => (
+    <div className='w-64 p-2'>
+      <div className='flex items-center justify-between mb-2'>
+        <h3 className='text-lg font-semibold'>{place.name}</h3>
+        {/* {place.hours?.open_now && (
+          <div className='flex items-center text-green-600'>
+            <Clock className='w-4 h-4 mr-1' />
+            <span className='text-xs'>Open now</span>
+          </div>
+        )} */}
+      </div>
+      <div className='mb-2 h-32 relative rounded-md overflow-hidden'>
+        {/* <Image
+          src={
+            place.photos?.[0]?.prefix + '300x200' + place.photos?.[0]?.suffix ||
+            '/placeholder.svg?height=200&width=300'
+          }
+          alt={place.name}
+          layout='fill'
+          objectFit='cover'
+        /> */}
+      </div>
+      <p className='text-sm mb-2'>{place.location.formatted_address}</p>
+      <div className='flex items-center justify-between'>
+        <p className='text-xs text-gray-600'>
+          {place.categories.map((cat) => cat.name).join(', ')}
+        </p>
+        <Button
+          variant='outline'
+          size='sm'
+          className='text-xs'
+          onClick={() => router.push(`/places/${place.fsq_id}`)}
+        >
+          <ExternalLink className='w-3 h-3 mr-1' />
+          View Details
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Loader className='w-8 h-8 animate-spin' />
+      </div>
+    );
+  }
 
   return (
-    <div className='relative h-screen w-full overflow-hidden '>
+    <div className='relative h-screen w-full overflow-hidden'>
+      {error && (
+        <Alert variant='destructive' className='mb-4'>
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       <div className='absolute inset-0 z-0 w-screen'>
         <MapContainer
           center={[center.latitude, center.longitude]}
@@ -207,12 +278,7 @@ export default function DiscoveryMap() {
               icon={customIcon}
             >
               <Popup>
-                <h3>{place.name}</h3>
-                <p>
-                  Categories:{' '}
-                  {place.categories.map((cat) => cat.name).join(', ')}
-                </p>
-                <p>Address: {place.location.formatted_address}</p>
+                <CustomPopup place={place} />
               </Popup>
             </Marker>
           ))}
