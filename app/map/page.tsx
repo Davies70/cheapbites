@@ -1,9 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useMap } from 'react-leaflet';
-import { Icon, LatLngExpression } from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -13,54 +10,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronUp, ChevronDown, Loader, ExternalLink } from 'lucide-react';
+import { ChevronUp, ChevronDown, Loader } from 'lucide-react';
 import PlaceCard from '@/components/place-card';
 import { PlaceCardSkeleton } from '@/components/place-card-skelenton';
 import { Place, Coordinates } from '@/types/places';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
-const MapWithNoSSR = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-
-const TileLayerWithNoSSR = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
-
-const CircleWithNoSSR = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Circle),
-  { ssr: false }
-);
-
-const MarkerWithNoSSR = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
-
-const PopupWithNoSSR = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
-
-const customIcon = new Icon({
-  iconUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// Dynamically import the Map component with no SSR
+const Map = dynamic(() => import('@/components/map'), {
+  ssr: false,
+  loading: () => (
+    <div className='flex items-center justify-center h-full'>
+      <Loader className='w-8 h-8 animate-spin text-primary' />
+    </div>
+  ),
 });
 
-function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
-  return null;
-}
+const moodTypes = [
+  'All',
+  'Casual',
+  'Fancy',
+  'Romantic',
+  'Business',
+  'Family-friendly',
+  'Neutral',
+];
 
 function assignMood(categories: { name: string }[]): string {
   const casualCategories = [
@@ -103,16 +79,6 @@ function assignMood(categories: { name: string }[]): string {
 
   return 'Neutral';
 }
-
-const moodTypes = [
-  'All',
-  'Casual',
-  'Fancy',
-  'Romantic',
-  'Business',
-  'Family-friendly',
-  'Neutral',
-];
 
 export default function DiscoveryMap() {
   const router = useRouter();
@@ -163,11 +129,13 @@ export default function DiscoveryMap() {
       } catch (error) {
         console.error('Error fetching user location:', error);
         setError('Failed to get your location. Using default location.');
+        // Use default location and fetch places
+        await getPlaces(center.latitude, center.longitude);
       }
     };
 
     getUserLocation();
-  }, [getPlaces]);
+  }, [getPlaces, center.latitude, center.longitude]);
 
   const filterPlaces = useCallback(() => {
     const maxDistanceMeters = distance * 1000;
@@ -214,47 +182,6 @@ export default function DiscoveryMap() {
     });
   }, []);
 
-  const CustomPopup = ({ place }: { place: Place }) => (
-    <div className='w-64 p-2'>
-      <div className='flex items-center justify-between mb-2'>
-        <h3 className='text-lg font-semibold'>{place.name}</h3>
-        {/* {place.hours?.open_now && (
-          <div className='flex items-center text-green-600'>
-            <Clock className='w-4 h-4 mr-1' />
-            <span className='text-xs'>Open now</span>
-          </div>
-        )} */}
-      </div>
-      <div className='mb-2 h-32 relative rounded-md overflow-hidden'>
-        <Image
-          src={
-            place.categories[0].icon.prefix +
-            'bg_64' +
-            place.categories[0].icon.suffix
-          }
-          alt={place.name}
-          layout='fill'
-          objectFit='cover'
-        />
-      </div>
-      <p className='text-sm mb-2'>{place.location.formatted_address}</p>
-      <div className='flex items-center justify-between'>
-        <p className='text-xs text-gray-600'>
-          {place.categories.map((cat) => cat.name).join(', ')}
-        </p>
-        <Button
-          variant='outline'
-          size='sm'
-          className='text-xs'
-          onClick={() => router.push(`/places/${place.fsq_id}`)}
-        >
-          <ExternalLink className='w-3 h-3 mr-1' />
-          View Details
-        </Button>
-      </div>
-    </div>
-  );
-
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-screen'>
@@ -272,32 +199,13 @@ export default function DiscoveryMap() {
         </Alert>
       )}
       <div className='absolute inset-0 z-0 w-screen'>
-        <MapWithNoSSR
-          center={[center.latitude, center.longitude]}
+        <Map
+          center={center}
           zoom={zoom}
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayerWithNoSSR url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-          <CircleWithNoSSR
-            center={[center.latitude, center.longitude]}
-            radius={distance * 1000}
-          />
-          {filteredPlaces.map((place) => (
-            <MarkerWithNoSSR
-              key={place.fsq_id}
-              position={[
-                place.geocodes.main.latitude,
-                place.geocodes.main.longitude,
-              ]}
-              icon={customIcon}
-            >
-              <PopupWithNoSSR>
-                <CustomPopup place={place} />
-              </PopupWithNoSSR>
-            </MarkerWithNoSSR>
-          ))}
-          <MapView center={[center.latitude, center.longitude]} zoom={zoom} />
-        </MapWithNoSSR>
+          places={filteredPlaces}
+          distance={distance}
+          onPlaceClick={(placeId) => router.push(`/places/${placeId}`)}
+        />
       </div>
 
       <div
