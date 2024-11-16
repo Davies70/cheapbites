@@ -1,14 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  MapContainer,
-  TileLayer,
-  Circle,
-  Marker,
-  Popup,
-  useMap,
-} from 'react-leaflet';
+import { TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
@@ -27,6 +20,12 @@ import { Place, Coordinates } from '@/types/places';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
+
+const MapWithNoSSR = dynamic(
+  () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
 
 const customIcon = new Icon({
   iconUrl:
@@ -253,7 +252,7 @@ export default function DiscoveryMap() {
         </Alert>
       )}
       <div className='absolute inset-0 z-0 w-screen'>
-        <MapContainer
+        <MapWithNoSSR
           center={[center.latitude, center.longitude]}
           zoom={zoom}
           style={{ height: '100%', width: '100%' }}
