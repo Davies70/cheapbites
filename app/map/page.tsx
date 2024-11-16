@@ -20,13 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  ChevronUp,
-  ChevronDown,
-  Loader,
-  Clock,
-  ExternalLink,
-} from 'lucide-react';
+import { ChevronUp, ChevronDown, Loader, ExternalLink } from 'lucide-react';
 import PlaceCard from '@/components/place-card';
 import { PlaceCardSkeleton } from '@/components/place-card-skelenton';
 import { Place, Coordinates } from '@/types/places';
