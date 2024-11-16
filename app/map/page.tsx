@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { TileLayer, Circle, Marker, Popup, useMap } from 'react-leaflet';
+import { useMap } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,26 @@ import dynamic from 'next/dynamic';
 
 const MapWithNoSSR = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+
+const TileLayerWithNoSSR = dynamic(
+  () => import('react-leaflet').then((mod) => mod.TileLayer),
+  { ssr: false }
+);
+
+const CircleWithNoSSR = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Circle),
+  { ssr: false }
+);
+
+const MarkerWithNoSSR = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Marker),
+  { ssr: false }
+);
+
+const PopupWithNoSSR = dynamic(
+  () => import('react-leaflet').then((mod) => mod.Popup),
   { ssr: false }
 );
 
@@ -257,13 +277,13 @@ export default function DiscoveryMap() {
           zoom={zoom}
           style={{ height: '100%', width: '100%' }}
         >
-          <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
-          <Circle
+          <TileLayerWithNoSSR url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
+          <CircleWithNoSSR
             center={[center.latitude, center.longitude]}
             radius={distance * 1000}
           />
           {filteredPlaces.map((place) => (
-            <Marker
+            <MarkerWithNoSSR
               key={place.fsq_id}
               position={[
                 place.geocodes.main.latitude,
@@ -271,10 +291,10 @@ export default function DiscoveryMap() {
               ]}
               icon={customIcon}
             >
-              <Popup>
+              <PopupWithNoSSR>
                 <CustomPopup place={place} />
-              </Popup>
-            </Marker>
+              </PopupWithNoSSR>
+            </MarkerWithNoSSR>
           ))}
           <MapView center={[center.latitude, center.longitude]} zoom={zoom} />
         </MapWithNoSSR>
