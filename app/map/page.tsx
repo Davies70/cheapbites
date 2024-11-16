@@ -277,7 +277,7 @@ export default function DiscoveryMap() {
             </Marker>
           ))}
           <MapView center={[center.latitude, center.longitude]} zoom={zoom} />
-        </MapContainer>
+        </MapWithNoSSR>
       </div>
 
       <div
