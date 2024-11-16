@@ -27,8 +27,8 @@ import {
   Clock,
   ExternalLink,
 } from 'lucide-react';
-import RestaurantCard from '@/components/restuarant-card';
-import { RestaurantCardSkeleton } from '@/components/restuarant-card-skelenton';
+import PlaceCard from '@/components/place-card';
+import { PlaceCardSkeleton } from '@/components/place-card-skelenton';
 import { Place, Coordinates } from '@/types/places';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -213,15 +213,16 @@ export default function DiscoveryMap() {
         )} */}
       </div>
       <div className='mb-2 h-32 relative rounded-md overflow-hidden'>
-        {/* <Image
+        <Image
           src={
-            place.photos?.[0]?.prefix + '300x200' + place.photos?.[0]?.suffix ||
-            '/placeholder.svg?height=200&width=300'
+            place.categories[0].icon.prefix +
+            'bg_64' +
+            place.categories[0].icon.suffix
           }
           alt={place.name}
           layout='fill'
           objectFit='cover'
-        /> */}
+        />
       </div>
       <p className='text-sm mb-2'>{place.location.formatted_address}</p>
       <div className='flex items-center justify-between'>
@@ -244,7 +245,7 @@ export default function DiscoveryMap() {
   if (isLoading) {
     return (
       <div className='flex items-center justify-center h-screen'>
-        <Loader className='w-8 h-8 animate-spin' />
+        <Loader className='w-8 h-8 animate-spin text-primary' />
       </div>
     );
   }
@@ -362,10 +363,10 @@ export default function DiscoveryMap() {
         <div className='overflow-y-auto h-[calc(100%-8rem)] md:h-[calc(100%-12rem)] p-4'>
           {isLoading
             ? Array.from({ length: 5 }).map((_, index) => (
-                <RestaurantCardSkeleton key={index} />
+                <PlaceCardSkeleton key={index} />
               ))
             : filteredPlaces.map((place) => (
-                <RestaurantCard
+                <PlaceCard
                   key={place.fsq_id}
                   name={place.name}
                   icon={

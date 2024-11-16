@@ -1,6 +1,10 @@
 import { PlacesResponse } from '@/types/places';
 // import { data as dataFromDB } from '../../../../db';
-import { getDataFromCache, setDataToCache } from '@/app/api/cache';
+import {
+  getDataFromCache,
+  setDataToCache,
+  deleteDataFromCache,
+} from '@/app/api/cache';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -32,7 +36,7 @@ export async function GET(
       // };
 
       const searchParams = {
-        limit: '10',
+        limit: '50',
         categories: '13000',
         ll: `${slug[1]},${slug[2]}`,
       };

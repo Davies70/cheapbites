@@ -120,7 +120,7 @@ const Nav = () => {
   );
 
   return (
-    <nav className='bg-primary text-primary-foreground sticky top-0 z-50 shadow-md backdrop-blur-lg'>
+    <nav className='bg-primary text-primary-foreground  top-0 z-50 shadow-md backdrop-blur-lg'>
       <div className='container mx-auto px-4 py-3 flex justify-between items-center'>
         <Link
           href='/'

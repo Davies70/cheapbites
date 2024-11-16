@@ -1,7 +1,7 @@
 'use client';
 
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import RestaurantCard from '@/components/restuarant-card-old';
+import TrendingPlaceCard from '@/components/trending-place-card';
 import { useState, useEffect } from 'react';
 import { Place } from '@/types/places';
 import { data } from '../db';
@@ -102,7 +102,7 @@ const TrendingPlaces = () => {
       <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
         <div className='flex w-max space-x-4 p-4'>
           {trendingPlaces?.map((place, i) => (
-            <RestaurantCard
+            <TrendingPlaceCard
               key={place.fsq_id}
               name={place.name}
               categories={[place.categories[0]?.name || 'Unknown']}
