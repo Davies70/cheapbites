@@ -4,43 +4,58 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-
-datasource db {
-  provider = "sqlite"  // Using SQLite
-  url      = env("DATABASE_URL")
-}
-
 generator client {
   provider = "prisma-client-js"
 }
 
-model PlaceCache {
-  key   String   @id
-  value String
-  ttl   DateTime  
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model PlacesCache {
-  key   String   @id
-  value String
-  ttl   DateTime  
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     Json
+  ttl       DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model ImageCache {
-  key   String   @id
-  value String
-  ttl   DateTime 
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  name    String?
+  role    Role     @default(USER)
+  posts   Post[]
+  profile Profile?
 }
 
-model ImagesCache {
-  key   String   @id
-  value String
-  ttl   DateTime 
+model Profile {
+  id     Int    @id @default(autoincrement())
+  bio    String
+  user   User   @relation(fields: [userId], references: [id])
+  userId Int    @unique
 }
 
-model OtherCache {
-  key   String   @id
-  value String
-  ttl   DateTime 
+model Post {
+  id         Int        @id @default(autoincrement())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  title      String
+  published  Boolean    @default(false)
+  author     User       @relation(fields: [authorId], references: [id])
+  authorId   Int
+  categories Category[]
 }
 
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String
+  posts Post[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}

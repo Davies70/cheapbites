@@ -1,5 +1,5 @@
-import { PlaceResponse } from '@/types/places';
-import { getDataFromCache, setDataToCache } from '../../cache';
+import { PlaceResponse, PlaceDetails } from '@/types/places';
+import { saveToCache, getFromCache } from '@/lib/cacheUtils';
 
 export async function GET(
   req: Request,
@@ -13,6 +13,21 @@ export async function GET(
     message: 'Place not found',
     place: {},
   };
+
+  const cachedData = await getFromCache(`place_${id}`, 'place');
+
+  if (cachedData) {
+    placeRes = {
+      ok: true,
+      status: 200,
+      message: 'Place found in cache',
+      place: cachedData,
+    };
+    return new Response(JSON.stringify(placeRes), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY;
   if (!apiKey) {
@@ -38,15 +53,6 @@ export async function GET(
   const cacheKey = `place_${id}`;
 
   try {
-    // await deleteDataFromCache(cacheKey, 'place');
-    const cachedData = await getDataFromCache(cacheKey, 'place');
-    if (cachedData) {
-      return new Response(JSON.stringify(cachedData), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     const response = await fetch(url, {
       headers: {
         Authorization: `${apiKey}`,
@@ -56,17 +62,16 @@ export async function GET(
 
     if (response.ok) {
       const data = await response.json();
+      await saveToCache(cacheKey, data, 1, 'place');
       placeRes = {
         ok: true,
         status: 200,
         message: 'Place found successfully',
         place: data,
       };
-      await setDataToCache(cacheKey, placeRes, 'place');
     } else {
       const errorData = await response.json().catch(() => ({}));
       console.error('Foursquare API Error:', errorData);
-
       placeRes = {
         ok: false,
         status: response.status,

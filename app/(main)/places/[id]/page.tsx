@@ -17,15 +17,83 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Heart, MapPin, Star, Clock, Phone, Globe, Facebook, Twitter, Instagram, DollarSign, Utensils, Users, Wifi, Music, ExternalLink, Edit, Trash2, Loader } from 'lucide-react';
+import {
+  Heart,
+  MapPin,
+  Star,
+  Clock,
+  Phone,
+  Globe,
+  Facebook,
+  Twitter,
+  Instagram,
+  DollarSign,
+  Utensils,
+  Users,
+  Wifi,
+  Music,
+  ExternalLink,
+  Edit,
+  Trash2,
+  Loader,
+  Beer,
+  Martini,
+  Wine,
+  Package,
+  Soup,
+} from 'lucide-react';
 import { PlaceDetails } from '@/types/places';
 import { useParams } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Check, X } from 'lucide-react';
 
 interface UserReview {
   rating: number;
   review: string;
   createdAt: string;
 }
+
+interface AttributesProps {
+  attributes: PlaceDetails['features']['attributes'];
+}
+
+const AttributeBadge = ({ value }: { value: string }) => {
+  if (value === 'yes')
+    return (
+      <Badge variant='default'>
+        <Check className='w-3 h-3 mr-1' /> Yes
+      </Badge>
+    );
+  if (value === 'no')
+    return (
+      <Badge variant='secondary'>
+        <X className='w-3 h-3 mr-1' /> No
+      </Badge>
+    );
+  return <Badge variant='outline'>{value}</Badge>;
+};
+
+const Attributes = ({ attributes }: AttributesProps) => {
+  return (
+    <Card className='mt-6'>
+      <CardHeader>
+        <CardTitle className='text-lg'>Attributes</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className='grid grid-cols-2 gap-4'>
+          {Object.entries(attributes).map(([key, value]) => (
+            <div key={key} className='flex items-center justify-between'>
+              <span className='text-sm capitalize'>
+                {key.replace(/_/g, ' ')}
+              </span>
+              <AttributeBadge value={value} />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function Place() {
   const { id } = useParams();
@@ -73,6 +141,21 @@ export default function Place() {
         navigator.clipboard.writeText(`${text} ${url}`);
         alert('Link copied! You can now paste it on Instagram.');
         break;
+    }
+  };
+
+  const getPriceRange = (price: number): string => {
+    switch (price) {
+      case 1:
+        return 'Affordable';
+      case 2:
+        return 'Moderate';
+      case 3:
+        return 'Expensive';
+      case 4:
+        return 'Very Expensive';
+      default:
+        return 'Not specified';
     }
   };
 
@@ -134,18 +217,24 @@ export default function Place() {
     );
   }
 
+  const imageToUse = placeData?.photos[0]?.prefix
+    ? `${placeData.photos[0].prefix}original${placeData.photos[0].suffix}`
+    : '/placeholder-place.png';
+
   return (
     <div className='max-w-4xl mx-auto p-4 space-y-6'>
       <div className='relative h-48 sm:h-64 md:h-96 rounded-lg overflow-hidden'>
         <Image
-          src={`${placeData.photos[0].prefix}original${placeData.photos[0].suffix}`}
+          src={imageToUse}
           alt={placeData.name}
           layout='fill'
           objectFit='cover'
         />
         <div className='absolute inset-0 bg-black bg-opacity-40 flex items-end'>
           <div className='p-4 text-white'>
-            <h1 className='text-xl sm:text-2xl md:text-4xl font-bold'>{placeData.name}</h1>
+            <h1 className='text-xl sm:text-2xl md:text-4xl font-bold'>
+              {placeData.name}
+            </h1>
             <p className='text-sm md:text-base'>
               {placeData.categories[0].name}
             </p>
@@ -213,23 +302,35 @@ export default function Place() {
               <MapPin className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
               <p className='text-sm'>{placeData.location.formatted_address}</p>
             </div>
-            <Button variant='outline' size='sm' onClick={openMap} className='w-full sm:w-auto'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={openMap}
+              className='w-full sm:w-auto'
+            >
               <ExternalLink className='w-4 h-4 mr-2' />
               Open Map
             </Button>
           </div>
           <div className='flex items-center'>
             <Clock className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
-            <p className='text-sm'>{placeData.hours?.display || 'Hours not available'}</p>
+            <p className='text-sm'>
+              {placeData.hours?.display || 'Hours not available'}
+            </p>
           </div>
           {placeData.closed_bucket && (
             <div className='flex items-center mt-2'>
-              <div className={`w-3 h-3 rounded-full mr-2 ${
-                placeData.closed_bucket === 'LikelyOpen' || placeData.closed_bucket === 'VeryLikelyOpen'
-                  ? 'bg-green-500'
-                  : 'bg-red-500'
-              }`}></div>
-              <p className='text-sm'>{placeData.closed_bucket.replace(/([A-Z])/g, ' $1').trim()}</p>
+              <div
+                className={`w-3 h-3 rounded-full mr-2 ${
+                  placeData.closed_bucket === 'LikelyOpen' ||
+                  placeData.closed_bucket === 'VeryLikelyOpen'
+                    ? 'bg-green-500'
+                    : 'bg-red-500'
+                }`}
+              ></div>
+              <p className='text-sm'>
+                {placeData.closed_bucket.replace(/([A-Z])/g, ' $1').trim()}
+              </p>
             </div>
           )}
           <div className='flex items-center'>
@@ -254,7 +355,7 @@ export default function Place() {
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
               <DollarSign className='w-5 h-5 mr-2 text-gray-500' />
-              <p className='text-sm'>{'$'.repeat(placeData.price || 0)}</p>
+              <p className='text-sm'>{getPriceRange(placeData.price || 0)}</p>
             </div>
             <div className='flex items-center'>
               <Star
@@ -262,7 +363,9 @@ export default function Place() {
                   placeData.rating || 0
                 )}`}
               />
-              <p className='text-sm font-bold'>{placeData.rating?.toFixed(1) || 'N/A'}</p>
+              <p className='text-sm font-bold'>
+                {placeData.rating?.toFixed(1) || 'N/A'}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -279,10 +382,40 @@ export default function Place() {
                 <p className='text-sm'>Accepts Credit Cards</p>
               </div>
             )}
+            {placeData.features?.food_and_drink?.meals?.brunch && (
+              <div className='flex items-center'>
+                <Soup className='w-5 h-5 mr-2 text-gray-500' />
+                <p className='text-sm'>Brunch</p>
+              </div>
+            )}
+            {placeData.features?.food_and_drink?.meals?.happy_hour && (
+              <div className='flex items-center'>
+                <Wine className='w-5 h-5 mr-2 text-gray-500' />
+                <p className='text-sm'>Happy Hour</p>
+              </div>
+            )}
+            {placeData.features?.food_and_drink?.alcohol?.cocktails && (
+              <div className='flex items-center'>
+                <Martini className='w-5 h-5 mr-2 text-gray-500' />
+                <p className='text-sm'>Cocktails</p>
+              </div>
+            )}
+            {placeData.features?.food_and_drink?.alcohol?.full_bar && (
+              <div className='flex items-center'>
+                <Beer className='w-5 h-5 mr-2 text-gray-500' />
+                <p className='text-sm'>Full Bar</p>
+              </div>
+            )}
             {placeData.features?.services?.dine_in?.reservations && (
               <div className='flex items-center'>
                 <Users className='w-5 h-5 mr-2 text-gray-500' />
                 <p className='text-sm'>Reservations</p>
+              </div>
+            )}
+            {placeData.features?.services?.delivery && (
+              <div className='flex items-center'>
+                <Package className='w-5 h-5 mr-2 text-gray-500' />
+                <p className='text-sm'>Delivery</p>
               </div>
             )}
             {placeData.features?.amenities?.outdoor_seating && (
@@ -306,6 +439,27 @@ export default function Place() {
           </div>
         </CardContent>
       </Card>
+
+      {placeData?.features?.attributes && (
+        <Attributes attributes={placeData.features.attributes} />
+      )}
+
+      {placeData.tastes && placeData.tastes.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-lg'>Tastes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='flex flex-wrap gap-2'>
+              {placeData.tastes.map((taste, index) => (
+                <Badge key={index} variant='secondary'>
+                  {taste}
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -331,13 +485,22 @@ export default function Place() {
               </p>
               <p className='text-sm'>{userReview.review}</p>
               <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
-                <Button variant='outline' size='sm' onClick={handleEditReview} className='w-full sm:w-auto'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleEditReview}
+                  className='w-full sm:w-auto'
+                >
                   <Edit className='w-4 h-4 mr-2' />
                   Edit Review
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant='outline' size='sm' className='w-full sm:w-auto'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      className='w-full sm:w-auto'
+                    >
                       <Trash2 className='w-4 h-4 mr-2' />
                       Delete Review
                     </Button>
@@ -398,20 +561,24 @@ export default function Place() {
         <TabsContent value='photos' className='mt-4'>
           {placeData.photos ? (
             <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4'>
-              {placeData.photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className='aspect-square rounded-lg overflow-hidden'
-                >
-                  <Image
-                    src={`${photo.prefix}300x300${photo.suffix}`}
-                    alt={placeData.name}
-                    width={300}
-                    height={300}
-                    objectFit='cover'
-                  />
-                </div>
-              ))}
+              {placeData.photos.length > 0 ? (
+                placeData.photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className='aspect-square rounded-lg overflow-hidden'
+                  >
+                    <Image
+                      src={`${photo.prefix}300x300${photo.suffix}`}
+                      alt={placeData.name}
+                      width={300}
+                      height={300}
+                      objectFit='cover'
+                    />
+                  </div>
+                ))
+              ) : (
+                <p className='text-sm text-gray-600'>No photos available</p>
+              )}
             </div>
           ) : (
             <div className='flex justify-center items-center h-32'>

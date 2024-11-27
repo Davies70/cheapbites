@@ -1,81 +1,56 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { Place, ReturnedPlace } from '@/types/places';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import TrendingPlaceCard from '@/components/trending-place-card';
-import { useState, useEffect } from 'react';
-import { Place } from '@/types/places';
-import { data } from '../db';
-import { Loader2 } from 'lucide-react';
-// import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 const TrendingPlaces = () => {
-  const [trendingPlaces, setTrendingPlaces] = useState<Place[]>();
-  const stockImages: string[] = [
-    'Block-House.png',
-    'Giovanni.jpg',
-    'Wochenmarkt.jpg',
-    'JanHein.jpg',
-    'Bakeliet.jpg',
-    'Lyck.jpg',
-  ];
-
+  const [trendingPlaces, setTrendingPlaces] = useState<ReturnedPlace[]>([]);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lon: number;
   } | null>(null);
-
-  const [isDefault, setIsDefault] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  // const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/geolocation', {
-      cache: 'no-store',
-      headers: {
-        'Cache-Control': 'no-cache',
-      },
-    })
-      .then((res) => res.json())
-      .then(({ latitude, longitude }) => {
-        setUserLocation({
-          lat: latitude,
-          lon: longitude,
-        });
-        console.log('User location:', latitude, longitude);
-      })
-      .catch((error) => {
-        console.error('Failed to fetch geolocation:', error);
-      });
+    const fetchLocationAndTrendingPlaces = async () => {
+      try {
+        const resLocation = await fetch('/api/geolocation');
+        const { latitude, longitude } = await resLocation.json();
+        setUserLocation({ lat: latitude, lon: longitude });
+
+        const resPlaces = await fetch(
+          `/api/places/trending/${latitude}/${longitude}`
+        );
+        const data = await resPlaces.json();
+        if (data.places.length === 0) setError('No trending places found');
+        setTrendingPlaces(data.places);
+      } catch (error) {
+        console.error('Error fetching location or places:', error);
+        setError('Failed to fetch location or trending places');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLocationAndTrendingPlaces();
   }, []);
 
-  useEffect(() => {
-    if (userLocation) {
-      fetch(`/api/places/trending/${userLocation.lat}/${userLocation.lon}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache',
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setTrendingPlaces(data.places);
-          setIsDefault(false);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error('Failed to fetch trending places:', error);
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-      setTrendingPlaces(data.results.slice(0, 5));
-    }
-  }, [userLocation]);
+  if (error) {
+    return (
+      <Alert variant='destructive' className='mt-12'>
+        <AlertCircle className='h-4 w-4' />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
 
-  if (isLoading && trendingPlaces?.length === 0) {
+  if (isLoading) {
     return (
       <div className='mt-12 flex items-center justify-center'>
         <Loader2 className='h-8 w-8 animate-spin text-primary' />
@@ -86,34 +61,23 @@ const TrendingPlaces = () => {
     );
   }
 
-  // if (error) {
-  //   return (
-  //     <Alert variant='destructive' className='mt-12'>
-  //       <AlertCircle className='h-4 w-4' />
-  //       <AlertTitle>Error</AlertTitle>
-  //       <AlertDescription>{error}</AlertDescription>
-  //     </Alert>
-  //   );
-  // }
-
   return (
     <div className='mt-12'>
       <h2 className='text-2xl font-semibold mb-4'>Trending Places</h2>
       <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
         <div className='flex w-max space-x-4 p-4'>
-          {trendingPlaces?.map((place, i) => (
+          {trendingPlaces.map((place) => (
             <TrendingPlaceCard
-              key={place.fsq_id}
+              key={place.id}
               name={place.name}
-              categories={[place.categories[0]?.name || 'Unknown']}
+              category={place.categories[0].name}
               priceForTwo={0}
-              address={place.location.formatted_address}
-              id={place.fsq_id}
-              latitude={place.geocodes.roof?.latitude}
-              longitude={place.geocodes.roof?.longitude}
+              address={place.address}
+              id={place.id}
+              latitude={place.lat}
+              longitude={place.lon}
               distance={place.distance}
-              defaultImage={stockImages[i % stockImages.length]}
-              isDefault={isDefault}
+              images={place.images}
             />
           ))}
         </div>

@@ -1,9 +1,5 @@
 // Types for Foursquare Places API search response
-
-export interface FoursquareSearchResponse {
-  results: Place[];
-  context: Context;
-}
+import { Image } from './images';
 
 export interface Place {
   fsq_id: string;
@@ -82,39 +78,6 @@ export interface Circle {
   center: Coordinates;
   radius: number;
 }
-
-export interface Restaurant {
-  id: number;
-  name: string;
-  lat: number;
-  lng: number;
-  price: number;
-  rating: number;
-  cuisine: string;
-  mood: string;
-  image: string;
-}
-
-export interface PlacesResponse {
-  places: Place[] | [];
-  context: Context | object;
-  ok: boolean;
-  message: string;
-  status: number;
-}
-
-export interface PlaceResponse {
-  place: Place | object;
-  ok: boolean;
-  message: string;
-  status: number;
-}
-
-// const categories = [13000];
-
-// const latitude_longitude = '54.3150,10.1320';
-// const fsq_id = '535bf4fc498ebbfcfcc44f53';
-// const fsq_id2 = '4b9a3c32f964a52047a635e3';
 
 export interface PlaceDetails {
   fsq_id: string;
@@ -217,6 +180,8 @@ export interface PlaceDetails {
   rating: number;
   social_media: {
     facebook_id: string;
+    instagram: string;
+    twitter: string;
   };
   tastes: string[];
   tel: string;
@@ -225,4 +190,40 @@ export interface PlaceDetails {
     text: string;
   }[];
   website: string;
+}
+
+export interface PlaceWithImages {
+  place: Place;
+  images: Image[];
+}
+
+export interface FoursquareSearchResponse {
+  results: Place[];
+  context: Context;
+}
+
+export interface PlacesResponse {
+  places: PlaceWithImages[];
+  context: Context | object;
+  ok: boolean;
+  message: string;
+  status: number;
+}
+
+export interface PlaceResponse {
+  place: PlaceDetails | object;
+  ok: boolean;
+  message: string;
+  status: number;
+}
+
+export interface ReturnedPlace {
+  id: string;
+  name: string;
+  categories: Category[];
+  address: string;
+  lat?: number;
+  lon?: number;
+  distance: number;
+  images: Image[];
 }

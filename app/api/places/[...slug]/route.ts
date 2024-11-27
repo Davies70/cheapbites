@@ -1,13 +1,78 @@
-import { PlacesResponse } from '@/types/places';
-// import { data as dataFromDB } from '../../../../db';
 import {
-  getDataFromCache,
-  setDataToCache,
-  deleteDataFromCache,
-} from '@/app/api/cache';
+  PlacesResponse,
+  FoursquareSearchResponse,
+  Place,
+  RelatedPlace,
+} from '@/types/places';
+import { Image } from '@/types/images';
+import { PlaceWithImages, ReturnedPlace } from '@/types/places';
+import { getFromCache, saveToCache } from '@/lib/cacheUtils';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY || '';
+
+const fetchTrendingImages = async (id: string): Promise<Image[]> => {
+  try {
+    const imageParams = new URLSearchParams({
+      classifications: 'food,indoor',
+    }).toString();
+
+    const url = `https://api.foursquare.com/v3/places/${id}/photos?${imageParams}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.length > 0 ? data : [];
+    } else {
+      console.error('Image fetch failed:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching images:', error);
+  }
+  return [];
+};
+
+const mapPlacesToImages = async (
+  places: Place[]
+): Promise<PlaceWithImages[]> => {
+  return Promise.all(
+    places.map(async (place) => {
+      const images = await fetchTrendingImages(place.fsq_id);
+      return { place, images };
+    })
+  );
+};
+
+const fetchPlaces = async (
+  params: Record<string, string>
+): Promise<FoursquareSearchResponse | null> => {
+  const queryParams = new URLSearchParams(params).toString();
+  const url = `https://api.foursquare.com/v3/places/search?${queryParams}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error('Places fetch failed:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error fetching places:', error);
+  }
+  return null;
+};
 
 export async function GET(
   req: Request,
@@ -15,162 +80,86 @@ export async function GET(
 ) {
   const { slug } = params;
 
-  const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY;
-
-  let placesRes: PlacesResponse = {
-    ok: false,
-    status: 404,
-    message: 'Places not found',
-    places: [],
-    context: {},
-  };
-
-  switch (slug[0]) {
-    case 'search':
-      // placesRes = {
-      //   ok: true,
-      //   status: 200,
-      //   places: dataFromDB.results,
-      //   context: dataFromDB.context,
-      //   message: 'Places found',
-      // };
-
-      const searchParams = {
-        limit: '50',
-        categories: '13000',
-        ll: `${slug[1]},${slug[2]}`,
-      };
-
-      const params = new URLSearchParams(searchParams).toString();
-      const searchUrl = `https://api.foursquare.com/v3/places/search?${params}`;
-
-      const cacheKeyForSearch = `search-${slug[1]}-${slug[2]}`;
-
-      const cachedData = await getDataFromCache(cacheKeyForSearch, 'places');
-
-      if (cachedData) {
-        return new Response(JSON.stringify(cachedData), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } else {
-        try {
-          const response = await fetch(searchUrl, {
-            headers: {
-              Authorization: `${apiKey}`,
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            placesRes = {
-              ok: true,
-              status: 200,
-              places: data.results,
-              context: data.context,
-              message: 'Places fetched successfully',
-            };
-            await setDataToCache(cacheKeyForSearch, placesRes, 'places');
-          } else {
-            console.error('Foursquare API error:', response.statusText);
-            placesRes = {
-              ok: false,
-              status: response.status,
-              message: `Error: ${response.statusText}`,
-              context: {},
-              places: [],
-            };
-          }
-        } catch (error) {
-          console.error('Network error fetching places:', error);
-          placesRes = {
-            ok: false,
-            status: 500,
-            message: 'Failed to fetch places',
-            context: {},
-            places: [],
-          };
-        }
-      }
-
-      break;
-
-    case 'trending': {
-      // Define parameters for Foursquare API
-      const trendingParams = {
-        query: 'restaurant',
-        limit: '10',
-        sort: 'RATING', // Standard sort option
-        categories: '13000', // Category ID for Food & Dining,
-        ll: `${slug[1]},${slug[2]}`,
-      };
-
-      // Construct query parameters
-      const queryParams = new URLSearchParams(trendingParams).toString();
-      const url = `https://api.foursquare.com/v3/places/search?${queryParams}`;
-
-      // Check if the data is already cached
-      const cacheKeyForTrending = `trending-${slug[1]}-${slug[2]}`;
-
-      console.log('Cache key:', cacheKeyForTrending);
-      const cachedData = await getDataFromCache(cacheKeyForTrending, 'places');
-
-      if (cachedData) {
-        return new Response(JSON.stringify(cachedData), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-
-      try {
-        const response = await fetch(url, {
-          headers: {
-            Authorization: `${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          placesRes = {
-            ok: true,
-            status: 200,
-            places: data.results,
-            context: data.context,
-            message: 'Trending restaurants fetched successfully',
-          };
-          await setDataToCache(cacheKeyForTrending, placesRes, 'places');
-        } else {
-          console.error('Foursquare API error:', response.statusText);
-          placesRes = {
-            ok: false,
-            status: response.status,
-            message: `Error: ${response.statusText}`,
-            context: {},
-            places: [],
-          };
-        }
-      } catch (error) {
-        console.error('Network error fetching trending restaurants:', error);
-        placesRes = {
-          ok: false,
-          status: 500,
-          message: 'Failed to fetch trending restaurants',
-          context: {},
-          places: [],
-        };
-      }
-      break;
-    }
-
-    default:
-      placesRes.message = 'Invalid endpoint';
-      break;
+  if (slug.length < 3) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        status: 400,
+        message: 'Invalid parameters',
+        places: [],
+        context: {},
+      }),
+      { status: 400 }
+    );
   }
 
-  return new Response(JSON.stringify(placesRes), {
-    status: placesRes.status,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const lat = slug[1];
+  const lon = slug[2];
+  const isSearch = slug[0] === 'search';
+  const queryParams = {
+    ll: `${lat},${lon}`,
+    limit: '50',
+    categories: '13000', // Food & Dining
+    ...(isSearch ? {} : { query: 'restaurant', sort: 'RATING', limit: '10' }),
+  };
+
+  const cacheKey = isSearch ? `search_${lat}_${lon}` : `trending_${lat}_${lon}`;
+
+  const cachedData = await getFromCache(cacheKey, 'places');
+
+  if (cachedData) {
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        status: 200,
+        message: isSearch
+          ? 'Places fetched successfully'
+          : 'Trending restaurants fetched successfully',
+        places: cachedData,
+      }),
+      { status: 200 }
+    );
+  }
+
+  const placesData = await fetchPlaces(queryParams);
+
+  if (!placesData || placesData.results.length === 0) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        status: 404,
+        message: isSearch ? 'No places found' : 'No trending restaurants found',
+        places: [],
+      }),
+      { status: 404 }
+    );
+  }
+
+  const placesWithImages = await mapPlacesToImages(placesData.results);
+
+  const returnedPlaces: ReturnedPlace[] = placesWithImages.map(
+    ({ place, images }) => ({
+      id: place.fsq_id,
+      name: place.name,
+      categories: place.categories,
+      address: place.location.address || 'Unknown',
+      lat: place.geocodes.roof?.latitude,
+      lon: place.geocodes.roof?.longitude,
+      distance: place.distance,
+      images,
+    })
+  );
+
+  await saveToCache(cacheKey, returnedPlaces, 10, 'places');
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      status: 200,
+      message: isSearch
+        ? 'Places fetched successfully'
+        : 'Trending restaurants fetched successfully',
+      places: returnedPlaces,
+    }),
+    { status: 200 }
+  );
 }

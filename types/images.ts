@@ -7,7 +7,7 @@ export interface Image {
   height: number;
 }
 
-export interface ImageResponse {
+export interface ImagesResponse {
   ok: boolean;
   status: number;
   message: string;

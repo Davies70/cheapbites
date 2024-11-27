@@ -13,7 +13,7 @@ import {
 import { ChevronUp, ChevronDown, Loader } from 'lucide-react';
 import PlaceCard from '@/components/place-card';
 import { PlaceCardSkeleton } from '@/components/place-card-skelenton';
-import { Place, Coordinates } from '@/types/places';
+import { Coordinates, ReturnedPlace } from '@/types/places';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import dynamic from 'next/dynamic';
@@ -89,11 +89,11 @@ export default function DiscoveryMap() {
   });
   const [zoom, setZoom] = useState<number>(13);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [filteredPlaces, setFilteredPlaces] = useState<Place[]>([]);
+  const [filteredPlaces, setFilteredPlaces] = useState<ReturnedPlace[]>([]);
   const [likedPlaces, setLikedPlaces] = useState<Set<string>>(new Set());
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [moodFilter, setMoodFilter] = useState<string>('All');
-  const [places, setPlaces] = useState<Place[]>([]);
+  const [places, setPlaces] = useState<ReturnedPlace[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -105,6 +105,9 @@ export default function DiscoveryMap() {
       );
       if (!response.ok) throw new Error('Failed to fetch places data');
       const data = await response.json();
+      if (data.places.length === 0) {
+        setError('No places found near you.');
+      }
       setPlaces(data.places);
       setFilteredPlaces(data.places);
     } catch (error) {
@@ -159,7 +162,7 @@ export default function DiscoveryMap() {
     return [
       'All',
       ...new Set(
-        places?.flatMap((place) => place.categories.map((cat) => cat.name))
+        places?.flatMap((place) => place?.categories?.map((cat) => cat.name))
       ),
     ];
   }, [places]);
@@ -181,6 +184,17 @@ export default function DiscoveryMap() {
       return newSet;
     });
   }, []);
+
+  if (error) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Alert variant='destructive' className='w-96'>
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -242,7 +256,10 @@ export default function DiscoveryMap() {
               </label>
               <Slider
                 value={[distance]}
-                onValueChange={(value) => setDistance(value[0])}
+                onValueChange={(value) => {
+                  setDistance(value[0]);
+                  setZoom(13);
+                }}
                 max={20}
                 step={0.5}
                 min={1}
@@ -288,27 +305,24 @@ export default function DiscoveryMap() {
               ))
             : filteredPlaces.map((place) => (
                 <PlaceCard
-                  key={place.fsq_id}
+                  key={place.id}
                   name={place.name}
                   icon={
                     place.categories[0].icon.prefix +
                     'bg_64' +
                     place.categories[0].icon.suffix
                   }
-                  category={place.categories[0].name}
+                  category={place.categories[0]?.name || 'Unknown Category'}
                   distance={place.distance}
                   onFocus={() =>
-                    focusOnPlace(
-                      place.geocodes.main.latitude,
-                      place.geocodes.main.longitude
-                    )
+                    place.lat && place.lon && focusOnPlace(place.lat, place.lon)
                   }
-                  isLiked={likedPlaces.has(place.fsq_id)}
-                  onLike={(e) => toggleLike(place.fsq_id, e)}
+                  isLiked={likedPlaces.has(place.id)}
+                  onLike={(e) => toggleLike(place.id, e)}
                   mood={assignMood(place.categories)}
                   goToPage={(e) => {
                     e.stopPropagation();
-                    router.push(`/places/${place.fsq_id}`);
+                    router.push(`/places/${place.id}`);
                   }}
                 />
               ))}

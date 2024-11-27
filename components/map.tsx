@@ -12,15 +12,16 @@ import {
 } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Place, Coordinates } from '@/types/places';
+import { ReturnedPlace, Coordinates, Place } from '@/types/places';
 import { ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Image as ImageType } from '@/types/images';
 
 interface MapProps {
   center: Coordinates;
   zoom: number;
-  places: Place[];
+  places: ReturnedPlace[];
   distance: number;
   onPlaceClick: (placeId: string) => void;
 }
@@ -43,9 +44,11 @@ const customIcon = new Icon({
 const CustomPopup = ({
   place,
   onPlaceClick,
+  image,
 }: {
-  place: Place;
+  place: ReturnedPlace;
   onPlaceClick: (placeId: string) => void;
+  image: ImageType;
 }) => (
   <div className='w-64 p-2'>
     <div className='flex items-center justify-between mb-2'>
@@ -54,16 +57,18 @@ const CustomPopup = ({
     <div className='mb-2 h-32 relative rounded-md overflow-hidden'>
       <Image
         src={
-          place.categories[0].icon.prefix +
-          'bg_64' +
-          place.categories[0].icon.suffix
+          image?.prefix
+            ? `${image.prefix}300x200${image.suffix}`
+            : '/placeholder-place.png'
         }
         alt={place.name}
         layout='fill'
         objectFit='cover'
+        placeholder='blur'
+        blurDataURL='/placeholder-place.png'
       />
     </div>
-    <p className='text-sm mb-2'>{place.location.formatted_address}</p>
+    <p className='text-sm mb-2'>{place.address}</p>
     <div className='flex items-center justify-between'>
       <p className='text-xs text-gray-600'>
         {place.categories.map((cat) => cat.name).join(', ')}
@@ -72,7 +77,7 @@ const CustomPopup = ({
         variant='outline'
         size='sm'
         className='text-xs'
-        onClick={() => onPlaceClick(place.fsq_id)}
+        onClick={() => onPlaceClick(place.id)}
       >
         <ExternalLink className='w-3 h-3 mr-1' />
         View Details
@@ -101,15 +106,16 @@ export default function Map({
       />
       {places.map((place) => (
         <Marker
-          key={place.fsq_id}
-          position={[
-            place.geocodes.main.latitude,
-            place.geocodes.main.longitude,
-          ]}
+          key={place.id}
+          position={[place.lat ?? 0, place.lon ?? 0]}
           icon={customIcon}
         >
           <Popup>
-            <CustomPopup place={place} onPlaceClick={onPlaceClick} />
+            <CustomPopup
+              place={place}
+              image={place.images[0]}
+              onPlaceClick={onPlaceClick}
+            />
           </Popup>
         </Marker>
       ))}

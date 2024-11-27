@@ -16,6 +16,22 @@ export async function GET() {
     const response = await fetch(
       `https://api.geoapify.com/v1/ipinfo?apiKey=${apiKey}`
     );
+
+    // Check if response is valid
+    if (!response.ok) {
+      return new Response(
+        JSON.stringify({
+          ok: false,
+          status: response.status,
+          message: 'Failed to fetch data from Geoapify',
+        }),
+        {
+          status: response.status,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const { location } = await response.json();
 
     return new Response(JSON.stringify(location), {
