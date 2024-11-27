@@ -17,6 +17,7 @@ import { Coordinates, ReturnedPlace } from '@/types/places';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import dynamic from 'next/dynamic';
+import getClientLocation from '@/helpers/get-client-location';
 
 // Dynamically import the Map component with no SSR
 const Map = dynamic(() => import('@/components/map'), {
@@ -121,9 +122,7 @@ export default function DiscoveryMap() {
   useEffect(() => {
     const getUserLocation = async () => {
       try {
-        const response = await fetch('/api/geolocation');
-        if (!response.ok) throw new Error('Failed to fetch user location');
-        const location = await response.json();
+        const location = await getClientLocation();
         setCenter({
           latitude: location.latitude,
           longitude: location.longitude,

@@ -6,6 +6,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import TrendingPlaceCard from '@/components/trending-place-card';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import getClientLocation from '@/helpers/get-client-location';
 
 const TrendingPlaces = () => {
   const [trendingPlaces, setTrendingPlaces] = useState<ReturnedPlace[]>([]);
@@ -19,8 +20,8 @@ const TrendingPlaces = () => {
   useEffect(() => {
     const fetchLocationAndTrendingPlaces = async () => {
       try {
-        const resLocation = await fetch('/api/geolocation');
-        const { latitude, longitude } = await resLocation.json();
+        const resLocation = await getClientLocation();
+        const { latitude, longitude } = resLocation;
         setUserLocation({ lat: latitude, lon: longitude });
 
         const resPlaces = await fetch(
