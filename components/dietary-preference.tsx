@@ -4,8 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const DietaryPreference = () => {
+interface DietaryPreferenceProps {
+  onPreferencesSubmit: (preferences: string[]) => void;
+}
+
+const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
+
   const handleDietaryRestriction = (value: string) => {
     setDietaryRestrictions(
       dietaryRestrictions.includes(value)
@@ -13,6 +18,11 @@ const DietaryPreference = () => {
         : [...dietaryRestrictions, value]
     );
   };
+
+  const handleSubmit = () => {
+    onPreferencesSubmit(dietaryRestrictions);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -20,7 +30,7 @@ const DietaryPreference = () => {
       </CardHeader>
       <CardContent>
         <p className='mb-4'>Select any dietary restrictions or preferences:</p>
-        <div className='flex flex-wrap gap-2'>
+        <div className='flex flex-wrap gap-2 mb-4'>
           {['Vegan', 'Vegetarian', 'Gluten-Free', 'Halal', 'Kosher'].map(
             (restriction) => (
               <Button
@@ -37,6 +47,9 @@ const DietaryPreference = () => {
             )
           )}
         </div>
+        <Button onClick={handleSubmit} className='w-full'>
+          Submit Preferences
+        </Button>
       </CardContent>
     </Card>
   );

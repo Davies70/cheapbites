@@ -1,31 +1,27 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Place, ReturnedPlace } from '@/types/places';
+import { ReturnedPlace } from '@/types/places';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import TrendingPlaceCard from '@/components/trending-place-card';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import getClientLocation from '@/helpers/get-client-location';
 
-const TrendingPlaces = () => {
+interface TrendingPlacesProps {
+  userLocation: { lat: number; lon: number };
+}
+
+const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
   const [trendingPlaces, setTrendingPlaces] = useState<ReturnedPlace[]>([]);
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLocationAndTrendingPlaces = async () => {
       try {
-        const resLocation = await getClientLocation();
-        const { latitude, longitude } = resLocation;
-        setUserLocation({ lat: latitude, lon: longitude });
-
         const resPlaces = await fetch(
-          `/api/places/trending/${latitude}/${longitude}`
+          `/api/places/trending/${userLocation?.lat}/${userLocation?.lon}`
         );
         const data = await resPlaces.json();
         if (data.places.length === 0) setError('No trending places found');
@@ -39,7 +35,7 @@ const TrendingPlaces = () => {
     };
 
     fetchLocationAndTrendingPlaces();
-  }, []);
+  }, [userLocation]);
 
   if (error) {
     return (

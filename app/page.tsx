@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,8 +14,12 @@ import { Utensils, Clock, TrendingUp, Users, Search } from 'lucide-react';
 import Image from 'next/image';
 import FoodQuiz from '@/components/food-quiz';
 import DietaryPreference from '@/components/dietary-preference';
+import Recommendations from '@/components/recommendations';
 import TrendingPlaces from '@/components/trending-places';
 import Nav from '@/components/nav';
+import getClientLocation from '@/helpers/get-client-location';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 // Mock data for featured collections
 const featuredCollections = [
@@ -24,6 +29,44 @@ const featuredCollections = [
 ];
 
 export default function HomePage() {
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
+  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
+  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lon: number;
+  }>({ lat: 0, lon: 0 });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLocation = async () => {
+      try {
+        const resLocation = await getClientLocation();
+        const { latitude, longitude } = resLocation;
+        setUserLocation({ lat: latitude, lon: longitude });
+      } catch (error) {
+        setError('Failed to fetch location');
+        console.error('Error fetching location:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLocation();
+  }, []);
+
+  const onQuizComplete = (answers: string[]) => {
+    setQuizAnswers(answers);
+    setQuizCompleted(true);
+  };
+
+  const handleDietaryPreferencesSubmit = (preferences: string[]) => {
+    setDietaryPreferences(preferences);
+    setShowRecommendations(true);
+  };
+
   const hour = new Date().getHours();
   let greeting = '';
   if (hour < 12) {
@@ -32,6 +75,24 @@ export default function HomePage() {
     greeting = 'Good afternoon';
   } else {
     greeting = 'Good evening';
+  }
+
+  if (error) {
+    return (
+      <Alert variant='destructive' className='mt-12'>
+        <AlertCircle className='h-4 w-4' />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />
+      </div>
+    );
   }
 
   return (
@@ -71,11 +132,25 @@ export default function HomePage() {
         </div>
 
         <div className='max-w-6xl mx-auto px-4'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8'>
-            <FoodQuiz />
-            <DietaryPreference />
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 justify-center items-center'>
+            {!quizCompleted && <FoodQuiz onQuizComplete={onQuizComplete} />}
+            {quizCompleted && !showRecommendations && (
+              <DietaryPreference
+                onPreferencesSubmit={handleDietaryPreferencesSubmit}
+              />
+            )}
           </div>
-          <TrendingPlaces />
+
+          {showRecommendations && (
+            <Recommendations
+              quizAnswers={quizAnswers}
+              dietaryPreferences={dietaryPreferences}
+              userLocation={userLocation}
+            />
+          )}
+
+          <TrendingPlaces userLocation={userLocation} />
+
           <div className='mt-8 md:mt-12'>
             <h2 className='text-xl md:text-2xl font-semibold mb-4'>
               Featured Collections

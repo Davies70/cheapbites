@@ -23,7 +23,6 @@ interface TrendingPlaceCardProps {
 export default function TrendingPlaceCard({
   name,
   category,
-  priceForTwo = 0,
   address,
   id,
   rating,
@@ -45,6 +44,13 @@ export default function TrendingPlaceCard({
 
   const imageToUse =
     prefix && suffix ? `${prefix}300x200${suffix}` : '/placeholder-place.png';
+
+  const meterOrKm = (distance: number) => {
+    if (distance < 1000) {
+      return `${distance}m`;
+    }
+    return `${(distance / 1000).toFixed(1)}km`;
+  };
 
   return (
     <Link href={`/places/${id}`} passHref>
@@ -90,15 +96,13 @@ export default function TrendingPlaceCard({
           </button>
         </CardContent>
         <CardFooter className='p-3 sm:p-4 pt-0 flex justify-between items-center text-xs sm:text-sm border-t'>
-          <div className='flex items-center text-gray-600'>
-            <DollarSign className='w-3 h-3 sm:w-4 sm:h-4 mr-1' />
-            <span>{priceForTwo} for two</span>
-          </div>
           {reviewCount && (
             <div className='text-gray-500 text-xs'>{reviewCount} reviews</div>
           )}
           {distance && (
-            <div className='text-gray-500 text-xs'>{distance}m away</div>
+            <div className='text-gray-500 text-xs'>
+              {meterOrKm(distance)} away
+            </div>
           )}
         </CardFooter>
       </Card>
