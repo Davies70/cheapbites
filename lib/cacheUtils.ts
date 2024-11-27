@@ -28,7 +28,7 @@ async function saveToCache(
     if (error instanceof mongoose.Error) {
       throw new Error('Mongoose error');
     }
-    throw new Error('Error saving to cache', error);
+    throw new Error(`Error saving to cache: ${error}`);
   }
 }
 
@@ -66,7 +66,7 @@ async function getFromCache(key: string, cacheType: 'places' | 'place') {
     if (error instanceof mongoose.Error) {
       throw new Error('Mongoose error');
     }
-    throw new Error('Error getting from cache', error);
+    throw new Error(`Error getting from cache: ${error}`);
   }
 }
 
