@@ -61,7 +61,7 @@ const AttributeBadge = ({ value }: { value: string }) => {
   if (value === 'yes')
     return (
       <Badge variant='default'>
-        <Check className='w-3 h-3 mr-1' /> Yes
+        <Check className='w-3 h-3 mr-1 ' /> Yes
       </Badge>
     );
   if (value === 'no')
@@ -75,15 +75,18 @@ const AttributeBadge = ({ value }: { value: string }) => {
 
 const Attributes = ({ attributes }: AttributesProps) => {
   return (
-    <Card className='mt-6'>
+    <Card className='mt-6 p-4 md:p-6'>
       <CardHeader>
-        <CardTitle className='text-lg'>Attributes</CardTitle>
+        <CardTitle className='text-lg md:text-xl'>Attributes</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className='grid grid-cols-2 gap-4'>
+        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           {Object.entries(attributes).map(([key, value]) => (
-            <div key={key} className='flex items-center justify-between'>
-              <span className='text-sm capitalize'>
+            <div
+              key={key}
+              className='flex items-center justify-between gap-2 md:gap-1'
+            >
+              <span className='text-sm md:text-base capitalize'>
                 {key.replace(/_/g, ' ')}
               </span>
               <AttributeBadge value={value} />

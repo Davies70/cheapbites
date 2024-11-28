@@ -1,34 +1,42 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Utensils, Leaf, FlameIcon as Fire, Globe, Star } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { ReturnedPlace } from '@/types/places';
+import TrendingPlaceCard from './trending-place-card';
 
 interface RecommendationsProps {
   quizAnswers: string[];
   dietaryPreferences: string[];
   userLocation: { lat: number; lon: number };
+  onChangePreferences: () => void;
 }
 
 const Recommendations = ({
   quizAnswers,
   dietaryPreferences,
   userLocation,
+  onChangePreferences,
 }: RecommendationsProps) => {
-  const [activeTab, setActiveTab] = useState('restaurants');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [recommendations, setRecommendations] = useState<ReturnedPlace[]>([]);
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        // Simulate loading
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const res = await fetch(
+          `api/recommendations/${userLocation.lat}/${
+            userLocation.lon
+          }/${quizAnswers[0].toLowerCase()}/${dietaryPreferences
+            .join(',')
+            .toLowerCase()
+            .replace('-', '')}`
+        );
+        const data = await res.json();
+        setRecommendations(data.places);
       } catch (error) {
         console.error('Error fetching recommendations:', error);
         setError('Failed to fetch recommendations');
@@ -38,44 +46,7 @@ const Recommendations = ({
     };
 
     fetchRecommendations();
-  }, []);
-
-  // Helper function to get icon based on cuisine type
-  const getCuisineIcon = (cuisine: string) => {
-    switch (cuisine.toLowerCase()) {
-      case 'italian':
-        return '🍝';
-      case 'asian':
-        return '🍜';
-      case 'mexican':
-        return '🌮';
-      case 'american':
-        return '🍔';
-      default:
-        return '🍴';
-    }
-  };
-
-  // Mock data for recommendations
-  const restaurantRecommendations = [
-    { name: 'Spice Haven', cuisine: 'Indian', rating: 4.5, price: '$$' },
-    { name: 'Pasta Paradise', cuisine: 'Italian', rating: 4.7, price: '$$$' },
-    { name: 'Green Leaf', cuisine: 'Vegan', rating: 4.3, price: '$$' },
-    { name: 'Taco Town', cuisine: 'Mexican', rating: 4.6, price: '$' },
-    { name: 'Sushi Sensation', cuisine: 'Japanese', rating: 4.8, price: '$$$' },
-  ];
-
-  const dishRecommendations = [
-    { name: 'Spicy Tofu Stir-Fry', cuisine: 'Asian', spiceLevel: 'Medium' },
-    { name: 'Vegetarian Lasagna', cuisine: 'Italian', spiceLevel: 'Mild' },
-    { name: 'Chickpea Curry', cuisine: 'Indian', spiceLevel: 'Spicy' },
-    {
-      name: 'Grilled Portobello Burger',
-      cuisine: 'American',
-      spiceLevel: 'Mild',
-    },
-    { name: 'Vegetable Fajitas', cuisine: 'Mexican', spiceLevel: 'Medium' },
-  ];
+  }, [userLocation, quizAnswers, dietaryPreferences]);
 
   if (error) {
     return (
@@ -87,87 +58,43 @@ const Recommendations = ({
     );
   }
 
-  if (isLoading) {
+  if (isLoading || recommendations.length === 0) {
     return (
       <div className='mt-12 flex items-center justify-center'>
         <Loader2 className='h-8 w-8 animate-spin text-primary' />
         <span className='ml-2 text-lg font-medium'>
-          Loading places based on your preference...
+          Loading places based on your preferences...
         </span>
       </div>
     );
   }
 
   return (
-    <Card className='w-full max-w-3xl mx-auto'>
-      <CardHeader>
-        <CardTitle className='text-2xl font-bold'>
-          Your Personalized Recommendations
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
-          <TabsList className='grid w-full grid-cols-2'>
-            <TabsTrigger value='restaurants'>
-              <Utensils className='w-4 h-4 mr-2' />
-              Restaurants
-            </TabsTrigger>
-            <TabsTrigger value='dishes'>
-              <Leaf className='w-4 h-4 mr-2' />
-              Dishes
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value='restaurants'>
-            <ScrollArea className='h-[300px] w-full rounded-md border p-4'>
-              {restaurantRecommendations.map((restaurant, index) => (
-                <div key={index} className='mb-4 p-4 border rounded-lg'>
-                  <div className='flex justify-between items-center'>
-                    <h3 className='text-lg font-semibold'>{restaurant.name}</h3>
-                    <span className='text-sm text-muted-foreground'>
-                      {restaurant.price}
-                    </span>
-                  </div>
-                  <p className='text-sm text-muted-foreground'>
-                    {getCuisineIcon(restaurant.cuisine)} {restaurant.cuisine}
-                  </p>
-                  <div className='flex items-center mt-2'>
-                    <Star className='w-4 h-4 text-yellow-400 fill-current' />
-                    <span className='ml-1 text-sm'>{restaurant.rating}</span>
-                  </div>
-                </div>
-              ))}
-            </ScrollArea>
-          </TabsContent>
-          <TabsContent value='dishes'>
-            <ScrollArea className='h-[300px] w-full rounded-md border p-4'>
-              {dishRecommendations.map((dish, index) => (
-                <div key={index} className='mb-4 p-4 border rounded-lg'>
-                  <h3 className='text-lg font-semibold'>{dish.name}</h3>
-                  <p className='text-sm text-muted-foreground'>
-                    {getCuisineIcon(dish.cuisine)} {dish.cuisine}
-                  </p>
-                  <div className='flex items-center mt-2'>
-                    <Fire className='w-4 h-4 text-red-500' />
-                    <span className='ml-1 text-sm'>{dish.spiceLevel}</span>
-                  </div>
-                </div>
-              ))}
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
-        <div className='mt-6 flex justify-between items-center'>
-          <p className='text-sm text-muted-foreground'>
-            Based on your preferences: {quizAnswers.join(', ')}
-            <br />
-            Dietary restrictions: {dietaryPreferences.join(', ')}
-          </p>
-          <Button variant='outline'>
-            <Globe className='w-4 h-4 mr-2' />
-            Explore More
-          </Button>
+    <div className='mt-12'>
+      <h2 className='text-2xl font-semibold mb-4'>Based on your preferences</h2>
+      <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
+        <div className='flex w-max space-x-4 p-4'>
+          {recommendations.map((place) => (
+            <TrendingPlaceCard
+              key={place.id}
+              name={place.name}
+              category={place.categories[0].name}
+              priceForTwo={0}
+              address={place.address}
+              id={place.id}
+              latitude={place.lat}
+              longitude={place.lon}
+              distance={place.distance}
+              images={place.images}
+            />
+          ))}
         </div>
-      </CardContent>
-    </Card>
+        <ScrollBar
+          orientation='horizontal'
+          className='custom-scrollbar-thumb'
+        />
+      </ScrollArea>
+    </div>
   );
 };
 

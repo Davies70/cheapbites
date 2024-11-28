@@ -57,7 +57,7 @@ export default function HomePage() {
     fetchLocation();
   }, []);
 
-  const onQuizComplete = (answers: string[]) => {
+  const handleQuizComplete = (answers: string[]) => {
     setQuizAnswers(answers);
     setQuizCompleted(true);
   };
@@ -65,6 +65,11 @@ export default function HomePage() {
   const handleDietaryPreferencesSubmit = (preferences: string[]) => {
     setDietaryPreferences(preferences);
     setShowRecommendations(true);
+  };
+
+  const handleChangePreferences = () => {
+    setQuizCompleted(false);
+    setShowRecommendations(false);
   };
 
   const hour = new Date().getHours();
@@ -98,8 +103,8 @@ export default function HomePage() {
   return (
     <>
       <Nav />
-      <div className='space-y-6 md:space-y-8'>
-        <div className='relative h-[40vh] md:h-[50vh] bg-gradient-to-r from-primary to-primary-foreground flex items-center justify-center text-white '>
+      <div className='min-h-screen bg-gray-50'>
+        <div className='relative h-[40vh] md:h-[50vh] bg-gradient-to-r from-primary to-primary-foreground flex items-center justify-center text-white'>
           <div className='absolute inset-0'>
             <Image
               src='/food-spread.jpg'
@@ -131,45 +136,54 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className='max-w-6xl mx-auto px-4'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 justify-center items-center'>
-            {!quizCompleted && <FoodQuiz onQuizComplete={onQuizComplete} />}
-            {quizCompleted && !showRecommendations && (
-              <DietaryPreference
-                onPreferencesSubmit={handleDietaryPreferencesSubmit}
-              />
-            )}
+        <div className='max-w-4xl mx-auto px-4 py-8'>
+          <div className='flex justify-center'>
+            <div className='w-full max-w-md'>
+              {!showRecommendations ? (
+                <>
+                  {!quizCompleted && (
+                    <FoodQuiz onQuizComplete={handleQuizComplete} />
+                  )}
+                  {quizCompleted && (
+                    <DietaryPreference
+                      onPreferencesSubmit={handleDietaryPreferencesSubmit}
+                    />
+                  )}
+                </>
+              ) : null}
+            </div>
           </div>
 
           {showRecommendations && (
             <Recommendations
               quizAnswers={quizAnswers}
-              dietaryPreferences={dietaryPreferences}
               userLocation={userLocation}
+              dietaryPreferences={dietaryPreferences}
+              onChangePreferences={handleChangePreferences}
             />
           )}
 
           <TrendingPlaces userLocation={userLocation} />
 
-          <div className='mt-8 md:mt-12'>
-            <h2 className='text-xl md:text-2xl font-semibold mb-4'>
+          <div className='mt-16'>
+            <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center'>
               Featured Collections
             </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
               {featuredCollections.map((collection) => (
-                <Card key={collection.id} className='overflow-hidden'>
+                <Card key={collection.id} className='overflow-hidden shadow-lg'>
                   <Image
                     src={collection.image}
                     alt={collection.name}
-                    className='w-full h-32 md:h-40 object-cover'
+                    className='w-full h-48 object-cover'
                     height={400}
                     width={300}
                   />
                   <CardContent className='p-4'>
-                    <h3 className='font-semibold text-base md:text-lg'>
+                    <h3 className='font-semibold text-lg mb-2'>
                       {collection.name}
                     </h3>
-                    <Button asChild className='mt-2 text-sm md:text-base'>
+                    <Button asChild className='w-full'>
                       <Link href={`/collection/${collection.id}`}>Explore</Link>
                     </Button>
                   </CardContent>
@@ -178,11 +192,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className='mt-8 md:mt-12'>
-            <h2 className='text-xl md:text-2xl font-semibold mb-4'>
+          <div className='mt-16'>
+            <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center'>
               Explore CheapBites Features
             </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
               {[
                 {
                   title: 'Time Machine',
@@ -213,20 +227,20 @@ export default function HomePage() {
                   link: '/social-dining',
                 },
               ].map((feature, index) => (
-                <Card key={index}>
+                <Card key={index} className='shadow-md'>
                   <CardHeader>
-                    <CardTitle className='flex items-center text-base md:text-lg'>
-                      <feature.icon className='mr-2 h-4 w-4 md:h-5 md:w-5' />{' '}
+                    <CardTitle className='flex items-center text-lg'>
+                      <feature.icon className='mr-2 h-5 w-5' />
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className='text-sm md:text-base'>
+                    <p className='text-sm text-gray-600'>
                       {feature.description}
                     </p>
                   </CardContent>
                   <CardFooter>
-                    <Button asChild className='w-full text-sm md:text-base'>
+                    <Button asChild className='w-full'>
                       <Link href={feature.link}>Explore</Link>
                     </Button>
                   </CardFooter>

@@ -1,9 +1,4 @@
-import {
-  PlacesResponse,
-  FoursquareSearchResponse,
-  Place,
-  RelatedPlace,
-} from '@/types/places';
+import { FoursquareSearchResponse, Place } from '@/types/places';
 import { Image } from '@/types/images';
 import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { getFromCache, saveToCache } from '@/lib/cacheUtils';
@@ -21,16 +16,20 @@ const cuisineCategoryMap: Record<string, string> = {
   african: '13067', // African Restaurant
   kosher: '13287', // Kosher Restaurant
   glutenfree: '13390',
+  halal: '13191', // Halal Restaurant
   default: '13000', // General Food & Dining
 };
 
-// Dietary preference filters
-const dietaryPreferenceFilters: Record<string, string[]> = {
-  Vegan: ['Vegan Restaurant', 'Vegetarian Restaurant'],
-  Vegetarian: ['Vegetarian Restaurant'],
-  'Gluten-Free': ['Gluten-Free Options'],
-  Halal: ['Halal Restaurant'],
-  Kosher: ['Kosher Restaurant'],
+const getCategoryIds = (
+  quizAnwser: string,
+  dietaryPreferences: string
+): string => {
+  const quizId = cuisineCategoryMap[quizAnwser];
+  const dietaryId = Object.keys(cuisineCategoryMap)
+    .filter((key) => dietaryPreferences.includes(key))
+    .map((key) => cuisineCategoryMap[key])
+    .join(',');
+  return `${quizId},${dietaryId}`;
 };
 
 const fetchTrendingImages = async (id: string): Promise<Image[]> => {
@@ -89,7 +88,10 @@ const fetchPlaces = async (
       const data = await response.json();
       return data;
     } else {
-      console.error('Places fetch failed:', response.statusText);
+      console.error(
+        'Error fetching recommendations fetch failed:',
+        response.statusText
+      );
     }
   } catch (error) {
     console.error('Error fetching places:', error);
@@ -113,20 +115,28 @@ export async function GET(
     );
   }
 
-  const cuisine = params.slug[0].toLowerCase();
-  const lat = params.slug[1];
-  const lon = params.slug[2];
-  const dietaryPreferences = params.slug.slice(3);
+  const lat = params.slug[0];
+  const lon = params.slug[1];
+  const quizAnwerFromUser = params.slug[2] || '13000';
+  const dietaryPreferencesFromUser = params.slug[3] || '';
+
+  const catIds = getCategoryIds(quizAnwerFromUser, dietaryPreferencesFromUser);
+
+  console.log('catIds:', catIds);
 
   const queryParams = {
     ll: `${lat},${lon}`,
     limit: '10',
-    categories: cuisineCategoryMap[cuisine] || cuisineCategoryMap['default'],
+    categories: catIds,
     query: 'restaurant',
     sort: 'RATING',
+    radius: '100000',
   };
 
-  const cacheKey = `${cuisine}_${lat}_${lon}_${dietaryPreferences.join('_')}`;
+  const quizCode =
+    quizAnwerFromUser.charAt(0).toUpperCase() + quizAnwerFromUser.slice(1);
+
+  const cacheKey = `${catIds}_${lat}_${lon}`;
 
   const cachedData = await getFromCache(cacheKey, 'places');
 
@@ -135,9 +145,7 @@ export async function GET(
       JSON.stringify({
         ok: true,
         status: 200,
-        message: `${
-          cuisine.charAt(0).toUpperCase() + cuisine.slice(1)
-        } restaurants fetched successfully`,
+        message: `${quizCode} places fetched successfully`,
         places: cachedData,
       }),
       { status: 200 }
@@ -151,33 +159,14 @@ export async function GET(
       JSON.stringify({
         ok: false,
         status: 404,
-        message: `No ${cuisine} restaurants found`,
+        message: `No ${quizCode} places found`,
         places: [],
       }),
       { status: 404 }
     );
   }
 
-  // Filter places based on dietary preferences
-  let filteredPlaces = placesData.results;
-  if (dietaryPreferences.length > 0) {
-    filteredPlaces = placesData.results.filter((place) =>
-      dietaryPreferences.every((pref) =>
-        place.categories.some((cat) =>
-          dietaryPreferenceFilters[pref]?.some((filter) =>
-            cat.name.toLowerCase().includes(filter.toLowerCase())
-          )
-        )
-      )
-    );
-
-    // If no places match all dietary preferences, return original results
-    if (filteredPlaces.length === 0) {
-      filteredPlaces = placesData.results;
-    }
-  }
-
-  const placesWithImages = await mapPlacesToImages(filteredPlaces);
+  const placesWithImages = await mapPlacesToImages(placesData.results);
 
   const returnedPlaces: ReturnedPlace[] = placesWithImages.map(
     ({ place, images }) => ({
@@ -197,9 +186,7 @@ export async function GET(
     JSON.stringify({
       ok: true,
       status: 200,
-      message: `${
-        cuisine.charAt(0).toUpperCase() + cuisine.slice(1)
-      } restaurants fetched successfully`,
+      message: `${quizCode} restaurants fetched successfully`,
       places: returnedPlaces,
     }),
     { status: 200 }
