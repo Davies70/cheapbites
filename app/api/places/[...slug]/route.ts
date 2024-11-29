@@ -95,15 +95,18 @@ export async function GET(
 
   const lat = slug[1];
   const lon = slug[2];
+  const catId = slug[3] ?? '';
   const isSearch = slug[0] === 'search';
   const queryParams = {
     ll: `${lat},${lon}`,
     limit: '50',
-    categories: '13000', // Food & Dining
+    categories: catId, // Food & Dining
     ...(isSearch ? {} : { query: 'restaurant', sort: 'RATING', limit: '10' }),
   };
 
-  const cacheKey = isSearch ? `search_${lat}_${lon}` : `trending_${lat}_${lon}`;
+  const cacheKey = isSearch
+    ? `search_${catId}_${lat}_${lon}`
+    : `trending_${lat}_${lon}`;
 
   const cachedData = await getFromCache(cacheKey, 'places');
 

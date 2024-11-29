@@ -130,7 +130,6 @@ export async function GET(
     categories: catIds,
     query: 'restaurant',
     sort: 'RATING',
-    radius: '100000',
   };
 
   const quizCode =

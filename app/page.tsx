@@ -23,9 +23,9 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 // Mock data for featured collections
 const featuredCollections = [
-  { id: 1, name: 'Best Thai this week', image: '/thai-food.jpg' },
-  { id: 2, name: 'Hidden Gems', image: '/hidden-gem.jpg' },
-  { id: 3, name: 'Top-rated Italian', image: '/italian.jpg' },
+  { id: 13352, name: 'Best Thai this week', image: '/thai-food.jpg' },
+  { id: 13030, name: 'Hidden Gems', image: '/hidden-gem.jpg' },
+  { id: 13236, name: 'Top-rated Italian', image: '/italian.jpg' },
 ];
 
 export default function HomePage() {
@@ -155,12 +155,19 @@ export default function HomePage() {
           </div>
 
           {showRecommendations && (
-            <Recommendations
-              quizAnswers={quizAnswers}
-              userLocation={userLocation}
-              dietaryPreferences={dietaryPreferences}
-              onChangePreferences={handleChangePreferences}
-            />
+            <>
+              <Recommendations
+                quizAnswers={quizAnswers}
+                userLocation={userLocation}
+                dietaryPreferences={dietaryPreferences}
+                onChangePreferences={handleChangePreferences}
+              />
+              <div className='mt-4 flex justify-center'>
+                <Button onClick={handleChangePreferences} variant='outline'>
+                  Change Preferences
+                </Button>
+              </div>
+            </>
           )}
 
           <TrendingPlaces userLocation={userLocation} />
@@ -184,7 +191,7 @@ export default function HomePage() {
                       {collection.name}
                     </h3>
                     <Button asChild className='w-full'>
-                      <Link href={`/collection/${collection.id}`}>Explore</Link>
+                      <Link href={`/explore/${collection.id}`}>Explore</Link>
                     </Button>
                   </CardContent>
                 </Card>

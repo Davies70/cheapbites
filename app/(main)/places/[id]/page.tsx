@@ -174,11 +174,18 @@ export default function Place() {
 
   const openMap = () => {
     if (placeData?.geocodes?.main) {
-      const { latitude, longitude } = placeData.geocodes.roof;
-      window.open(
-        `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-        '_blank'
-      );
+      const { latitude, longitude } = placeData.geocodes.main;
+      if (latitude && longitude) {
+        window.open(
+          `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
+          '_blank'
+        );
+      } else {
+        window.open(
+          `https://www.google.com/maps/search/?api=1&query=${placeData.name},${placeData.location.formatted_address}`,
+          '_blank'
+        );
+      }
     }
   };
 
