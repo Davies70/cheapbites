@@ -3,7 +3,7 @@ import { Image } from '@/types/images';
 import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { createRecommendations } from '@/lib/user';
 
-const apiKey = process.env.UBLIC_FOURSQUARE_API_KEY || '';
+const apiKey = process.env.FOURSQUARE_API_KEY || '';
 
 // Cuisine category mappings
 const cuisineCategoryMap: Record<string, string> = {
