@@ -1,7 +1,6 @@
 import { FoursquareSearchResponse, Place } from '@/types/places';
 import { Image } from '@/types/images';
 import { PlaceWithImages, ReturnedPlace } from '@/types/places';
-import { getFromCache, saveToCache } from '@/lib/cacheUtils';
 import { createRecommendations } from '@/lib/user';
 
 const apiKey = process.env.UBLIC_FOURSQUARE_API_KEY || '';
@@ -105,8 +104,21 @@ const fetchPlaces = async (
 
 export async function GET(
   req: Request,
+
   { params }: { params: { slug: string[] } }
 ) {
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        status: 500,
+        message: 'API Key is missing',
+        places: [],
+      }),
+      { status: 500 }
+    );
+  }
+
   if (params.slug.length < 3) {
     return new Response(
       JSON.stringify({

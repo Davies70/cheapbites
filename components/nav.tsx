@@ -70,7 +70,7 @@ const Nav = () => {
     <nav className='bg-primary text-primary-foreground sticky top-0 z-50 shadow-md backdrop-blur-lg'>
       <div className='container mx-auto px-4 py-3 flex justify-between items-center'>
         <Link
-          href='/'
+          href='/home'
           className='text-xl font-bold flex items-center hover:text-primary-foreground/80 transition-colors'
         >
           CheapBites
