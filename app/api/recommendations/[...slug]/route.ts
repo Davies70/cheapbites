@@ -20,6 +20,7 @@ const cuisineCategoryMap: Record<string, string> = {
   halal: '13191', // Halal Restaurant
   french: '13148',
   japanese: '13263', // Japanese Restaurant
+  chinese: '13099', // Chinese Restaurant
   default: '13000', // General Food & Dining
 };
 
@@ -27,7 +28,7 @@ const getCategoryIds = (
   quizAnwser: string,
   dietaryPreferences: string
 ): string => {
-  const quizId = cuisineCategoryMap[quizAnwser];
+  const quizId = cuisineCategoryMap[quizAnwser] || cuisineCategoryMap.default;
   const dietaryId = Object.keys(cuisineCategoryMap)
     .filter((key) => dietaryPreferences.includes(key))
     .map((key) => cuisineCategoryMap[key])
