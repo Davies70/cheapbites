@@ -60,22 +60,25 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
 
   return (
     <div className='mt-12'>
-      <h2 className='text-2xl font-semibold mb-4'>Trending Places</h2>
+      <h2 className='text-xl sm:text-2xl font-semibold mb-4'>
+        Trending Places
+      </h2>
       <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
         <div className='flex w-max space-x-4 p-4'>
           {trendingPlaces.map((place) => (
-            <TrendingPlaceCard
-              key={place.id}
-              name={place.name}
-              category={place.categories[0].name}
-              priceForTwo={0}
-              address={place.address}
-              id={place.id}
-              latitude={place.lat}
-              longitude={place.lon}
-              distance={place.distance}
-              images={place.images}
-            />
+            <div key={place.id} className='w-64 sm:w-72 flex-shrink-0'>
+              <TrendingPlaceCard
+                name={place.name}
+                category={place.categories[0].name}
+                priceForTwo={0}
+                address={place.address}
+                id={place.id}
+                latitude={place.lat}
+                longitude={place.lon}
+                distance={place.distance}
+                images={place.images}
+              />
+            </div>
           ))}
         </div>
         <ScrollBar

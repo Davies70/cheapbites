@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin, User, Menu, LogOut } from 'lucide-react';
 import {
   Sheet,
@@ -13,17 +13,22 @@ import {
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
-// 
+import { signOut, useSession } from 'next-auth/react';
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
-  // const router = useRouter();
-  // const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
 
-  // if (!session) {
-  //   router.push('/');
-  // }
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/');
+    }
+  }, [status, router]);
+
+  if (status === 'loading' || status === 'unauthenticated') {
+    return null; // Don't render anything while checking session or if unauthenticated
+  }
 
   const NavItems = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div
@@ -49,13 +54,15 @@ const Nav = () => {
           <User className='mr-2 h-4 w-4' /> Dashboard
         </Link>
       </Button>
-      <Button
-        variant='ghost'
-        onClick={() => signOut({ callbackUrl: '/', redirect: true })}
-        className={isMobile ? 'justify-start' : ''}
-      >
-        <LogOut className='mr-2 h-4 w-4' /> Sign Out
-      </Button>
+      {session && (
+        <Button
+          variant='ghost'
+          onClick={() => signOut({ callbackUrl: '/', redirect: true })}
+          className={isMobile ? 'justify-start' : ''}
+        >
+          <LogOut className='mr-2 h-4 w-4' /> Sign Out
+        </Button>
+      )}
     </div>
   );
 
