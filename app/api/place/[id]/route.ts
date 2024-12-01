@@ -29,7 +29,7 @@ export async function GET(
     });
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY;
+  const apiKey = process.env.FOURSQUARE_API_KEY;
   if (!apiKey) {
     return new Response(
       JSON.stringify({

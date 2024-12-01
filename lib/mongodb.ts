@@ -5,12 +5,12 @@ const connectToDatabase = async () => {
     return; // Already connected
   }
 
-  if (!process.env.NEXT_PUBLIC_MONGODB_URI) {
+  if (!process.env.MONGODB_URI) {
     throw new Error('MongoDB URI is missing');
   }
 
   try {
-    await mongoose.connect(process.env.NEXT_PUBLIC_MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);

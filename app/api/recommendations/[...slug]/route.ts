@@ -4,7 +4,7 @@ import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { getFromCache, saveToCache } from '@/lib/cacheUtils';
 import { createRecommendations } from '@/lib/user';
 
-const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY || '';
+const apiKey = process.env.UBLIC_FOURSQUARE_API_KEY || '';
 
 // Cuisine category mappings
 const cuisineCategoryMap: Record<string, string> = {

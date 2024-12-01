@@ -3,7 +3,7 @@ import { Image } from '@/types/images';
 import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { getFromCache, saveToCache } from '@/lib/cacheUtils';
 
-const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY || '';
+const apiKey = process.env.FOURSQUARE_API_KEY || '';
 
 const fetchTrendingImages = async (id: string): Promise<Image[]> => {
   try {
