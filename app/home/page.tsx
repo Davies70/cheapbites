@@ -66,6 +66,9 @@ export default function HomePage() {
     };
 
     const getUser = async () => {
+      if (!session?.user?.email) {
+        return;
+      }
       try {
         const res = await fetch(`/api/user/${session?.user?.email}`);
         if (res.ok) {
