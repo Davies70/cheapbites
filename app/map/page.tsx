@@ -83,7 +83,7 @@ function assignMood(categories: { name: string }[]): string {
 
 export default function DiscoveryMap() {
   const router = useRouter();
-  const [distance, setDistance] = useState<number>(2);
+  const [distance, setDistance] = useState<number>(4);
   const [center, setCenter] = useState<Coordinates>({
     latitude: 54.315,
     longitude: 10.132,
