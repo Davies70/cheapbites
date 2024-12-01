@@ -96,10 +96,8 @@ const Nav = () => {
             className='w-[250px] sm:w-[300px] bg-primary text-primary-foreground'
           >
             <SheetHeader>
-              <SheetTitle className='text-primary-foreground'>Menu</SheetTitle>
-              <SheetDescription className='text-primary-foreground'>
-                Navigate CheapBites
-              </SheetDescription>
+              <SheetTitle className='text-primary-foreground'></SheetTitle>
+              <SheetDescription className='text-primary-foreground'></SheetDescription>
             </SheetHeader>
             <div className='mt-6 flex flex-col space-y-4'>
               <NavItems isMobile />
