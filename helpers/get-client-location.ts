@@ -1,4 +1,4 @@
-const apiKey = process.env.GEOAPIFY_API_KEY;
+const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
 
 const getClientLocation = async () => {
   if (!apiKey) {
