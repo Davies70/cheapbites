@@ -12,6 +12,10 @@ const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
   const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
 
   const handleDietaryRestriction = (value: string) => {
+    if (value === 'None') {
+      onPreferencesSubmit([]);
+      return;
+    }
     setDietaryRestrictions(
       dietaryRestrictions.includes(value)
         ? dietaryRestrictions.filter((item) => item !== value)
@@ -31,21 +35,26 @@ const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
       <CardContent>
         <p className='mb-4'>Select any dietary restrictions or preferences:</p>
         <div className='flex flex-wrap gap-2 mb-4'>
-          {['Vegan', 'Vegetarian', 'Gluten-Free', 'Halal', 'Kosher'].map(
-            (restriction) => (
-              <Button
-                key={restriction}
-                variant={
-                  dietaryRestrictions.includes(restriction)
-                    ? 'default'
-                    : 'outline'
-                }
-                onClick={() => handleDietaryRestriction(restriction)}
-              >
-                {restriction}
-              </Button>
-            )
-          )}
+          {[
+            'Vegan',
+            'Vegetarian',
+            'Gluten-Free',
+            'Halal',
+            'Kosher',
+            'None',
+          ].map((restriction) => (
+            <Button
+              key={restriction}
+              variant={
+                dietaryRestrictions.includes(restriction)
+                  ? 'default'
+                  : 'outline'
+              }
+              onClick={() => handleDietaryRestriction(restriction)}
+            >
+              {restriction}
+            </Button>
+          ))}
         </div>
         <Button onClick={handleSubmit} className='w-full'>
           Submit Preferences

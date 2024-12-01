@@ -1,9 +1,4 @@
-import {
-  PlacesResponse,
-  FoursquareSearchResponse,
-  Place,
-  RelatedPlace,
-} from '@/types/places';
+import { FoursquareSearchResponse, Place } from '@/types/places';
 import { Image } from '@/types/images';
 import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { getFromCache, saveToCache } from '@/lib/cacheUtils';

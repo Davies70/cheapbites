@@ -17,7 +17,17 @@ const quizQuestions = [
   },
   {
     question: "What's your favorite type of cuisine?",
-    options: ['Italian', 'Asian', 'Mexican', 'American', 'Indian', 'African'],
+    options: [
+      'Italian',
+      'Chinese',
+      'Mexican',
+      'American',
+      'Indian',
+      'African',
+      'French',
+      'Japanese',
+      'Thai',
+    ],
   },
 ];
 

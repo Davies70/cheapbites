@@ -1,42 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ReturnedPlace } from '@/types/places';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import TrendingPlaceCard from '@/components/trending-place-card';
+import { Button } from '@/components/ui/button';
+import TrendingPlaceCard from './trending-place-card';
+import { ReturnedPlace } from '@/types/places';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-interface TrendingPlacesProps {
-  userLocation: { lat: number; lon: number };
+interface UserRecommendationsProps {
+  recommendations: ReturnedPlace[];
+  onChangePreferences: () => void;
+  error: string | null;
+  isLoading: boolean;
 }
 
-const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
-  const [trendingPlaces, setTrendingPlaces] = useState<ReturnedPlace[]>([]);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchLocationAndTrendingPlaces = async () => {
-      try {
-        const resPlaces = await fetch(
-          `/api/places/trending/${userLocation?.lat}/${userLocation?.lon}`
-        );
-        const data = await resPlaces.json();
-        if (data.places.length === 0) setError('No trending places found');
-        setTrendingPlaces(data.places);
-      } catch (error) {
-        console.error('Error fetching location or places:', error);
-        setError('Failed to fetch location or trending places');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchLocationAndTrendingPlaces();
-  }, [userLocation]);
-
+const UserRecommendations = ({
+  recommendations,
+  onChangePreferences,
+  error,
+  isLoading,
+}: UserRecommendationsProps) => {
   if (error) {
     return (
       <Alert variant='destructive' className='mt-12'>
@@ -52,7 +35,7 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
       <div className='mt-12 flex items-center justify-center'>
         <Loader2 className='h-8 w-8 animate-spin text-primary' />
         <span className='ml-2 text-lg font-medium sm:text-base'>
-          Loading trending places...
+          Loading places based on your preferences...
         </span>
       </div>
     );
@@ -60,10 +43,17 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
 
   return (
     <div className='mt-12'>
-      <h2 className='text-2xl font-semibold mb-4'>Trending Places</h2>
+      <div className='flex justify-between items-center mb-4'>
+        <h2 className='text-2xl font-semibold'>
+          Your Personalized Recommendations
+        </h2>
+        <Button onClick={onChangePreferences} variant='outline'>
+          Change Preferences
+        </Button>
+      </div>
       <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
         <div className='flex w-max space-x-4 p-4'>
-          {trendingPlaces.map((place) => (
+          {recommendations.map((place: ReturnedPlace) => (
             <TrendingPlaceCard
               key={place.id}
               name={place.name}
@@ -87,4 +77,4 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
   );
 };
 
-export default TrendingPlaces;
+export default UserRecommendations;

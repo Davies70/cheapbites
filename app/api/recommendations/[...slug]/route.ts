@@ -2,6 +2,7 @@ import { FoursquareSearchResponse, Place } from '@/types/places';
 import { Image } from '@/types/images';
 import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { getFromCache, saveToCache } from '@/lib/cacheUtils';
+import { createRecommendations } from '@/lib/user';
 
 const apiKey = process.env.NEXT_PUBLIC_FOURSQUARE_API_KEY || '';
 
@@ -16,7 +17,10 @@ const cuisineCategoryMap: Record<string, string> = {
   african: '13067', // African Restaurant
   kosher: '13287', // Kosher Restaurant
   glutenfree: '13390',
+  thai: '13352',
   halal: '13191', // Halal Restaurant
+  french: '13148',
+  japanese: '13263', // Japanese Restaurant
   default: '13000', // General Food & Dining
 };
 
@@ -117,12 +121,11 @@ export async function GET(
 
   const lat = params.slug[0];
   const lon = params.slug[1];
-  const quizAnwerFromUser = params.slug[2] || '13000';
-  const dietaryPreferencesFromUser = params.slug[3] || '';
+  const email = params.slug[2] || 'ajayid89@gmail.com';
+  const quizAnwerFromUser = params.slug[3] || '13000';
+  const dietaryPreferencesFromUser = params.slug[4] || '';
 
   const catIds = getCategoryIds(quizAnwerFromUser, dietaryPreferencesFromUser);
-
-  console.log('catIds:', catIds);
 
   const queryParams = {
     ll: `${lat},${lon}`,
@@ -134,22 +137,6 @@ export async function GET(
 
   const quizCode =
     quizAnwerFromUser.charAt(0).toUpperCase() + quizAnwerFromUser.slice(1);
-
-  const cacheKey = `${catIds}_${lat}_${lon}`;
-
-  const cachedData = await getFromCache(cacheKey, 'places');
-
-  if (cachedData) {
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        status: 200,
-        message: `${quizCode} places fetched successfully`,
-        places: cachedData,
-      }),
-      { status: 200 }
-    );
-  }
 
   const placesData = await fetchPlaces(queryParams);
 
@@ -180,13 +167,26 @@ export async function GET(
     })
   );
 
-  await saveToCache(cacheKey, returnedPlaces, 10, 'places');
+  const user = await createRecommendations(email, returnedPlaces);
+
+  if (!user) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        status: 500,
+        message: 'Error adding recommendations',
+        places: [],
+      }),
+      { status: 500 }
+    );
+  }
+
   return new Response(
     JSON.stringify({
       ok: true,
       status: 200,
       message: `${quizCode} restaurants fetched successfully`,
-      places: returnedPlaces,
+      places: user.recommendations,
     }),
     { status: 200 }
   );

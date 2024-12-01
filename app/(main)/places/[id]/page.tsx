@@ -18,7 +18,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  Heart,
   MapPin,
   Star,
   Clock,
@@ -41,6 +40,8 @@ import {
   Wine,
   Package,
   Soup,
+  MapPinIcon,
+  Bookmark,
 } from 'lucide-react';
 import { PlaceDetails } from '@/types/places';
 import { useParams } from 'next/navigation';
@@ -102,8 +103,8 @@ export default function Place() {
   const { id } = useParams();
 
   const [placeData, setPlaceData] = useState<PlaceDetails | null>(null);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isMustVisit, setIsMustVisit] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isVisited, setIsVisited] = useState(false);
   const [userReview, setUserReview] = useState<UserReview | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [tempRating, setTempRating] = useState(0);
@@ -116,8 +117,8 @@ export default function Place() {
       .catch((e) => console.error('Error fetching place data:', e));
   }, [id]);
 
-  const toggleLike = () => setIsLiked(!isLiked);
-  const toggleMustVisit = () => setIsMustVisit(!isMustVisit);
+  const toggleLike = () => setIsSaved(!isSaved);
+  const toggleMustVisit = () => setIsVisited(!isVisited);
 
   const shareOnSocialMedia = (platform: string) => {
     const url = `https://cheapbites.com/restaurant/${placeData?.fsq_id}`;
@@ -255,26 +256,26 @@ export default function Place() {
       <div className='flex flex-col sm:flex-row sm:flex-wrap gap-2 justify-between items-center'>
         <div className='flex gap-2 w-full sm:w-auto'>
           <Button
-            variant={isLiked ? 'default' : 'outline'}
+            variant={isSaved ? 'default' : 'outline'}
             size='sm'
             onClick={toggleLike}
             className='flex-1 sm:flex-none'
           >
-            <Heart
-              className={`w-4 h-4 mr-2 ${isLiked ? 'fill-current' : ''}`}
+            <Bookmark
+              className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`}
             />
-            {isLiked ? 'Liked' : 'Like'}
+            {isSaved ? 'Saved' : 'Save'}
           </Button>
           <Button
-            variant={isMustVisit ? 'default' : 'outline'}
+            variant={isVisited ? 'default' : 'outline'}
             size='sm'
             onClick={toggleMustVisit}
             className='flex-1 sm:flex-none'
           >
-            <Star
-              className={`w-4 h-4 mr-2 ${isMustVisit ? 'fill-current' : ''}`}
+            <MapPinIcon
+              className={`w-4 h-4 mr-2 ${isVisited ? 'fill-current' : ''}`}
             />
-            {isMustVisit ? 'Must-Visit' : 'Add to Must-Visit'}
+            {isVisited ? 'Visited' : 'Add to Visited List'}
           </Button>
         </div>
         <div className='flex gap-2 mt-2 sm:mt-0'>
