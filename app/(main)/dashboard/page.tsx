@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Bookmark, MapPin, Clock, Utensils } from 'lucide-react';
+import Link from 'next/link';
 
 // Mock data (replace with actual API calls in a real application)
 const savedRestaurants = [
@@ -155,27 +156,40 @@ export default function Dashboard() {
             <CardContent>
               <ScrollArea className='h-[400px] pr-4'>
                 {saved.map((restaurant) => (
-                  <Card key={restaurant.id} className='mb-4'>
-                    <CardContent className='flex items-center justify-between p-4'>
-                      <div>
-                        <h3 className='font-semibold'>{restaurant.name}</h3>
-                        <p className='text-sm text-muted-foreground'>
-                          {restaurant.cuisine}
-                        </p>
-                        <p className='text-sm text-muted-foreground flex items-center mt-1'>
-                          <MapPin className='w-4 h-4 mr-1' />
-                          {restaurant.address}
-                        </p>
-                      </div>
-                      <Button
-                        variant='ghost'
-                        size='sm'
-                        onClick={() => unsaveRestaurant(restaurant.id)}
-                      >
-                        <Bookmark className='w-4 h-4' />
-                        Unsave
-                      </Button>
-                    </CardContent>
+                  <Card
+                    key={restaurant.id}
+                    className='mb-4 hover:bg-accent transition-colors'
+                  >
+                    <Link href={`/place/${restaurant.id}`} passHref>
+                      <CardContent className='flex items-center justify-between p-4 cursor-pointer'>
+                        <div>
+                          <h3 className='font-semibold'>{restaurant.name}</h3>
+                          <p className='text-sm text-muted-foreground'>
+                            {restaurant.cuisine}
+                          </p>
+                          <p className='text-sm text-muted-foreground flex items-center mt-1'>
+                            <MapPin className='w-4 h-4 mr-1' />
+                            {restaurant.address}
+                          </p>
+                        </div>
+                        <div className='flex items-center space-x-2'>
+                          <Button variant='secondary' size='sm'>
+                            View Details
+                          </Button>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={(e) => {
+                              e.preventDefault();
+                              unsaveRestaurant(restaurant.id);
+                            }}
+                          >
+                            <Bookmark className='w-4 h-4' />
+                            Unsave
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Link>
                   </Card>
                 ))}
               </ScrollArea>
