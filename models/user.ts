@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema({
       rating: { type: Number, required: true },
       review: { type: String, required: true },
       created_at: { type: Date, default: Date.now },
+      name: { type: String, required: true },
     },
   ],
   saved: [
@@ -46,7 +47,7 @@ const userSchema = new mongoose.Schema({
       id: { type: String, required: true },
       name: { type: String, required: true },
       category: { type: String, required: true },
-      rating: { type: Number, required: true },
+      rating: { type: Number },
     },
   ],
   visited: [
@@ -54,7 +55,7 @@ const userSchema = new mongoose.Schema({
       id: { type: String, required: true },
       name: { type: String, required: true },
       category: { type: String, required: true },
-      rating: { type: Number, required: true },
+      rating: { type: Number },
     },
   ],
   dietaryPreferences: [{ type: String }],

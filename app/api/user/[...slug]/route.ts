@@ -1,9 +1,10 @@
 import {
   getORCreateUser,
   saveReview,
+  deleteReview,
   createRecommendations,
-  addSavedPlace,
-  addVisitedPlace,
+  addOrRemoveSavedPlace,
+  addOrRemoveVisitedPlace,
   addDietaryPreference,
 } from '@/lib/user';
 
@@ -102,7 +103,10 @@ export async function POST(
       });
     case 'visited':
       const visitedPlace = await req.json();
-      const userWithVisitedPlace = await addVisitedPlace(email, visitedPlace);
+      const userWithVisitedPlace = await addOrRemoveVisitedPlace(
+        email,
+        visitedPlace
+      );
       if (!userWithVisitedPlace) {
         return new Response(JSON.stringify({ error: 'Error saving visited' }), {
           headers: {
@@ -119,7 +123,8 @@ export async function POST(
       });
     case 'saved':
       const savedPlace = await req.json();
-      const userWithSavedPlace = await addSavedPlace(email, savedPlace);
+
+      const userWithSavedPlace = await addOrRemoveSavedPlace(email, savedPlace);
       if (!userWithSavedPlace) {
         return new Response(JSON.stringify({ error: 'Error saving saved' }), {
           headers: {
@@ -165,4 +170,51 @@ export async function POST(
         status: 400,
       });
   }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { slug: string[] } }
+): Promise<Response> {
+  const { slug } = params;
+
+  if (slug.length < 2) {
+    return new Response(JSON.stringify({ error: 'Invalid query' }), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      status: 400,
+    });
+  }
+
+  const email = slug[1];
+
+  switch (slug[0]) {
+    case 'review':
+      const reviewId = await req.json();
+      const userWithoutReview = await deleteReview(email, reviewId);
+      if (!userWithoutReview) {
+        return new Response(
+          JSON.stringify({ error: 'Error deleting review' }),
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            status: 500,
+          }
+        );
+      }
+      return new Response(JSON.stringify(userWithoutReview), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        status: 200,
+      });
+  }
+  return new Response(JSON.stringify({ error: 'Invalid query' }), {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    status: 400,
+  });
 }

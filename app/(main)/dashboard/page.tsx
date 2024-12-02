@@ -12,13 +12,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
-import { Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Bookmark, MapPin, Clock, Utensils } from 'lucide-react';
 
 // Mock data (replace with actual API calls in a real application)
 const savedRestaurants = [
-  { id: 1, name: 'Tasty Bites', cuisine: 'American', rating: 4.5 },
-  { id: 2, name: 'Sushi Haven', cuisine: 'Japanese', rating: 4.7 },
-  { id: 3, name: 'Pasta Paradise', cuisine: 'Italian', rating: 4.2 },
+  {
+    id: 1,
+    name: 'Tasty Bites',
+    cuisine: 'American',
+    address: '123 Main St, Cityville',
+  },
+  {
+    id: 2,
+    name: 'Sushi Haven',
+    cuisine: 'Japanese',
+    address: '456 Oak Ave, Townsburg',
+  },
+  {
+    id: 3,
+    name: 'Pasta Paradise',
+    cuisine: 'Italian',
+    address: '789 Elm Rd, Villageton',
+  },
 ];
 
 const pastReviews = [
@@ -26,19 +42,35 @@ const pastReviews = [
     id: 1,
     restaurantName: 'Burger Bliss',
     rating: 5,
-    review: 'Amazing burgers!',
+    review: 'Amazing burgers! The patties were juicy and flavorful.',
+    timestamp: '2023-05-15T14:30:00Z',
   },
   {
     id: 2,
     restaurantName: 'Taco Town',
     rating: 4,
-    review: 'Great tacos, but a bit pricey.',
+    review: 'Great tacos, but a bit pricey. The salsa was outstanding though.',
+    timestamp: '2023-05-10T19:45:00Z',
   },
 ];
 
-const recommendations = [
-  { id: 1, name: 'Pizza Palace', cuisine: 'Italian', rating: 4.6 },
-  { id: 2, name: 'Curry Corner', cuisine: 'Indian', rating: 4.8 },
+const recommendations: ReturnedPlace[] = [
+  {
+    id: '1',
+    name: 'Pizza Palace',
+    categories: [{ id: 'italian', name: 'Italian' }],
+    address: '101 Pizza St, Cheeseville',
+    distance: 1.2,
+    images: [{ url: '/placeholder.svg?height=100&width=100' }],
+  },
+  {
+    id: '2',
+    name: 'Curry Corner',
+    categories: [{ id: 'indian', name: 'Indian' }],
+    address: '202 Spice Rd, Flavortown',
+    distance: 2.5,
+    images: [{ url: '/placeholder.svg?height=100&width=100' }],
+  },
 ];
 
 const cuisines = [
@@ -52,10 +84,31 @@ const cuisines = [
   'French',
 ];
 
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface Image {
+  url: string;
+}
+
+interface ReturnedPlace {
+  id: string;
+  name: string;
+  categories: Category[];
+  address: string;
+  lat?: number;
+  lon?: number;
+  distance: number;
+  images: Image[];
+}
+
 export default function Dashboard() {
   const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
   const [spiceTolerance, setSpiceTolerance] = useState(5);
   const [favoriteCuisines, setFavoriteCuisines] = useState<string[]>([]);
+  const [saved, setSaved] = useState(savedRestaurants);
 
   useEffect(() => {
     // Fetch user data here in a real application
@@ -77,15 +130,19 @@ export default function Dashboard() {
     );
   };
 
+  const unsaveRestaurant = (id: number) => {
+    setSaved((prev) => prev.filter((restaurant) => restaurant.id !== id));
+  };
+
   return (
     <div className='container mx-auto p-4'>
       <h1 className='text-3xl font-bold mb-6'>Personal Dashboard</h1>
 
       <Tabs defaultValue='saved' className='space-y-4'>
-        <TabsList>
-          <TabsTrigger value='saved'>Saved Restaurants</TabsTrigger>
-          <TabsTrigger value='reviews'>Past Reviews</TabsTrigger>
-          <TabsTrigger value='recommendations'>Recommendations</TabsTrigger>
+        <TabsList className='grid w-full grid-cols-4'>
+          <TabsTrigger value='saved'>Saved</TabsTrigger>
+          <TabsTrigger value='reviews'>Reviews</TabsTrigger>
+          <TabsTrigger value='recommendations'>For You</TabsTrigger>
           <TabsTrigger value='preferences'>Preferences</TabsTrigger>
         </TabsList>
 
@@ -96,20 +153,28 @@ export default function Dashboard() {
               <CardDescription>Your favorite spots to revisit</CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className='h-[400px]'>
-                {savedRestaurants.map((restaurant) => (
+              <ScrollArea className='h-[400px] pr-4'>
+                {saved.map((restaurant) => (
                   <Card key={restaurant.id} className='mb-4'>
-                    <CardContent className='flex items-center p-4'>
-                      <div className='flex-1'>
+                    <CardContent className='flex items-center justify-between p-4'>
+                      <div>
                         <h3 className='font-semibold'>{restaurant.name}</h3>
                         <p className='text-sm text-muted-foreground'>
                           {restaurant.cuisine}
                         </p>
+                        <p className='text-sm text-muted-foreground flex items-center mt-1'>
+                          <MapPin className='w-4 h-4 mr-1' />
+                          {restaurant.address}
+                        </p>
                       </div>
-                      <div className='flex items-center'>
-                        <Star className='w-4 h-4 text-yellow-400 mr-1' />
-                        <span>{restaurant.rating}</span>
-                      </div>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => unsaveRestaurant(restaurant.id)}
+                      >
+                        <Bookmark className='w-4 h-4' />
+                        Unsave
+                      </Button>
                     </CardContent>
                   </Card>
                 ))}
@@ -127,7 +192,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className='h-[400px]'>
+              <ScrollArea className='h-[400px] pr-4'>
                 {pastReviews.map((review) => (
                   <Card key={review.id} className='mb-4'>
                     <CardContent className='p-4'>
@@ -135,12 +200,13 @@ export default function Dashboard() {
                         <h3 className='font-semibold'>
                           {review.restaurantName}
                         </h3>
-                        <div className='flex items-center'>
-                          <Star className='w-4 h-4 text-yellow-400 mr-1' />
-                          <span>{review.rating}</span>
-                        </div>
+                        <Badge>{review.rating} / 5</Badge>
                       </div>
-                      <p className='text-sm'>{review.review}</p>
+                      <p className='text-sm mb-2'>{review.review}</p>
+                      <p className='text-xs text-muted-foreground flex items-center'>
+                        <Clock className='w-3 h-3 mr-1' />
+                        {new Date(review.timestamp).toLocaleString()}
+                      </p>
                     </CardContent>
                   </Card>
                 ))}
@@ -156,19 +222,30 @@ export default function Dashboard() {
               <CardDescription>Places we think you'll love</CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className='h-[400px]'>
-                {recommendations.map((restaurant) => (
-                  <Card key={restaurant.id} className='mb-4'>
+              <ScrollArea className='h-[400px] pr-4'>
+                {recommendations.map((place) => (
+                  <Card key={place.id} className='mb-4'>
                     <CardContent className='flex items-center p-4'>
-                      <div className='flex-1'>
-                        <h3 className='font-semibold'>{restaurant.name}</h3>
-                        <p className='text-sm text-muted-foreground'>
-                          {restaurant.cuisine}
-                        </p>
+                      <div className='w-16 h-16 mr-4 rounded-md overflow-hidden'>
+                        <img
+                          src={place.images[0].url}
+                          alt={place.name}
+                          className='w-full h-full object-cover'
+                        />
                       </div>
-                      <div className='flex items-center'>
-                        <Star className='w-4 h-4 text-yellow-400 mr-1' />
-                        <span>{restaurant.rating}</span>
+                      <div className='flex-1'>
+                        <h3 className='font-semibold'>{place.name}</h3>
+                        <p className='text-sm text-muted-foreground flex items-center'>
+                          <Utensils className='w-4 h-4 mr-1' />
+                          {place.categories.map((cat) => cat.name).join(', ')}
+                        </p>
+                        <p className='text-sm text-muted-foreground flex items-center mt-1'>
+                          <MapPin className='w-4 h-4 mr-1' />
+                          {place.address}
+                        </p>
+                        <p className='text-sm text-muted-foreground mt-1'>
+                          {place.distance.toFixed(1)} miles away
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
@@ -201,7 +278,7 @@ export default function Dashboard() {
                       variant={
                         dietaryPreferences.includes(preference)
                           ? 'default'
-                          : 'outline'
+                          : 'secondary'
                       }
                       className='cursor-pointer'
                       onClick={() => toggleDietaryPreference(preference)}
@@ -249,7 +326,7 @@ export default function Dashboard() {
                       variant={
                         favoriteCuisines.includes(cuisine)
                           ? 'default'
-                          : 'outline'
+                          : 'secondary'
                       }
                       className='cursor-pointer'
                       onClick={() => toggleFavoriteCuisine(cuisine)}

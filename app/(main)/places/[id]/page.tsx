@@ -47,11 +47,17 @@ import { PlaceDetails } from '@/types/places';
 import { useParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Check, X } from 'lucide-react';
+import { User } from '@/types/user';
+import { useSession } from 'next-auth/react';
+import { useToast } from '@/hooks/use-toast';
+import { SavedPlace } from '@/types/user';
 
 interface UserReview {
   rating: number;
   review: string;
-  createdAt: string;
+  placeId: string;
+  created_at: string;
+  name: string;
 }
 
 interface AttributesProps {
@@ -101,24 +107,140 @@ const Attributes = ({ attributes }: AttributesProps) => {
 
 export default function Place() {
   const { id } = useParams();
+  const { data: session } = useSession();
 
   const [placeData, setPlaceData] = useState<PlaceDetails | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isVisited, setIsVisited] = useState(false);
-  const [userReview, setUserReview] = useState<UserReview | null>(null);
+  const [userReview, setUserReview] = useState<UserReview | undefined>(
+    undefined
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [tempRating, setTempRating] = useState(0);
   const [tempReview, setTempReview] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [isDeletingReview, setIsDeletingReview] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetch(`/api/place/${id}`)
       .then((res) => res.json())
       .then(({ place }) => setPlaceData(place))
       .catch((e) => console.error('Error fetching place data:', e));
-  }, [id]);
 
-  const toggleLike = () => setIsSaved(!isSaved);
-  const toggleMustVisit = () => setIsVisited(!isVisited);
+    if (session?.user?.email) {
+      fetch(`/api/user/${session?.user?.email}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setUser(data);
+          const userReview: UserReview = data.reviews.find(
+            (r: UserReview) => r.placeId === id
+          );
+          if (userReview) {
+            setUserReview(userReview);
+          }
+          setIsVisited(
+            data.visited.some((place: { id: string }) => place.id === id)
+          );
+          setIsSaved(
+            data.saved.some((place: { id: string }) => place.id === id)
+          );
+        })
+        .catch((e) => console.error('Error fetching user data:', e));
+    }
+  }, [id, session]);
+
+  const toggleSave = async () => {
+    if (!session?.user?.email) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to save this place.',
+        variant: 'default',
+      });
+      return;
+    }
+
+    // Optimistically update the UI
+    setIsSaved((prev) => !prev);
+
+    try {
+      const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          name: placeData?.name,
+          category: placeData?.categories[0].name,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save place');
+      }
+
+      const data = await response.json();
+      setIsSaved(data.saved.some((p: SavedPlace) => p.id === id));
+    } catch (error) {
+      console.error('Error saving place:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save place. Please try again.',
+        variant: 'destructive',
+      });
+      // Revert the optimistic update if there's an error
+      setIsSaved((prev) => !prev);
+    }
+  };
+
+  const toggleMustVisit = async () => {
+    if (!session?.user?.email) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to add this place to your visited list.',
+        variant: 'default',
+      });
+      return;
+    }
+
+    // Optimistically update the UI
+    setIsVisited((prev) => !prev);
+
+    try {
+      const response = await fetch(
+        `/api/user/visited/${session?.user?.email}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id,
+            name: placeData?.name,
+            category: placeData?.categories[0].name,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update visited list');
+      }
+
+      const data = await response.json();
+      setIsVisited(data.visited.some((p: SavedPlace) => p.id === id));
+    } catch (error) {
+      console.error('Error updating visited list:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update visited list. Please try again.',
+        variant: 'destructive',
+      });
+      // Revert the optimistic update if there's an error
+      setIsVisited((prev) => !prev);
+    }
+  };
 
   const shareOnSocialMedia = (platform: string) => {
     const url = `https://cheapbites.com/restaurant/${placeData?.fsq_id}`;
@@ -190,22 +312,79 @@ export default function Place() {
     }
   };
 
-  const handleReviewSubmit = () => {
+  const handleReviewSubmit = async () => {
     if (tempReview.trim() === '' || tempRating === 0) {
-      alert('Please provide both a rating and a review before submitting.');
+      toast({
+        title: 'Incomplete Review',
+        description:
+          'Please provide both a rating and a review before submitting.',
+        variant: 'destructive',
+      });
       return;
     }
+
+    if (
+      tempReview === userReview?.review &&
+      tempRating === userReview?.rating
+    ) {
+      toast({
+        title: 'No Changes',
+        description: 'Your review is already the same. No changes made.',
+        variant: 'default',
+      });
+      return;
+    }
+
+    setIsSubmittingReview(true);
 
     const newReview: UserReview = {
       rating: tempRating,
       review: tempReview,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      placeId: id as string,
+      name: placeData?.name || '',
     };
 
-    setUserReview(newReview);
-    setIsEditing(false);
-    setTempRating(0);
-    setTempReview('');
+    try {
+      const res = await fetch(`/api/user/review/${session?.user?.email}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newReview),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to submit review');
+      }
+
+      const userWithNewReview = await res.json();
+
+      const updatedReview: UserReview = userWithNewReview.reviews.find(
+        (r: UserReview) => r.placeId === id
+      );
+
+      if (updatedReview) {
+        setUserReview(updatedReview);
+        setIsEditing(false);
+        setTempRating(0);
+        setTempReview('');
+        toast({
+          title: 'Review Submitted',
+          description: 'Your review has been successfully saved.',
+          variant: 'default',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to submit review. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   const handleEditReview = () => {
@@ -216,8 +395,37 @@ export default function Place() {
     }
   };
 
-  const handleDeleteReview = () => {
-    setUserReview(null);
+  const handleDeleteReview = async () => {
+    setIsDeletingReview(true);
+    try {
+      const res = await fetch(`/api/user/review/${session?.user?.email}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userReview?.placeId),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to delete review');
+      }
+
+      setUserReview(undefined);
+      toast({
+        title: 'Review Deleted',
+        description: 'Your review has been successfully deleted.',
+        variant: 'default',
+      });
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete review. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeletingReview(false);
+    }
   };
 
   if (!placeData) {
@@ -240,6 +448,7 @@ export default function Place() {
           alt={placeData.name}
           layout='fill'
           objectFit='cover'
+          sizes='(min-width: 640px) 50vw, 100vw'
         />
         <div className='absolute inset-0 bg-black bg-opacity-40 flex items-end'>
           <div className='p-4 text-white'>
@@ -258,7 +467,7 @@ export default function Place() {
           <Button
             variant={isSaved ? 'default' : 'outline'}
             size='sm'
-            onClick={toggleLike}
+            onClick={toggleSave}
             className='flex-1 sm:flex-none'
           >
             <Bookmark
@@ -492,7 +701,7 @@ export default function Place() {
                 ))}
               </div>
               <p className='text-xs text-gray-600'>
-                {new Date(userReview.createdAt).toLocaleDateString()}
+                {new Date(userReview.created_at).toLocaleDateString()}
               </p>
               <p className='text-sm'>{userReview.review}</p>
               <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
@@ -511,9 +720,19 @@ export default function Place() {
                       variant='outline'
                       size='sm'
                       className='w-full sm:w-auto'
+                      disabled={isDeletingReview}
                     >
-                      <Trash2 className='w-4 h-4 mr-2' />
-                      Delete Review
+                      {isDeletingReview ? (
+                        <>
+                          <Loader className='w-4 h-4 mr-2 animate-spin' />
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 className='w-4 h-4 mr-2' />
+                          Delete Review
+                        </>
+                      )}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -556,8 +775,21 @@ export default function Place() {
                 rows={4}
                 className='w-full p-2 border rounded-md text-sm'
               />
-              <Button onClick={handleReviewSubmit} className='w-full sm:w-auto'>
-                {isEditing ? 'Update Review' : 'Submit Review'}
+              <Button
+                onClick={handleReviewSubmit}
+                className='w-full sm:w-auto'
+                disabled={isSubmittingReview}
+              >
+                {isSubmittingReview ? (
+                  <>
+                    <Loader className='w-4 h-4 mr-2 animate-spin' />
+                    {isEditing ? 'Updating...' : 'Submitting...'}
+                  </>
+                ) : isEditing ? (
+                  'Update Review'
+                ) : (
+                  'Submit Review'
+                )}
               </Button>
             </div>
           )}

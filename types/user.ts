@@ -44,7 +44,7 @@ export type SavedPlace = {
   id: string;
   name: string;
   category: string;
-  rating: number;
+  rating?: number;
 };
 
 export type User = {

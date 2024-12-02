@@ -9,12 +9,17 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface TrendingPlacesProps {
   userLocation: { lat: number; lon: number };
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
-const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
+const TrendingPlaces = ({
+  userLocation,
+  isLoading,
+  setIsLoading,
+}: TrendingPlacesProps) => {
   const [trendingPlaces, setTrendingPlaces] = useState<ReturnedPlace[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +40,7 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
     };
 
     fetchLocationAndTrendingPlaces();
-  }, [userLocation]);
+  }, [setIsLoading, userLocation]);
 
   if (error) {
     return (
@@ -47,16 +52,16 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className='mt-12 flex items-center justify-center'>
-        <Loader2 className='h-8 w-8 animate-spin text-primary' />
-        <span className='ml-2 text-lg font-medium sm:text-base'>
-          Loading trending places...
-        </span>
-      </div>
-    );
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className='mt-12 flex items-center justify-center'>
+  //       <Loader2 className='h-8 w-8 animate-spin text-primary' />
+  //       <span className='ml-2 text-lg font-medium sm:text-base'>
+  //         Loading trending places...
+  //       </span>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className='mt-12'>

@@ -1,7 +1,7 @@
 import { connectToDatabase, handleMongooseError } from './mongodb';
 import User from '@/models/user';
 import { ReturnedPlace } from '@/types/places';
-import { User as UserType, Review, Place, SavedPlace } from '@/types/user';
+import { User as UserType, Review, SavedPlace } from '@/types/user';
 
 export const getORCreateUser = async (
   email: string
@@ -33,12 +33,46 @@ export const saveReview = async (
     if (!user) {
       throw new Error('User not found');
     }
-    user.reviews.push(review);
+    const existingReviewIndex = user.reviews.findIndex(
+      (r: Review) => r.placeId === review.placeId
+    );
+    if (existingReviewIndex !== -1) {
+      user.reviews[existingReviewIndex] = review;
+    } else {
+      user.reviews.push(review);
+    }
     await user.save();
     console.log('Review added');
     return user.toObject();
   } catch (error) {
     handleMongooseError(error, 'Error adding review');
+  }
+  return null;
+};
+
+export const deleteReview = async (
+  email: string,
+  placeId: string
+): Promise<UserType | null> => {
+  try {
+    await connectToDatabase();
+    const user = await User.findOne({ email });
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const reviewIndex = user.reviews.findIndex(
+      (r: Review) => r.placeId === placeId
+    );
+    if (reviewIndex === -1) {
+      throw new Error('Review not found');
+    }
+    user.reviews.splice(reviewIndex, 1);
+
+    await user.save();
+    console.log('Review deleted');
+    return user.toObject();
+  } catch (error) {
+    handleMongooseError(error, 'Error deleting review');
   }
   return null;
 };
@@ -63,7 +97,7 @@ export const createRecommendations = async (
   return null;
 };
 
-export const addSavedPlace = async (
+export const addOrRemoveSavedPlace = async (
   email: string,
   savedPlace: SavedPlace
 ): Promise<UserType | null> => {
@@ -73,17 +107,25 @@ export const addSavedPlace = async (
     if (!user) {
       throw new Error('User not found');
     }
-    user.saved.push(savedPlace);
+    const existingPlaceIndex = user.saved.findIndex(
+      (place: SavedPlace) => place.id === savedPlace.id
+    );
+    if (existingPlaceIndex !== -1) {
+      user.saved.splice(existingPlaceIndex, 1);
+      console.log('Saved place removed');
+    } else {
+      user.saved.push(savedPlace);
+      console.log('Saved place added');
+    }
     await user.save();
-    console.log('Saved place added');
     return user.toObject();
   } catch (error) {
-    handleMongooseError(error, 'Error adding saved place');
+    handleMongooseError(error, 'Error adding or removing saved place');
   }
   return null;
 };
 
-export const addVisitedPlace = async (
+export const addOrRemoveVisitedPlace = async (
   email: string,
   visitedPlace: SavedPlace
 ): Promise<UserType | null> => {
@@ -93,12 +135,20 @@ export const addVisitedPlace = async (
     if (!user) {
       throw new Error('User not found');
     }
-    user.visited.push(visitedPlace);
+    const existingPlaceIndex = user.visited.findIndex(
+      (place: SavedPlace) => place.id === visitedPlace.id
+    );
+    if (existingPlaceIndex !== -1) {
+      user.visited.splice(existingPlaceIndex, 1);
+      console.log('Visited place removed');
+    } else {
+      user.visited.push(visitedPlace);
+      console.log('Visited place added');
+    }
     await user.save();
-    console.log('Visited place added');
     return user.toObject();
   } catch (error) {
-    handleMongooseError(error, 'Error adding visited place');
+    handleMongooseError(error, 'Error adding or removing visited place');
   }
   return null;
 };
