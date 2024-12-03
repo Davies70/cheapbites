@@ -58,7 +58,7 @@ const UserRecommendations = ({
       <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
         <div className='flex w-max space-x-4 p-4'>
           {recommendations.map((place: ReturnedPlace) => (
-            <div key={place.id} className='w-64 sm:w-72 flex-shrink-0'>
+            <div key={place.id} className='w-40 sm:w-72 flex-shrink-0'>
               <TrendingPlaceCard
                 name={place.name}
                 category={place.categories[0].name}
