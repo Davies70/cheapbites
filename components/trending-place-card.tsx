@@ -54,7 +54,7 @@ export default function TrendingPlaceCard({
 
   return (
     <Link href={`/places/${id}`} passHref>
-      <Card className='overflow-hidden transition-all duration-300 ease-in-out w-full sm:w-[200px] md:w-[300px] h-full flex flex-col cursor-pointer hover:shadow-lg focus-within:ring-2 focus-within:ring-primary'>
+      <Card className='overflow-hidden transition-all duration-300 ease-in-out w-full sm:w-[150px] md:w-[300px] h-full flex flex-col cursor-pointer hover:shadow-lg focus-within:ring-2 focus-within:ring-primary'>
         <div className='relative'>
           <Image
             src={imageToUse}
