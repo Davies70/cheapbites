@@ -48,7 +48,6 @@ export default function HomePage() {
     null
   );
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
-  const [isTrendingLoading, setIsTrendingLoading] = useState(true);
 
   const { data: session } = useSession();
 
@@ -151,7 +150,7 @@ export default function HomePage() {
     );
   }
 
-  if (isLoading && !userLocation && isTrendingLoading) {
+  if (isLoading && !userLocation) {
     return (
       <div className='flex items-center justify-center h-screen'>
         <Loader2 className='h-8 w-8 animate-spin text-primary' />
@@ -224,13 +223,7 @@ export default function HomePage() {
             </>
           )}
 
-          {userLocation && (
-            <TrendingPlaces
-              userLocation={userLocation}
-              setIsLoading={setIsTrendingLoading}
-              isLoading={isTrendingLoading}
-            />
-          )}
+          {userLocation && <TrendingPlaces userLocation={userLocation} />}
 
           <div className='mt-16'>
             <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center'>

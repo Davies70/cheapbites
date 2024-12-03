@@ -158,7 +158,7 @@ export default function Dashboard() {
                   >
                     <Link href={`/places/${restaurant.id}`} passHref>
                       <CardContent className='flex items-center justify-between p-4 cursor-pointer'>
-                        <div className='flex-grow'>
+                        <div className='flex-grow pr-2'>
                           <h3 className='font-semibold'>{restaurant.name}</h3>
                           <p className='text-sm text-muted-foreground'>
                             {restaurant.category}
@@ -170,7 +170,7 @@ export default function Dashboard() {
                             </span>
                           </p>
                         </div>
-                        <div className='flex items-center space-x-2 ml-2'>
+                        <div className='flex items-center space-x-2'>
                           <Button
                             variant='ghost'
                             size='sm'
@@ -182,14 +182,14 @@ export default function Dashboard() {
                           <Button
                             variant='ghost'
                             size='sm'
-                            className='p-0 h-8 w-8'
+                            className='p-2 h-8'
                             onClick={(e) => {
                               e.preventDefault();
                               unsaveRestaurant(restaurant);
                             }}
                           >
-                            <Bookmark className='w-4 h-4' />
-                            <span className='sr-only'>Unsave</span>
+                            <Bookmark className='w-4 h-4 mr-2' />
+                            Unsave
                           </Button>
                         </div>
                       </CardContent>
@@ -455,3 +455,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
