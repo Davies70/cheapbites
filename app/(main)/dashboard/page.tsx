@@ -120,28 +120,19 @@ export default function Dashboard() {
       </h1>
 
       <Tabs defaultValue='saved' className='space-y-4'>
-        <TabsList className='flex w-full overflow-x-auto space-x-2 p-1 md:grid md:grid-cols-4 md:gap-2'>
-          <TabsTrigger
-            value='saved'
-            className='flex-shrink-0 px-4 py-2 text-xs sm:text-sm'
-          >
+        <TabsList className='grid grid-cols-4 w-full '>
+          <TabsTrigger value='saved' className=' px-4 py-2 text-xs sm:text-sm'>
             Saved
           </TabsTrigger>
-          <TabsTrigger
-            value='visited'
-            className='flex-shrink-0 px-4 py-2 text-xs sm:text-sm'
-          >
+          <TabsTrigger value='visited' className='px-4 py-2 text-xs sm:text-sm'>
             Visited
           </TabsTrigger>
-          <TabsTrigger
-            value='reviews'
-            className='flex-shrink-0 px-4 py-2 text-xs sm:text-sm'
-          >
+          <TabsTrigger value='reviews' className='px-4 py-2 text-xs sm:text-sm'>
             Reviews
           </TabsTrigger>
           <TabsTrigger
             value='recommendations'
-            className='flex-shrink-0 px-4 py-2 text-xs sm:text-sm'
+            className='px-4 py-2 text-xs sm:text-sm'
           >
             For You
           </TabsTrigger>
@@ -288,7 +279,7 @@ export default function Dashboard() {
         </TabsContent>
 
         <TabsContent value='recommendations'>
-          <Card className='mb-4'>
+          <Card className='mb-4 hover:bg-accent transition-colors'>
             <CardHeader className='p-4 md:p-6'>
               <CardTitle className='text-lg md:text-xl'>
                 Personalized Recommendations
@@ -310,7 +301,7 @@ export default function Dashboard() {
                       className='mb-4 hover:bg-accent transition-colors'
                     >
                       <Link href={`/places/${place.id}`} passHref>
-                        <CardContent className='flex flex-col md:flex-row items-start p-4 cursor-pointer'>
+                        <CardContent className='flex items-center p-4 cursor-pointer'>
                           <div className='w-16 h-16 mr-4 rounded-md overflow-hidden flex-shrink-0'>
                             <Image
                               src={
@@ -319,42 +310,39 @@ export default function Dashboard() {
                                   : '/placeholder-place.png'
                               }
                               alt={place.name}
-                              className='w-auto h-auto object-cover'
+                              className='w-full h-full object-cover'
                               width={64}
                               height={64}
-                              layout='responsive'
                             />
                           </div>
                           <div className='flex-grow min-w-0'>
-                            <h3 className='font-semibold truncate'>
+                            <h3 className='font-semibold truncate text-sm'>
                               {place.name}
                             </h3>
-                            <p className='text-sm text-muted-foreground flex items-center'>
-                              <Utensils className='w-4 h-4 mr-1 flex-shrink-0' />
+                            <p className='text-xs text-muted-foreground flex items-center'>
+                              <Utensils className='w-3 h-3 mr-1 flex-shrink-0' />
                               <span className='truncate'>
                                 {place.categories
                                   .map((cat) => cat.name)
                                   .join(', ')}
                               </span>
                             </p>
-                            <p className='text-sm text-muted-foreground flex items-center mt-1'>
-                              <MapPin className='w-4 h-4 mr-1 flex-shrink-0' />
+                            <p className='text-xs text-muted-foreground flex items-center mt-1'>
+                              <MapPin className='w-3 h-3 mr-1 flex-shrink-0' />
                               <span className='truncate'>{place.address}</span>
                             </p>
-                            <p className='text-sm text-muted-foreground mt-1'>
+                            <p className='text-xs text-muted-foreground mt-1'>
                               {kmorMiles(place.distance)} away
                             </p>
                           </div>
-                          <div className='flex items-center mt-2 md:mt-0'>
-                            <Button
-                              variant='ghost'
-                              size='sm'
-                              className='p-0 h-8 w-8'
-                            >
-                              <ChevronRight className='w-4 h-4' />
-                              <span className='sr-only'>View Details</span>
-                            </Button>
-                          </div>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='p-0 h-8 w-8'
+                          >
+                            <ChevronRight className='w-4 h-4' />
+                            <span className='sr-only'>View Details</span>
+                          </Button>
                         </CardContent>
                       </Link>
                     </Card>
