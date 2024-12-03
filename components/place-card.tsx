@@ -62,11 +62,11 @@ export default function PlaceCard({
               }}
               aria-label={isLiked ? 'Unlike place' : 'Like place'}
             >
-              <Heart
+              {/* <Heart
                 className={`w-4 h-4 ${
                   isLiked ? 'fill-red-500 text-red-500' : 'text-gray-400'
                 }`}
-              />
+              /> */}
             </Button>
           </div>
           <div className='flex items-center text-xs text-gray-600 mt-1'>
