@@ -37,7 +37,8 @@ export type Review = {
   placeId: string;
   rating: number;
   review: string;
-  created_at?: Date;
+  created_at: Date;
+  name: string;
 };
 
 export type SavedPlace = {
@@ -45,6 +46,7 @@ export type SavedPlace = {
   name: string;
   category: string;
   rating?: number;
+  address: string;
 };
 
 export type User = {

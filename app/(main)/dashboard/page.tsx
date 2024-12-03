@@ -11,181 +11,233 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Bookmark, MapPin, Clock, Utensils } from 'lucide-react';
+import { Bookmark, MapPin, Clock, Utensils, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
-
-// Mock data (replace with actual API calls in a real application)
-const savedRestaurants = [
-  {
-    id: 1,
-    name: 'Tasty Bites',
-    cuisine: 'American',
-    address: '123 Main St, Cityville',
-  },
-  {
-    id: 2,
-    name: 'Sushi Haven',
-    cuisine: 'Japanese',
-    address: '456 Oak Ave, Townsburg',
-  },
-  {
-    id: 3,
-    name: 'Pasta Paradise',
-    cuisine: 'Italian',
-    address: '789 Elm Rd, Villageton',
-  },
-];
-
-const pastReviews = [
-  {
-    id: 1,
-    restaurantName: 'Burger Bliss',
-    rating: 5,
-    review: 'Amazing burgers! The patties were juicy and flavorful.',
-    timestamp: '2023-05-15T14:30:00Z',
-  },
-  {
-    id: 2,
-    restaurantName: 'Taco Town',
-    rating: 4,
-    review: 'Great tacos, but a bit pricey. The salsa was outstanding though.',
-    timestamp: '2023-05-10T19:45:00Z',
-  },
-];
-
-const recommendations: ReturnedPlace[] = [
-  {
-    id: '1',
-    name: 'Pizza Palace',
-    categories: [{ id: 'italian', name: 'Italian' }],
-    address: '101 Pizza St, Cheeseville',
-    distance: 1.2,
-    images: [{ url: '/placeholder.svg?height=100&width=100' }],
-  },
-  {
-    id: '2',
-    name: 'Curry Corner',
-    categories: [{ id: 'indian', name: 'Indian' }],
-    address: '202 Spice Rd, Flavortown',
-    distance: 2.5,
-    images: [{ url: '/placeholder.svg?height=100&width=100' }],
-  },
-];
-
-const cuisines = [
-  'Italian',
-  'Japanese',
-  'Mexican',
-  'Indian',
-  'American',
-  'Thai',
-  'Chinese',
-  'French',
-];
-
-interface Category {
-  id: string;
-  name: string;
-}
-
-interface Image {
-  url: string;
-}
-
-interface ReturnedPlace {
-  id: string;
-  name: string;
-  categories: Category[];
-  address: string;
-  lat?: number;
-  lon?: number;
-  distance: number;
-  images: Image[];
-}
+import { useSession } from 'next-auth/react';
+import { User, SavedPlace } from '@/types/user';
+import { useParams } from 'next/navigation';
+import Image from 'next/image';
+import { Loader } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
-  const [dietaryPreferences, setDietaryPreferences] = useState<string[]>([]);
-  const [spiceTolerance, setSpiceTolerance] = useState(5);
-  const [favoriteCuisines, setFavoriteCuisines] = useState<string[]>([]);
-  const [saved, setSaved] = useState(savedRestaurants);
+  const [user, setUser] = useState<User | null>(null);
+
+  const { id } = useParams();
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Fetch user data here in a real application
-  }, []);
+    if (!session) return;
+    if (session?.user?.email) {
+      setIsLoading(true);
+      fetch(`/api/user/${session?.user?.email}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setUser(data);
+        })
+        .catch((e) => {
+          console.error('Error fetching user data:', e);
+          setError('An error occurred while fetching user data');
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [session, id]);
 
-  const toggleDietaryPreference = (preference: string) => {
-    setDietaryPreferences((prev) =>
-      prev.includes(preference)
-        ? prev.filter((p) => p !== preference)
-        : [...prev, preference]
+  const unsaveRestaurant = async (savedPlace: SavedPlace) => {
+    setUser((prevUser) => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        saved: prevUser.saved.filter((place) => place.id !== savedPlace.id),
+      };
+    });
+
+    try {
+      const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...savedPlace,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save place');
+      }
+      toast({
+        title: 'Place unsaved',
+        description: 'This place has been removed from your saved list',
+        variant: 'default',
+      });
+    } catch (error) {
+      console.error('Error saving place:', error);
+      toast({
+        title: 'Error',
+        description: 'An error occurred while saving the place',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const kmorMiles = (distance: number) => {
+    return distance > 1000
+      ? `${(distance / 1000).toFixed(1)} km`
+      : `${distance} m`;
+  };
+
+  if (error) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Alert variant='destructive' className='w-96'>
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
-  };
+  }
 
-  const toggleFavoriteCuisine = (cuisine: string) => {
-    setFavoriteCuisines((prev) =>
-      prev.includes(cuisine)
-        ? prev.filter((c) => c !== cuisine)
-        : [...prev, cuisine]
+  if (isLoading) {
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <Loader className='w-8 h-8 animate-spin text-primary' />
+      </div>
     );
-  };
-
-  const unsaveRestaurant = (id: number) => {
-    setSaved((prev) => prev.filter((restaurant) => restaurant.id !== id));
-  };
+  }
 
   return (
     <div className='container mx-auto p-4'>
-      <h1 className='text-3xl font-bold mb-6'>Personal Dashboard</h1>
+      <h1 className='text-xl sm:text-2xl md:text-3xl font-bold mb-4 md:mb-6'>
+        Personal Dashboard
+      </h1>
 
       <Tabs defaultValue='saved' className='space-y-4'>
-        <TabsList className='grid w-full grid-cols-4'>
-          <TabsTrigger value='saved'>Saved</TabsTrigger>
-          <TabsTrigger value='reviews'>Reviews</TabsTrigger>
-          <TabsTrigger value='recommendations'>For You</TabsTrigger>
-          <TabsTrigger value='preferences'>Preferences</TabsTrigger>
+        <TabsList className='flex w-full overflow-x-auto space-x-2 p-1 md:grid md:grid-cols-4 md:gap-2'>
+          <TabsTrigger value='saved' className='flex-shrink-0 px-4 py-2'>
+            Saved
+          </TabsTrigger>
+          <TabsTrigger value='visited' className='flex-shrink-0 px-4 py-2'>
+            Visited
+          </TabsTrigger>
+          <TabsTrigger value='reviews' className='flex-shrink-0 px-4 py-2'>
+            Reviews
+          </TabsTrigger>
+          <TabsTrigger
+            value='recommendations'
+            className='flex-shrink-0 px-4 py-2'
+          >
+            For You
+          </TabsTrigger>
+          {/* <TabsTrigger value='preferences' className='flex-shrink-0 px-4 py-2'>
+            Preferences
+          </TabsTrigger> */}
         </TabsList>
 
         <TabsContent value='saved'>
           <Card>
-            <CardHeader>
-              <CardTitle>Saved Places</CardTitle>
-              <CardDescription>Your favorite spots to revisit</CardDescription>
+            <CardHeader className='p-4 md:p-6'>
+              <CardTitle className='text-lg md:text-xl'>Saved Places</CardTitle>
+              <CardDescription className='text-sm'>
+                Your favorite spots to revisit
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className='h-[400px] pr-4'>
-                {saved.map((restaurant) => (
+                {user?.saved.map((restaurant) => (
                   <Card
                     key={restaurant.id}
                     className='mb-4 hover:bg-accent transition-colors'
                   >
-                    <Link href={`/place/${restaurant.id}`} passHref>
+                    <Link href={`/places/${restaurant.id}`} passHref>
                       <CardContent className='flex items-center justify-between p-4 cursor-pointer'>
-                        <div>
+                        <div className='flex-grow'>
                           <h3 className='font-semibold'>{restaurant.name}</h3>
                           <p className='text-sm text-muted-foreground'>
-                            {restaurant.cuisine}
+                            {restaurant.category}
                           </p>
                           <p className='text-sm text-muted-foreground flex items-center mt-1'>
-                            <MapPin className='w-4 h-4 mr-1' />
-                            {restaurant.address}
+                            <MapPin className='w-4 h-4 mr-1 flex-shrink-0' />
+                            <span className='truncate'>
+                              {restaurant.address}
+                            </span>
                           </p>
                         </div>
-                        <div className='flex items-center space-x-2'>
-                          <Button variant='secondary' size='sm'>
-                            View Details
+                        <div className='flex items-center space-x-2 ml-2'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='p-0 h-8 w-8'
+                          >
+                            <ChevronRight className='w-4 h-4' />
+                            <span className='sr-only'>View Details</span>
                           </Button>
                           <Button
                             variant='ghost'
                             size='sm'
+                            className='p-0 h-8 w-8'
                             onClick={(e) => {
                               e.preventDefault();
-                              unsaveRestaurant(restaurant.id);
+                              unsaveRestaurant(restaurant);
                             }}
                           >
                             <Bookmark className='w-4 h-4' />
-                            Unsave
+                            <span className='sr-only'>Unsave</span>
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Link>
+                  </Card>
+                ))}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value='visited'>
+          <Card>
+            <CardHeader className='p-4 md:p-6'>
+              <CardTitle className='text-lg md:text-xl'>
+                Visited Places
+              </CardTitle>
+              <CardDescription className='text-sm'>
+                Places you've been to
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className='h-[400px] pr-4'>
+                {user?.visited.map((place) => (
+                  <Card
+                    key={place.id}
+                    className='mb-4 hover:bg-accent transition-colors'
+                  >
+                    <Link href={`/places/${place.id}`} passHref>
+                      <CardContent className='flex items-center justify-between p-4 cursor-pointer'>
+                        <div className='flex-grow'>
+                          <h3 className='font-semibold'>{place.name}</h3>
+                          <p className='text-sm text-muted-foreground'>
+                            {place.category}
+                          </p>
+                          <p className='text-sm text-muted-foreground flex items-center mt-1'>
+                            <MapPin className='w-4 h-4 mr-1 flex-shrink-0' />
+                            <span className='truncate'>{place.address}</span>
+                          </p>
+                        </div>
+                        <div className='flex items-center space-x-2 ml-2'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            className='p-0 h-8 w-8'
+                          >
+                            <ChevronRight className='w-4 h-4' />
+                            <span className='sr-only'>View Details</span>
                           </Button>
                         </div>
                       </CardContent>
@@ -199,27 +251,27 @@ export default function Dashboard() {
 
         <TabsContent value='reviews'>
           <Card>
-            <CardHeader>
-              <CardTitle>Past Ratings and Reviews</CardTitle>
-              <CardDescription>
+            <CardHeader className='p-4 md:p-6'>
+              <CardTitle className='text-lg md:text-xl'>
+                Past Ratings and Reviews
+              </CardTitle>
+              <CardDescription className='text-sm'>
                 Your thoughts on places you've visited
               </CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className='h-[400px] pr-4'>
-                {pastReviews.map((review) => (
-                  <Card key={review.id} className='mb-4'>
+                {user?.reviews.map((review) => (
+                  <Card key={review.placeId} className='mb-4'>
                     <CardContent className='p-4'>
-                      <div className='flex justify-between items-center mb-2'>
-                        <h3 className='font-semibold'>
-                          {review.restaurantName}
-                        </h3>
+                      <div className='flex justify-between items-start mb-2 flex-wrap'>
+                        <h3 className='font-semibold mr-2'>{review.name}</h3>
                         <Badge>{review.rating} / 5</Badge>
                       </div>
                       <p className='text-sm mb-2'>{review.review}</p>
                       <p className='text-xs text-muted-foreground flex items-center'>
-                        <Clock className='w-3 h-3 mr-1' />
-                        {new Date(review.timestamp).toLocaleString()}
+                        <Clock className='w-3 h-3 mr-1 flex-shrink-0' />
+                        {new Date(review.created_at).toLocaleString()}
                       </p>
                     </CardContent>
                   </Card>
@@ -231,59 +283,99 @@ export default function Dashboard() {
 
         <TabsContent value='recommendations'>
           <Card>
-            <CardHeader>
-              <CardTitle>Personalized Recommendations</CardTitle>
-              <CardDescription>Places we think you'll love</CardDescription>
+            <CardHeader className='p-4 md:p-6'>
+              <CardTitle className='text-lg md:text-xl'>
+                Personalized Recommendations
+              </CardTitle>
+              <CardDescription className='text-sm'>
+                Places we think you'll love
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className='h-[400px] pr-4'>
-                {recommendations.map((place) => (
-                  <Card key={place.id} className='mb-4'>
-                    <CardContent className='flex items-center p-4'>
-                      <div className='w-16 h-16 mr-4 rounded-md overflow-hidden'>
-                        <img
-                          src={place.images[0].url}
-                          alt={place.name}
-                          className='w-full h-full object-cover'
-                        />
-                      </div>
-                      <div className='flex-1'>
-                        <h3 className='font-semibold'>{place.name}</h3>
-                        <p className='text-sm text-muted-foreground flex items-center'>
-                          <Utensils className='w-4 h-4 mr-1' />
-                          {place.categories.map((cat) => cat.name).join(', ')}
-                        </p>
-                        <p className='text-sm text-muted-foreground flex items-center mt-1'>
-                          <MapPin className='w-4 h-4 mr-1' />
-                          {place.address}
-                        </p>
-                        <p className='text-sm text-muted-foreground mt-1'>
-                          {place.distance.toFixed(1)} miles away
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {user?.recommendations.length === 0 ? (
+                  <p className='text-center text-muted-foreground'>
+                    Change your preferences to get personalized recommendations
+                  </p>
+                ) : (
+                  user?.recommendations.map((place) => (
+                    <Card
+                      key={place.id}
+                      className='mb-4 hover:bg-accent transition-colors'
+                    >
+                      <Link href={`/places/${place.id}`} passHref>
+                        <CardContent className='flex items-start p-4 cursor-pointer'>
+                          <div className='w-16 h-16 mr-4 rounded-md overflow-hidden flex-shrink-0'>
+                            <Image
+                              src={
+                                place?.images[0]?.prefix
+                                  ? `${place.images[0].prefix}original${place.images[0].suffix}`
+                                  : '/placeholder-place.png'
+                              }
+                              alt={place.name}
+                              className='w-auto h-auto object-cover'
+                              width={64}
+                              height={64}
+                              layout='responsive'
+                            />
+                          </div>
+                          <div className='flex-grow min-w-0'>
+                            <h3 className='font-semibold truncate'>
+                              {place.name}
+                            </h3>
+                            <p className='text-sm text-muted-foreground flex items-center'>
+                              <Utensils className='w-4 h-4 mr-1 flex-shrink-0' />
+                              <span className='truncate'>
+                                {place.categories
+                                  .map((cat) => cat.name)
+                                  .join(', ')}
+                              </span>
+                            </p>
+                            <p className='text-sm text-muted-foreground flex items-center mt-1'>
+                              <MapPin className='w-4 h-4 mr-1 flex-shrink-0' />
+                              <span className='truncate'>{place.address}</span>
+                            </p>
+                            <p className='text-sm text-muted-foreground mt-1'>
+                              {kmorMiles(place.distance)} away
+                            </p>
+                          </div>
+                          <div className='flex items-center ml-2'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              className='p-0 h-8 w-8'
+                            >
+                              <ChevronRight className='w-4 h-4' />
+                              <span className='sr-only'>View Details</span>
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Link>
+                    </Card>
+                  ))
+                )}
               </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value='preferences'>
+        {/* <TabsContent value='preferences'>
           <div className='grid gap-4 md:grid-cols-2'>
             <Card>
-              <CardHeader>
-                <CardTitle>Dietary Preferences</CardTitle>
-                <CardDescription>Manage your dietary needs</CardDescription>
+              <CardHeader className='p-4 md:p-6'>
+                <CardTitle className='text-lg md:text-xl'>
+                  Dietary Preferences
+                </CardTitle>
+                <CardDescription className='text-sm'>
+                  Manage your dietary needs
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className='flex flex-wrap gap-2'>
                   {[
-                    'Vegetarian',
                     'Vegan',
+                    'Vegetarian',
                     'Gluten-Free',
-                    'Dairy-Free',
-                    'Nut-Free',
                     'Halal',
                     'Kosher',
                   ].map((preference) => (
@@ -305,9 +397,11 @@ export default function Dashboard() {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Spice Tolerance</CardTitle>
-                <CardDescription>
+              <CardHeader className='p-4 md:p-6'>
+                <CardTitle className='text-lg md:text-xl'>
+                  Spice Tolerance
+                </CardTitle>
+                <CardDescription className='text-sm'>
                   Set your preferred spice level
                 </CardDescription>
               </CardHeader>
@@ -328,9 +422,13 @@ export default function Dashboard() {
             </Card>
 
             <Card className='md:col-span-2'>
-              <CardHeader>
-                <CardTitle>Favorite Cuisines</CardTitle>
-                <CardDescription>Track your preferred cuisines</CardDescription>
+              <CardHeader className='p-4 md:p-6'>
+                <CardTitle className='text-lg md:text-xl'>
+                  Favorite Cuisines
+                </CardTitle>
+                <CardDescription className='text-sm'>
+                  Track your preferred cuisines
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className='flex flex-wrap gap-2'>
@@ -352,7 +450,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
     </div>
   );

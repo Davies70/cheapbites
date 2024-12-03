@@ -66,6 +66,7 @@ const CustomPopup = ({
         objectFit='cover'
         placeholder='blur'
         blurDataURL='/placeholder-place.png'
+        sizes='300px'
       />
     </div>
     <p className='text-sm mb-2'>{place.address}</p>
@@ -103,6 +104,9 @@ export default function Map({
       <Circle
         center={[center.latitude, center.longitude]}
         radius={distance * 1000}
+        color='#f97015'
+        fillOpacity={0.1}
+        weight={3}
       />
       {places.map((place) => (
         <Marker

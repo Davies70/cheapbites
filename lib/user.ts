@@ -155,7 +155,7 @@ export const addOrRemoveVisitedPlace = async (
 
 export const addDietaryPreference = async (
   email: string,
-  preference: string
+  preference: string[]
 ): Promise<UserType | null> => {
   try {
     await connectToDatabase();
@@ -163,7 +163,7 @@ export const addDietaryPreference = async (
     if (!user) {
       throw new Error('User not found');
     }
-    user.dietaryPreferences.push(preference);
+    user.dietaryPreferences = preference;
     await user.save();
     console.log('Dietary preference added');
     return user.toObject();

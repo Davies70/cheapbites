@@ -48,6 +48,7 @@ const userSchema = new mongoose.Schema({
       name: { type: String, required: true },
       category: { type: String, required: true },
       rating: { type: Number },
+      address: { type: String, required: true },
     },
   ],
   visited: [
@@ -56,6 +57,7 @@ const userSchema = new mongoose.Schema({
       name: { type: String, required: true },
       category: { type: String, required: true },
       rating: { type: Number },
+      address: { type: String, required: true },
     },
   ],
   dietaryPreferences: [{ type: String }],

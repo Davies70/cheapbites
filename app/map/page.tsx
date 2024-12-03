@@ -83,10 +83,10 @@ function assignMood(categories: { name: string }[]): string {
 
 export default function DiscoveryMap() {
   const router = useRouter();
-  const [distance, setDistance] = useState<number>(4);
+  const [distance, setDistance] = useState<number>(2.5);
   const [center, setCenter] = useState<Coordinates>({
-    latitude: 54.315,
-    longitude: 10.132,
+    latitude: 0,
+    longitude: 0,
   });
   const [zoom, setZoom] = useState<number>(13);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
@@ -131,13 +131,11 @@ export default function DiscoveryMap() {
       } catch (error) {
         console.error('Error fetching user location:', error);
         setError('Failed to get your location. Using default location.');
-        // Use default location and fetch places
-        await getPlaces(center.latitude, center.longitude);
       }
     };
 
     getUserLocation();
-  }, [getPlaces, center.latitude, center.longitude]);
+  }, [getPlaces]);
 
   const filterPlaces = useCallback(() => {
     const maxDistanceMeters = distance * 1000;
@@ -167,8 +165,14 @@ export default function DiscoveryMap() {
   }, [places]);
 
   const focusOnPlace = useCallback((latitude: number, longitude: number) => {
-    setCenter({ latitude, longitude });
-    setZoom(16);
+    // setCenter({ latitude, longitude });
+    setCenter((prev) => {
+      return {
+        latitude: latitude,
+        longitude: longitude,
+      };
+    });
+    setZoom(18);
   }, []);
 
   const toggleLike = useCallback((id: string, e: React.MouseEvent) => {
@@ -205,12 +209,6 @@ export default function DiscoveryMap() {
 
   return (
     <div className='relative h-screen w-full overflow-hidden'>
-      {error && (
-        <Alert variant='destructive' className='mb-4'>
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
       <div className='absolute inset-0 z-0 w-screen'>
         <Map
           center={center}

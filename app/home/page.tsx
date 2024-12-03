@@ -74,7 +74,6 @@ export default function HomePage() {
         const res = await fetch(`/api/user/${session?.user?.email}`);
         if (res.ok) {
           const data = await res.json();
-          console.log('User data:', data);
           setUser(data);
           if (data.recommendations.length > 0) {
             setRecommendations(data.recommendations);

@@ -174,6 +174,8 @@ export default function Place() {
           id,
           name: placeData?.name,
           category: placeData?.categories[0].name,
+          rating: placeData?.rating,
+          address: placeData?.location.formatted_address,
         }),
       });
 
@@ -220,6 +222,8 @@ export default function Place() {
             id,
             name: placeData?.name,
             category: placeData?.categories[0].name,
+            rating: placeData?.rating,
+            address: placeData?.location.formatted_address,
           }),
         }
       );

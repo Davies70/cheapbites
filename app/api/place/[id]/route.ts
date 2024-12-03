@@ -62,7 +62,7 @@ export async function GET(
 
     if (response.ok) {
       const data = await response.json();
-      await saveToCache(cacheKey, data, 1, 'place');
+      await saveToCache(cacheKey, data, 0.25, 'place');
       placeRes = {
         ok: true,
         status: 200,
