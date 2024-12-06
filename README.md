@@ -25,6 +25,10 @@ CheapBites is a web application designed to help users discover affordable dinin
 
 ---
 
+## Live Demo
+
+Visit [CheapBites](https://cheapbites.vercel.app) to see the app in action!
+
 ## Screenshots
 
 ### Home Page
