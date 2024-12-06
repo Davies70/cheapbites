@@ -1,36 +1,148 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CheapBites
+
+CheapBites is a web application designed to help users discover affordable dining options in their vicinity. It uses geolocation, interactive maps, and APIs to provide tailored restaurant recommendations, allowing users to explore, review, and save favorite dining spots.
+
+---
+
+## Features
+
+- **Search & Discover**: Find budget-friendly restaurants near your location using the FourSquare API.
+- **Interactive Maps**: Adjust the search radius and explore dining options via a Leaflet-powered map.
+- **User Management**: Save favorite places, manage visited locations, and contribute reviews.
+- **Reviews & Recommendations**: Read reviews from other users and get personalized suggestions based on dietary preferences and a fun food quiz.
+- **Photo Sharing**: Upload and view images of restaurants and dishes to enhance discovery and engagement.
+- **Authentication**: Secure user accounts and sessions with NextAuth.
+
+---
+
+## Tech Stack
+
+- **Frontend**: Next.js, Tailwind CSS
+- **Database**: MongoDB
+- **APIs**: FourSquare, Geolocation API, Geoapify
+- **Authentication**: NextAuth
+- **Mapping**: Leaflet
+
+---
+
+## Screenshots
+
+### Home Page
+
+![Home Page](/public/cheapbites4.PNG)  
+_The vibrant home page interface displaying restaurant recommendations._
+
+### Search Results
+
+![Map](/public/cheapbites2.png)  
+_Interactive map showcasing search results and adjustable radius._
+
+### Dashboard
+
+![Dashboard](/public/reviews.PNG)  
+_Manage saved places, visited locations, and reviews from your profile page._
+
+###
+
+![Place Page](/public/page.PNG)  
+_View place details and atttributes, write reviews and save place._
+
+To replace the placeholder images above, add actual screenshots of the web app to your repository and update the URLs. For example:
+
+```markdown
+![Home Page](/public/cheapbites.PNG)
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Ensure you have the following installed:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Node.js
+- npm or yarn
+- MongoDB
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Installation
 
-## Learn More
+1. **Clone the Repository**
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   git clone https://github.com/yourusername/cheapbites.git
+   cd cheapbites
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Install Dependencies**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   npm install
+   ```
 
-## Deploy on Vercel
+3. **Environment Variables**  
+   Create a `.env.local` file in the project root and add the following variables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```plaintext
+   FOURSQUARE_API_KEY=fsq33uhuuYycdX/rClU+A0JznEPjfiR0ud+CrpwqaI2S3m8=
+   GEOAPIFY_API_KEY=<Your_Geoapify_API_Key>
+   MONGODB_URI=<Your_MongoDB_URI>
+   GOOGLE_CLIENT_ID=<Your_Google_Client_ID>
+   GOOGLE_CLIENT_SECRET=<Your_Google_Client_Secret>
+   NEXTAUTH_SECRET=<Your_NextAuth_Secret>
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   Replace placeholders with your actual API keys and credentials.
+
+4. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
+   The app will be available at `http://localhost:3000`.
+
+---
+
+## Deployment
+
+To deploy CheapBites, follow the instructions for your chosen hosting provider (e.g., Vercel, Netlify). Ensure all environment variables are properly set up in the hosting platform.
+
+---
+
+## API Keys
+
+- **FourSquare API**: Provides restaurant data. [Get your API key here](https://developer.foursquare.com/docs).
+- **Geoapify API**: Used for geolocation services. [Get your API key here](https://www.geoapify.com/).
+- **Google Client ID/Secret**: Used for Google authentication via NextAuth. [Set up Google OAuth](https://console.cloud.google.com/).
+- **MongoDB URI**: Connection string for your MongoDB database. [Get started with MongoDB](https://www.mongodb.com/).
+
+---
+
+## Scripts
+
+- `npm run dev`: Starts the development server.
+- `npm run build`: Builds the app for production.
+- `npm start`: Starts the production server.
+
+---
+
+## Contributing
+
+Contributions are welcome! Feel free to open issues or pull requests to improve the app.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Contact
+
+For questions or feedback, reach out at [your email/contact info].
+
+---
+
+**Happy Eating with CheapBites!**
