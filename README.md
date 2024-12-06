@@ -10,18 +10,24 @@ CheapBites is a web application designed to help users discover affordable dinin
 - **Interactive Maps**: Adjust the search radius and explore dining options via a Leaflet-powered map.
 - **User Management**: Save favorite places, manage visited locations, and contribute reviews.
 - **Reviews & Recommendations**: Read reviews from other users and get personalized suggestions based on dietary preferences and a fun food quiz.
-- **Photo Sharing**: Upload and view images of restaurants and dishes to enhance discovery and engagement.
 - **Authentication**: Secure user accounts and sessions with NextAuth.
 
 ---
 
 ## Tech Stack
 
-- **Frontend**: Next.js, Tailwind CSS
-- **Database**: MongoDB
-- **APIs**: FourSquare, Geolocation API, Geoapify
-- **Authentication**: NextAuth
-- **Mapping**: Leaflet
+- **Frontend**
+    - Next.js: For server-side rendering and a dynamic, SEO-friendly user interface.
+    - TypeScript: Ensures type safety, improving code quality and reducing runtime errors.
+    - Tailwind CSS: Provides a modern, responsive UI design.
+- **Backend**
+    - Next.js API Routes: Manages backend services, including user authentication, geolocation, and data retrieval.
+    - MongoDB: A flexible, document-oriented database for storing user preferences, reviews, and restaurant data.
+    - Authentication: Secure OAuth-based authentication using NextAuth.
+- **APIs & Services**
+    - FourSquare API: Provides rich restaurant data for discovery.
+    - Geoapify API: Powers geolocation features to enhance user experience.
+    - Leaflet: Enables interactive map functionality.
 
 ---
 
