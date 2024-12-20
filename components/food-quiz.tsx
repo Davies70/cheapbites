@@ -23,7 +23,6 @@ const quizQuestions = [
       'Mexican',
       'American',
       'Indian',
-      'African',
       'French',
       'Japanese',
       'Thai',
