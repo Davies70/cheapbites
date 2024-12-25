@@ -33,7 +33,13 @@ const Nav = () => {
     router.push('/dashboard'); // Redirect to dashboard after successful sign-in
   };
 
-  const NavItems = ({ isMobile = false }: { isMobile?: boolean }) => (
+  const NavItems = ({
+    isMobile = false,
+    onSignInClick,
+  }: {
+    isMobile?: boolean;
+    onSignInClick: () => void;
+  }) => (
     <div
       className={
         isMobile ? 'flex flex-col space-y-4' : 'flex items-center space-x-6'
@@ -70,7 +76,7 @@ const Nav = () => {
       ) : (
         <Button
           variant='ghost'
-          onClick={() => setShowSignIn(true)}
+          onClick={onSignInClick}
           className={isMobile ? 'justify-start' : ''}
         >
           <User className='mr-2 h-4 w-4' /> Sign In
@@ -93,7 +99,7 @@ const Nav = () => {
           </Link>
 
           <div className='hidden md:block'>
-            <NavItems />
+            <NavItems onSignInClick={() => setShowSignIn(true)} />
           </div>
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -116,17 +122,25 @@ const Nav = () => {
                 <SheetDescription className='text-primary-foreground'></SheetDescription>
               </SheetHeader>
               <div className='mt-6 flex flex-col space-y-4'>
-                <NavItems isMobile />
+                <NavItems
+                  isMobile
+                  onSignInClick={() => {
+                    setShowSignIn(true);
+                    setIsOpen(false);
+                  }}
+                />
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </nav>
       {showSignIn && (
-        <SignInOverlay
-          onClose={() => setShowSignIn(false)}
-          onSuccess={handleSignInSuccess}
-        />
+        <div className='fixed inset-0 z-50'>
+          <SignInOverlay
+            onClose={() => setShowSignIn(false)}
+            onSuccess={handleSignInSuccess}
+          />
+        </div>
       )}
     </>
   );
