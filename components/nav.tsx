@@ -22,12 +22,6 @@ const Nav = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-    }
-  }, [status, router]);
-
   const handleSignInSuccess = () => {
     setShowSignIn(false);
     router.push('/dashboard'); // Redirect to dashboard after successful sign-in
