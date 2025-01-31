@@ -773,16 +773,17 @@ export default function Place() {
                 ))}
               </div>
               <Textarea
-                placeholder='Write your review here...'
+                placeholder={session ? 'Write your review here...' : 'Sign in to create reviews...'}
                 value={tempReview}
                 onChange={(e) => setTempReview(e.target.value)}
                 rows={4}
                 className='w-full p-2 border rounded-md text-sm'
+                disabled={!session}
               />
               <Button
                 onClick={handleReviewSubmit}
                 className='w-full sm:w-auto'
-                disabled={isSubmittingReview}
+                disabled={isSubmittingReview || !session}
               >
                 {isSubmittingReview ? (
                   <>
