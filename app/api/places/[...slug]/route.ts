@@ -145,10 +145,12 @@ export async function GET(
       lon: place.geocodes.roof?.longitude,
       distance: place.distance,
       images,
+      geocodes: place.geocodes,
     })
   );
 
   await saveToCache(cacheKey, returnedPlaces, 10, 'places');
+  console.log('returned1', returnedPlaces[0]);
   return new Response(
     JSON.stringify({
       ok: true,

@@ -226,4 +226,5 @@ export interface ReturnedPlace {
   lon?: number;
   distance: number;
   images: Image[];
+  geocodes: Geocodes;
 }

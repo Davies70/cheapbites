@@ -29,6 +29,7 @@ const returnedPlaceSchema = new mongoose.Schema({
       height: { type: Number },
     },
   ],
+  geocodes: { type: Object },
 });
 
 // Define the Cache schema

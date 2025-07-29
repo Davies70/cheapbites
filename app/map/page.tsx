@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -39,7 +39,8 @@ const moodTypes = [
   'Neutral',
 ];
 
-function assignMood(categories: { name: string }[]): string {
+// Move this outside component to prevent recreation on every render
+const assignMood = (categories: { name: string }[]): string => {
   const casualCategories = [
     'Café',
     'Bar',
@@ -79,7 +80,7 @@ function assignMood(categories: { name: string }[]): string {
   }
 
   return 'Neutral';
-}
+};
 
 export default function DiscoveryMap() {
   const router = useRouter();
@@ -98,6 +99,10 @@ export default function DiscoveryMap() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Use ref to track if initial load is complete
+  const initialLoadComplete = useRef(false);
+
+  // Memoize the getPlaces function to prevent recreation
   const getPlaces = useCallback(async (latitude: number, longitude: number) => {
     setIsLoading(true);
     try {
@@ -116,10 +121,14 @@ export default function DiscoveryMap() {
       setError('Failed to fetch places. Please try again later.');
     } finally {
       setIsLoading(false);
+      initialLoadComplete.current = true;
     }
   }, []);
 
+  // Only run initial location fetch once
   useEffect(() => {
+    if (initialLoadComplete.current) return;
+
     const getUserLocation = async () => {
       try {
         const location = await getClientLocation();
@@ -131,13 +140,17 @@ export default function DiscoveryMap() {
       } catch (error) {
         console.error('Error fetching user location:', error);
         setError('Failed to get your location. Using default location.');
+        initialLoadComplete.current = true;
       }
     };
 
     getUserLocation();
   }, [getPlaces]);
 
-  const filterPlaces = useCallback(() => {
+  // Memoize the filtering logic to prevent unnecessary recalculations
+  const filteredPlacesData = useMemo(() => {
+    if (!places.length) return [];
+
     const maxDistanceMeters = distance * 1000;
     return places.filter((place) => {
       const categoryMatch =
@@ -150,28 +163,27 @@ export default function DiscoveryMap() {
     });
   }, [distance, categoryFilter, moodFilter, places]);
 
+  // Update filtered places only when the computed result actually changes
   useEffect(() => {
-    const filtered = filterPlaces();
-    setFilteredPlaces(filtered);
-  }, [filterPlaces]);
+    setFilteredPlaces(filteredPlacesData);
+  }, [filteredPlacesData]);
 
+  // Memoize category types to prevent recalculation
   const categoryTypes = useMemo(() => {
+    if (!places.length) return ['All'];
     return [
       'All',
       ...new Set(
-        places?.flatMap((place) => place?.categories?.map((cat) => cat.name))
+        places.flatMap(
+          (place) => place.categories?.map((cat) => cat.name) || []
+        )
       ),
     ];
   }, [places]);
 
+  // Memoize callbacks to prevent child re-renders
   const focusOnPlace = useCallback((latitude: number, longitude: number) => {
-    // setCenter({ latitude, longitude });
-    setCenter((prev) => {
-      return {
-        latitude: latitude,
-        longitude: longitude,
-      };
-    });
+    setCenter({ latitude, longitude });
     setZoom(18);
   }, []);
 
@@ -187,6 +199,28 @@ export default function DiscoveryMap() {
       return newSet;
     });
   }, []);
+
+  // Memoize the distance change handler
+  const handleDistanceChange = useCallback((value: number[]) => {
+    setDistance(value[0]);
+    setZoom(13);
+  }, []);
+
+  // Memoize the place click handler
+  const handlePlaceClick = useCallback(
+    (placeId: string) => {
+      router.push(`/places/${placeId}`);
+    },
+    [router]
+  );
+
+  const handlePlaceCardClick = useCallback(
+    (e: React.MouseEvent, placeId: string) => {
+      e.stopPropagation();
+      router.push(`/places/${placeId}`);
+    },
+    [router]
+  );
 
   if (error) {
     return (
@@ -207,6 +241,8 @@ export default function DiscoveryMap() {
     );
   }
 
+  console.log('render')
+
   return (
     <div className='relative h-screen w-full overflow-hidden'>
       <div className='absolute inset-0 z-0 w-screen'>
@@ -215,7 +251,7 @@ export default function DiscoveryMap() {
           zoom={zoom}
           places={filteredPlaces}
           distance={distance}
-          onPlaceClick={(placeId) => router.push(`/places/${placeId}`)}
+          onPlaceClick={handlePlaceClick}
         />
       </div>
 
@@ -253,10 +289,7 @@ export default function DiscoveryMap() {
               </label>
               <Slider
                 value={[distance]}
-                onValueChange={(value) => {
-                  setDistance(value[0]);
-                  setZoom(13);
-                }}
+                onValueChange={handleDistanceChange}
                 max={20}
                 step={0.5}
                 min={1}
@@ -296,33 +329,26 @@ export default function DiscoveryMap() {
         </div>
 
         <div className='overflow-y-auto h-[calc(100%-8rem)] md:h-[calc(100%-12rem)] p-4'>
-          {isLoading
-            ? Array.from({ length: 5 }).map((_, index) => (
-                <PlaceCardSkeleton key={index} />
-              ))
-            : filteredPlaces.map((place) => (
-                <PlaceCard
-                  key={place.id}
-                  name={place.name}
-                  icon={
-                    place.categories[0].icon.prefix +
-                    'bg_64' +
-                    place.categories[0].icon.suffix
-                  }
-                  category={place.categories[0]?.name || 'Unknown Category'}
-                  distance={place.distance}
-                  onFocus={() =>
-                    place.lat && place.lon && focusOnPlace(place.lat, place.lon)
-                  }
-                  isLiked={likedPlaces.has(place.id)}
-                  onLike={(e) => toggleLike(place.id, e)}
-                  mood={assignMood(place.categories)}
-                  goToPage={(e) => {
-                    e.stopPropagation();
-                    router.push(`/places/${place.id}`);
-                  }}
-                />
-              ))}
+          {filteredPlaces.map((place) => (
+            <PlaceCard
+              key={place.id}
+              name={place.name}
+              icon={
+                place.categories[0].icon.prefix +
+                'bg_64' +
+                place.categories[0].icon.suffix
+              }
+              category={place.categories[0]?.name || 'Unknown Category'}
+              distance={place.distance}
+              onFocus={() =>
+                place.lat && place.lon && focusOnPlace(place.lat, place.lon)
+              }
+              isLiked={likedPlaces.has(place.id)}
+              onLike={(e) => toggleLike(place.id, e)}
+              mood={assignMood(place.categories)}
+              goToPage={(e) => handlePlaceCardClick(e, place.id)}
+            />
+          ))}
         </div>
       </div>
     </div>

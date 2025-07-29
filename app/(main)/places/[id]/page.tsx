@@ -441,7 +441,7 @@ export default function Place() {
   }
 
   const imageToUse = placeData?.photos[0]?.prefix
-    ? `${placeData.photos[0].prefix}original${placeData.photos[0].suffix}`
+    ? `${placeData.photos[0]?.prefix}original${placeData.photos[0]?.suffix}`
     : '/placeholder-place.png';
 
   return (

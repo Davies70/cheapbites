@@ -34,13 +34,30 @@ function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
   return null;
 }
 
+// const createSvgIcon = () => {
+//   const div = document.createElement('div');
+//   div.innerHTML = `
+//     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#21c45d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+//   `;
+
+//   return new Icon({
+//     iconUrl: 'data:image/svg+xml;base64,' + btoa(div.innerHTML),
+//     iconSize: [24, 24],
+//     iconAnchor: [12, 24],
+//     popupAnchor: [0, -24],
+//   });
+// };
+
+// const svgIcon = createSvgIcon();
+
 const customIcon = new Icon({
-  iconUrl:
-    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: `/map-pin.png`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -24],
 });
 
+// Rest of your component remains the same...
 const CustomPopup = ({
   place,
   onPlaceClick,
@@ -94,13 +111,23 @@ export default function Map({
   distance,
   onPlaceClick,
 }: MapProps) {
+  // Only initialize with a default center and zoom
+  const initialPosition: LatLngExpression = [
+    center.latitude || 0,
+    center.longitude || 0,
+  ];
+
   return (
     <MapContainer
-      center={[center.latitude, center.longitude]}
+      center={initialPosition}
       zoom={zoom}
       style={{ height: '100%', width: '100%' }}
+      scrollWheelZoom={true}
     >
+      {/* Keep tile layer static */}
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
+
+      {/* Circle showing search radius */}
       <Circle
         center={[center.latitude, center.longitude]}
         radius={distance * 1000}
@@ -108,10 +135,15 @@ export default function Map({
         fillOpacity={0.1}
         weight={3}
       />
+
+      {/* Place markers */}
       {places.map((place) => (
         <Marker
           key={place.id}
-          position={[place.lat ?? 0, place.lon ?? 0]}
+          position={[
+            place.geocodes?.main?.latitude ?? 0,
+            place.geocodes?.main?.longitude ?? 0,
+          ]}
           icon={customIcon}
         >
           <Popup>
@@ -123,6 +155,8 @@ export default function Map({
           </Popup>
         </Marker>
       ))}
+
+      {/* Imperatively control map view changes */}
       <MapView center={[center.latitude, center.longitude]} zoom={zoom} />
     </MapContainer>
   );
