@@ -241,7 +241,6 @@ export default function DiscoveryMap() {
     );
   }
 
-  console.log('render')
 
   return (
     <div className='relative h-screen w-full overflow-hidden'>
