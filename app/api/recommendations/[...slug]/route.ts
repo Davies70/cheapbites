@@ -177,6 +177,7 @@ export async function GET(
       lon: place.geocodes.roof?.longitude,
       distance: place.distance,
       images,
+      geocodes: place.geocodes,
     })
   );
 
