@@ -2,11 +2,12 @@ import PlaceCache from '@/models/placeCache';
 import PlacesCache from '@/models/placesCache';
 import { connectToDatabase } from '@/lib/mongodb';
 import mongoose from 'mongoose';
-import { PlaceDetails, ReturnedPlace } from '@/types/places';
+import { FSQPlace } from '@/types/places';
+import { Place } from '@/types/place';
 
 async function saveToCache(
   key: string,
-  value: ReturnedPlace[] | PlaceDetails,
+  value: FSQPlace[] | Place,
   ttlInDays: number,
   cacheType: 'places' | 'place'
 ) {
@@ -16,7 +17,7 @@ async function saveToCache(
     const Cache = cacheType === 'places' ? PlacesCache : PlaceCache;
     const cacheEntry = new Cache({ key, value, ttl });
     await cacheEntry.save();
-    console.log('Saved to cache');
+    console.log(`Saved ${cacheType} to cache`);
     // await closeDatabase();
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError) {
@@ -41,7 +42,7 @@ async function getFromCache(key: string, cacheType: 'places' | 'place') {
     } else {
       cacheEntry = await PlaceCache.findOne({ key });
     }
-    console.log('getting from cache');
+    console.log(`getting from ${cacheType} data from cache`);
     if (!cacheEntry) {
       console.log('Cache miss');
       return null;
@@ -66,7 +67,7 @@ async function getFromCache(key: string, cacheType: 'places' | 'place') {
     if (error instanceof mongoose.Error) {
       throw new Error('Mongoose error');
     }
-    throw new Error(`Error getting from cache: ${error}`);
+    throw new Error(`Error getting ${cacheType} from cache: ${error}`);
   }
 }
 

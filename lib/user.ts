@@ -1,6 +1,6 @@
 import { connectToDatabase, handleMongooseError } from './mongodb';
 import User from '@/models/user';
-import { ReturnedPlace } from '@/types/places';
+import { FSQPlace } from '@/types/places';
 import { User as UserType, Review, SavedPlace } from '@/types/user';
 
 export const getORCreateUser = async (
@@ -79,7 +79,7 @@ export const deleteReview = async (
 
 export const createRecommendations = async (
   email: string,
-  recommendations: ReturnedPlace[]
+  recommendations: FSQPlace[]
 ): Promise<UserType | null> => {
   try {
     await connectToDatabase();
@@ -87,6 +87,7 @@ export const createRecommendations = async (
     if (!user) {
       throw new Error('User not found');
     }
+
     user.recommendations = recommendations;
     await user.save();
     console.log('Recommendations added');

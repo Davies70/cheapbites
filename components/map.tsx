@@ -1,7 +1,7 @@
 // components/Map.tsx
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState, memo } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -12,18 +12,18 @@ import {
 } from 'react-leaflet';
 import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { ReturnedPlace, Coordinates, Place } from '@/types/places';
+import { FSQPlace, Coordinates } from '@/types/places';
 import { ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Image as ImageType } from '@/types/images';
 
 interface MapProps {
   center: Coordinates;
   zoom: number;
-  places: ReturnedPlace[];
+  places: FSQPlace[];
   distance: number;
   onPlaceClick: (placeId: string) => void;
+  selectedPlaceId?: string; // 👈 add this prop
 }
 
 function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
@@ -34,38 +34,12 @@ function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
   return null;
 }
 
-// const createSvgIcon = () => {
-//   const div = document.createElement('div');
-//   div.innerHTML = `
-//     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#21c45d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin-icon lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
-//   `;
-
-//   return new Icon({
-//     iconUrl: 'data:image/svg+xml;base64,' + btoa(div.innerHTML),
-//     iconSize: [24, 24],
-//     iconAnchor: [12, 24],
-//     popupAnchor: [0, -24],
-//   });
-// };
-
-// const svgIcon = createSvgIcon();
-
-const customIcon = new Icon({
-  iconUrl: `/map-pin.png`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 24],
-  popupAnchor: [0, -24],
-});
-
-// Rest of your component remains the same...
 const CustomPopup = ({
   place,
   onPlaceClick,
-  image,
 }: {
-  place: ReturnedPlace;
+  place: FSQPlace;
   onPlaceClick: (placeId: string) => void;
-  image: ImageType;
 }) => (
   <div className='w-64 p-2'>
     <div className='flex items-center justify-between mb-2'>
@@ -74,19 +48,19 @@ const CustomPopup = ({
     <div className='mb-2 h-32 relative rounded-md overflow-hidden'>
       <Image
         src={
-          image?.prefix
-            ? `${image.prefix}300x200${image.suffix}`
-            : '/placeholder-place.png'
+          place.categories[0].icon.prefix +
+          'bg_64' +
+          place.categories[0].icon.suffix
         }
         alt={place.name}
-        layout='fill'
-        objectFit='cover'
+        fill
+        style={{ objectFit: 'cover' }}
         placeholder='blur'
         blurDataURL='/placeholder-place.png'
         sizes='300px'
       />
     </div>
-    <p className='text-sm mb-2'>{place.address}</p>
+    <p className='text-sm mb-2'>{place.location.formatted_address}</p>
     <div className='flex items-center justify-between'>
       <p className='text-xs text-gray-600'>
         {place.categories.map((cat) => cat.name).join(', ')}
@@ -95,7 +69,7 @@ const CustomPopup = ({
         variant='outline'
         size='sm'
         className='text-xs'
-        onClick={() => onPlaceClick(place.id)}
+        onClick={() => onPlaceClick(place.fsq_place_id)}
       >
         <ExternalLink className='w-3 h-3 mr-1' />
         View Details
@@ -104,18 +78,65 @@ const CustomPopup = ({
   </div>
 );
 
+const MemoMarker = memo(
+  ({
+    place,
+    onPlaceClick,
+    icon,
+  }: {
+    place: FSQPlace;
+    onPlaceClick: (id: string) => void;
+    icon: Icon;
+  }) => (
+    <Marker position={[place.latitude ?? 0, place.longitude ?? 0]} icon={icon}>
+      <Popup>
+        <CustomPopup place={place} onPlaceClick={onPlaceClick} />
+      </Popup>
+    </Marker>
+  ),
+  (prevProps, nextProps) =>
+    prevProps.place.fsq_place_id === nextProps.place.fsq_place_id &&
+    prevProps.icon === nextProps.icon
+);
+
+MemoMarker.displayName = 'MemoMarker';
+
 export default function Map({
   center,
   zoom,
   places,
   distance,
   onPlaceClick,
+  selectedPlaceId,
 }: MapProps) {
-  // Only initialize with a default center and zoom
   const initialPosition: LatLngExpression = [
     center.latitude || 0,
     center.longitude || 0,
   ];
+
+  // Default icon
+  const defaultIcon = useMemo(
+    () =>
+      new Icon({
+        iconUrl: `/map-pin.png`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24],
+      }),
+    []
+  );
+
+  // Highlight icon
+  const highlightIcon = useMemo(
+    () =>
+      new Icon({
+        iconUrl: `/green-map-pin.svg`, // 👈 upload/design a brighter/different pin
+        iconSize: [32, 32], // larger
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      }),
+    []
+  );
 
   return (
     <MapContainer
@@ -124,10 +145,8 @@ export default function Map({
       style={{ height: '100%', width: '100%' }}
       scrollWheelZoom={true}
     >
-      {/* Keep tile layer static */}
       <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
-      {/* Circle showing search radius */}
       <Circle
         center={[center.latitude, center.longitude]}
         radius={distance * 1000}
@@ -136,27 +155,17 @@ export default function Map({
         weight={3}
       />
 
-      {/* Place markers */}
       {places.map((place) => (
-        <Marker
-          key={place.id}
-          position={[
-            place.geocodes?.main?.latitude ?? 0,
-            place.geocodes?.main?.longitude ?? 0,
-          ]}
-          icon={customIcon}
-        >
-          <Popup>
-            <CustomPopup
-              place={place}
-              image={place.images[0]}
-              onPlaceClick={onPlaceClick}
-            />
-          </Popup>
-        </Marker>
+        <MemoMarker
+          key={place.fsq_place_id}
+          place={place}
+          icon={
+            place.fsq_place_id === selectedPlaceId ? highlightIcon : defaultIcon
+          }
+          onPlaceClick={onPlaceClick}
+        />
       ))}
 
-      {/* Imperatively control map view changes */}
       <MapView center={[center.latitude, center.longitude]} zoom={zoom} />
     </MapContainer>
   );

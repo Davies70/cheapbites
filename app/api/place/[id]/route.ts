@@ -1,4 +1,4 @@
-import { PlaceResponse, PlaceDetails } from '@/types/places';
+import { PlaceResponse } from '@/types/place';
 import { saveToCache, getFromCache } from '@/lib/cacheUtils';
 
 export async function GET(
@@ -11,7 +11,6 @@ export async function GET(
     ok: false,
     status: 404,
     message: 'Place not found',
-    place: {},
   };
 
   const cachedData = await getFromCache(`place_${id}`, 'place');
@@ -21,15 +20,16 @@ export async function GET(
       ok: true,
       status: 200,
       message: 'Place found in cache',
-      place: cachedData,
+      placeResponse: cachedData,
     };
+
     return new Response(JSON.stringify(placeRes), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { Accept: 'application/json' },
     });
   }
 
-  const apiKey = process.env.FOURSQUARE_API_KEY;
+  const apiKey = process.env.z;
   if (!apiKey) {
     return new Response(
       JSON.stringify({
@@ -37,26 +37,27 @@ export async function GET(
         status: 500,
         message: 'API Key is missing',
       }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { Accept: 'application/json' } }
     );
   }
 
   const placeParams = {
-    fsq_id: id,
-    fields:
-      'name,geocodes,location,categories,distance,closed_bucket,description,tel,fax,email,website,social_media,verified,hours,hours_popular,rating,popularity,price,menu,date_closed,photos,tips,tastes,features,store_id',
+    fsq_place_id: id,
+    // fields:
+    //   'name,geocodes,location,categories,distance,closed_bucket,description,tel,fax,email,website,social_media,verified,hours,hours_popular,rating,popularity,price,menu,date_closed,photos,tips,tastes,features,store_id',
   };
 
   const paramsString = new URLSearchParams(placeParams).toString();
 
-  const url = `https://api.foursquare.com/v3/places/${id}?${paramsString}`;
+  const url = `https://places-api.foursquare.com/places/${id}?${paramsString}`;
   const cacheKey = `place_${id}`;
 
   try {
     const response = await fetch(url, {
       headers: {
-        Authorization: `${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json',
+        'X-Places-API-Version': '2025-06-17',
       },
     });
 
@@ -67,7 +68,7 @@ export async function GET(
         ok: true,
         status: 200,
         message: 'Place found successfully',
-        place: data,
+        placeResponse: data,
       };
     } else {
       const errorData = await response.json().catch(() => ({}));
@@ -76,7 +77,6 @@ export async function GET(
         ok: false,
         status: response.status,
         message: errorData.message || response.statusText || 'Unknown error',
-        place: {},
       };
     }
   } catch (error) {
@@ -85,12 +85,11 @@ export async function GET(
       ok: false,
       status: 500,
       message: 'Failed to fetch place data',
-      place: {},
     };
   }
 
   return new Response(JSON.stringify(placeRes), {
     status: placeRes.status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { Accept: 'application/json' },
   });
 }

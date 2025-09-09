@@ -22,9 +22,9 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useSession } from 'next-auth/react';
 import { User } from '@/types/user';
-import { ReturnedPlace } from '@/types/places';
+import { FSQSearchResponse, FSQPlace } from '@/types/places';
 import SignInOverlay from '@/components/sign-in-overlay';
-import { set } from 'mongoose';
+
 
 // Mock data for featured collections
 const featuredCollections = [
@@ -45,7 +45,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [recommendations, setRecommendations] = useState<ReturnedPlace[]>([]);
+  const [recommendations, setRecommendations] = useState<FSQPlace[]>([]);
   const [recommendationError, setRecommendationError] = useState<string | null>(
     null
   );
@@ -211,9 +211,9 @@ export default function HomePage() {
               src='/food-spread.jpg'
               alt='Delicious food spread'
               className='w-full h-full object-cover opacity-30'
-              height={400}
-              width={800}
+              fill
               priority
+              rel='preload'
             />
           </div>
           <div className='relative z-10 text-center space-y-3 md:space-y-4 px-4'>

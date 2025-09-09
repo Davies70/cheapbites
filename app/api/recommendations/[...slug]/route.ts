@@ -1,9 +1,9 @@
-import { FoursquareSearchResponse, Place } from '@/types/places';
-import { Image } from '@/types/images';
-import { PlaceWithImages, ReturnedPlace } from '@/types/places';
+import { FSQSearchResponse } from '@/types/places';
+// import { Image } from '@/types/images';
+// import { PlaceWithImages, ReturnedPlace } from '@/types/places';
 import { createRecommendations } from '@/lib/user';
 
-const apiKey = process.env.FOURSQUARE_API_KEY || '';
+const apiKey = process.env.z || '';
 
 // Cuisine category mappings
 const cuisineCategoryMap: Record<string, string> = {
@@ -36,55 +36,56 @@ const getCategoryIds = (
   return `${quizId},${dietaryId}`;
 };
 
-const fetchTrendingImages = async (id: string): Promise<Image[]> => {
-  try {
-    const imageParams = new URLSearchParams({
-      classifications: 'food,indoor',
-    }).toString();
+// const fetchTrendingImages = async (id: string): Promise<Image[]> => {
+//   try {
+//     const imageParams = new URLSearchParams({
+//       classifications: 'food,indoor',
+//     }).toString();
 
-    const url = `https://api.foursquare.com/v3/places/${id}/photos?${imageParams}`;
+//     const url = `https://api.foursquare.com/v3/places/${id}/photos?${imageParams}`;
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-    });
+//     const response = await fetch(url, {
+//       headers: {
+//         Authorization: `${apiKey}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
 
-    if (response.ok) {
-      const data = await response.json();
-      return data.length > 0 ? data : [];
-    } else {
-      console.error('Image fetch failed:', response.statusText);
-    }
-  } catch (error) {
-    console.error('Error fetching images:', error);
-  }
-  return [];
-};
+//     if (response.ok) {
+//       const data = await response.json();
+//       return data.length > 0 ? data : [];
+//     } else {
+//       console.error('Image fetch failed:', response.statusText);
+//     }
+//   } catch (error) {
+//     console.error('Error fetching images:', error);
+//   }
+//   return [];
+// };
 
-const mapPlacesToImages = async (
-  places: Place[]
-): Promise<PlaceWithImages[]> => {
-  return Promise.all(
-    places.map(async (place) => {
-      const images = await fetchTrendingImages(place.fsq_id);
-      return { place, images };
-    })
-  );
-};
+// const mapPlacesToImages = async (
+//   places: Place[]
+// ): Promise<PlaceWithImages[]> => {
+//   return Promise.all(
+//     places.map(async (place) => {
+//       const images = await fetchTrendingImages(place.fsq_id);
+//       return { place, images };
+//     })
+//   );
+// };
 
 const fetchPlaces = async (
   params: Record<string, string>
-): Promise<FoursquareSearchResponse | null> => {
+): Promise<FSQSearchResponse | null> => {
   const queryParams = new URLSearchParams(params).toString();
-  const url = `https://api.foursquare.com/v3/places/search?${queryParams}`;
+  const url = `https://places-api.foursquare.com/places/search?${queryParams}`;
 
   try {
     const response = await fetch(url, {
       headers: {
-        Authorization: `${apiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        Accept: 'application/json',
+        'X-Places-API-Version': '2025-06-17',
       },
     });
 
@@ -165,23 +166,24 @@ export async function GET(
     );
   }
 
-  const placesWithImages = await mapPlacesToImages(placesData.results);
 
-  const returnedPlaces: ReturnedPlace[] = placesWithImages.map(
-    ({ place, images }) => ({
-      id: place.fsq_id,
-      name: place.name,
-      categories: place.categories,
-      address: place.location.address || 'Unknown',
-      lat: place.geocodes.roof?.latitude,
-      lon: place.geocodes.roof?.longitude,
-      distance: place.distance,
-      images,
-      geocodes: place.geocodes,
-    })
-  );
+  // const placesWithImages = await mapPlacesToImages(placesData.results);
 
-  const user = await createRecommendations(email, returnedPlaces);
+  // const returnedPlaces: ReturnedPlace[] = placesWithImages.map(
+  //   ({ place, images }) => ({
+  //     id: place.fsq_id,
+  //     name: place.name,
+  //     categories: place.categories,
+  //     address: place.location.address || 'Unknown',
+  //     lat: place.geocodes.roof?.latitude,
+  //     lon: place.geocodes.roof?.longitude,
+  //     distance: place.distance,
+  //     images,
+  //     geocodes: place.geocodes,
+  //   })
+  // );
+
+  const user = await createRecommendations(email, placesData.results);
 
   if (!user) {
     return new Response(

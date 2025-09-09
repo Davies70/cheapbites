@@ -12,8 +12,7 @@ import {
 } from '@/components/ui/select';
 import { ChevronUp, ChevronDown, Loader } from 'lucide-react';
 import PlaceCard from '@/components/place-card';
-import { PlaceCardSkeleton } from '@/components/place-card-skelenton';
-import { Coordinates, ReturnedPlace } from '@/types/places';
+import { FSQPlace, Coordinates } from '@/types/places';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import dynamic from 'next/dynamic';
@@ -89,15 +88,16 @@ export default function DiscoveryMap() {
     latitude: 0,
     longitude: 0,
   });
-  const [zoom, setZoom] = useState<number>(13);
+  const [zoom, setZoom] = useState<number>(50);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [filteredPlaces, setFilteredPlaces] = useState<ReturnedPlace[]>([]);
+  const [filteredPlaces, setFilteredPlaces] = useState<FSQPlace[]>([]);
   const [likedPlaces, setLikedPlaces] = useState<Set<string>>(new Set());
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [moodFilter, setMoodFilter] = useState<string>('All');
-  const [places, setPlaces] = useState<ReturnedPlace[]>([]);
+  const [places, setPlaces] = useState<FSQPlace[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
 
   // Use ref to track if initial load is complete
   const initialLoadComplete = useRef(false);
@@ -158,7 +158,10 @@ export default function DiscoveryMap() {
         place.categories.some((cat) => cat.name === categoryFilter);
       const moodMatch =
         moodFilter === 'All' || assignMood(place.categories) === moodFilter;
-      const withinDistance = place.distance <= maxDistanceMeters;
+      let withinDistance = false;
+      if (place.distance) {
+        withinDistance = place?.distance <= maxDistanceMeters;
+      }
       return categoryMatch && moodMatch && withinDistance;
     });
   }, [distance, categoryFilter, moodFilter, places]);
@@ -182,10 +185,14 @@ export default function DiscoveryMap() {
   }, [places]);
 
   // Memoize callbacks to prevent child re-renders
-  const focusOnPlace = useCallback((latitude: number, longitude: number) => {
-    setCenter({ latitude, longitude });
-    setZoom(18);
-  }, []);
+  const focusOnPlace = useCallback(
+    (latitude: number, longitude: number, placeId: string) => {
+      setCenter({ latitude, longitude });
+      setZoom(18);
+      setFocusedPlaceId(placeId);
+    },
+    []
+  );
 
   const toggleLike = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -241,7 +248,6 @@ export default function DiscoveryMap() {
     );
   }
 
-
   return (
     <div className='relative h-screen w-full overflow-hidden'>
       <div className='absolute inset-0 z-0 w-screen'>
@@ -251,6 +257,7 @@ export default function DiscoveryMap() {
           places={filteredPlaces}
           distance={distance}
           onPlaceClick={handlePlaceClick}
+          selectedPlaceId={focusedPlaceId ?? ''}
         />
       </div>
 
@@ -289,7 +296,7 @@ export default function DiscoveryMap() {
               <Slider
                 value={[distance]}
                 onValueChange={handleDistanceChange}
-                max={20}
+                max={5}
                 step={0.5}
                 min={1}
               />
@@ -328,9 +335,9 @@ export default function DiscoveryMap() {
         </div>
 
         <div className='overflow-y-auto h-[calc(100%-8rem)] md:h-[calc(100%-12rem)] p-4'>
-          {filteredPlaces.map((place) => (
+          {filteredPlaces.map((place, index) => (
             <PlaceCard
-              key={place.id}
+              key={place.fsq_place_id}
               name={place.name}
               icon={
                 place.categories[0].icon.prefix +
@@ -338,14 +345,22 @@ export default function DiscoveryMap() {
                 place.categories[0].icon.suffix
               }
               category={place.categories[0]?.name || 'Unknown Category'}
-              distance={place.distance}
+              distance={place.distance ?? 0}
               onFocus={() =>
-                place.lat && place.lon && focusOnPlace(place.lat, place.lon)
+                place.latitude &&
+                place.longitude &&
+                focusOnPlace(
+                  place.latitude,
+                  place.longitude,
+                  place.fsq_place_id
+                )
               }
-              isLiked={likedPlaces.has(place.id)}
-              onLike={(e) => toggleLike(place.id, e)}
+              isLiked={likedPlaces.has(place.fsq_place_id)}
+              onLike={(e) => toggleLike(place.fsq_place_id, e)}
               mood={assignMood(place.categories)}
-              goToPage={(e) => handlePlaceCardClick(e, place.id)}
+              goToPage={(e) => handlePlaceCardClick(e, place.fsq_place_id)}
+              priority={index < 3}
+              isFocused={focusedPlaceId === place.fsq_place_id}
             />
           ))}
         </div>

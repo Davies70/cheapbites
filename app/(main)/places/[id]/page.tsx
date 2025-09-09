@@ -1,11 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
+import { useParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Loader2,
+  AlertCircle,
+  BookmarkPlus,
+  CheckCircle,
+  Pencil,
+  Loader,
+  Trash2,
+  Star,
+  Edit,
+} from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,40 +30,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  MapPin,
-  Star,
-  Clock,
-  Phone,
-  Globe,
-  Facebook,
-  Twitter,
-  Instagram,
-  DollarSign,
-  Utensils,
-  Users,
-  Wifi,
-  Music,
-  ExternalLink,
-  Edit,
-  Trash2,
-  Loader,
-  Beer,
-  Martini,
-  Wine,
-  Package,
-  Soup,
-  MapPinIcon,
-  Bookmark,
-} from 'lucide-react';
-import { PlaceDetails } from '@/types/places';
-import { useParams } from 'next/navigation';
-import { Badge } from '@/components/ui/badge';
-import { Check, X } from 'lucide-react';
-import { User } from '@/types/user';
-import { useSession } from 'next-auth/react';
-import { useToast } from '@/hooks/use-toast';
+import { PlaceResponse, Place } from '@/types/place';
 import { SavedPlace } from '@/types/user';
+import ContactCard from '@/components/info-card';
 
 interface UserReview {
   rating: number;
@@ -60,268 +42,87 @@ interface UserReview {
   name: string;
 }
 
-interface AttributesProps {
-  attributes: PlaceDetails['features']['attributes'];
-}
-
-const AttributeBadge = ({ value }: { value: string }) => {
-  if (value === 'yes')
-    return (
-      <Badge variant='default'>
-        <Check className='w-3 h-3 mr-1 ' /> Yes
-      </Badge>
-    );
-  if (value === 'no')
-    return (
-      <Badge variant='secondary'>
-        <X className='w-3 h-3 mr-1' /> No
-      </Badge>
-    );
-  return <Badge variant='outline'>{value}</Badge>;
-};
-
-const Attributes = ({ attributes }: AttributesProps) => {
-  return (
-    <Card className='mt-6 p-4 md:p-6'>
-      <CardHeader>
-        <CardTitle className='text-lg md:text-xl'>Attributes</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-          {Object.entries(attributes).map(([key, value]) => (
-            <div
-              key={key}
-              className='flex items-center justify-between gap-2 md:gap-1'
-            >
-              <span className='text-sm md:text-base capitalize'>
-                {key.replace(/_/g, ' ')}
-              </span>
-              <AttributeBadge value={value} />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default function Place() {
+export default function PlacePage() {
   const { id } = useParams();
   const { data: session } = useSession();
+  const { toast } = useToast();
 
-  const [placeData, setPlaceData] = useState<PlaceDetails | null>(null);
+  const [place, setPlace] = useState<Place | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [isSaved, setIsSaved] = useState(false);
   const [isVisited, setIsVisited] = useState(false);
-  const [userReview, setUserReview] = useState<UserReview | undefined>(
-    undefined
-  );
+  const [userReview, setUserReview] = useState<UserReview | undefined>();
+  const [isReview, setIsReview] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [tempRating, setTempRating] = useState(0);
   const [tempReview, setTempReview] = useState('');
-  const [user, setUser] = useState<User | null>(null);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [isDeletingReview, setIsDeletingReview] = useState(false);
-  const { toast } = useToast();
 
+  const reviewRef = useRef<HTMLDivElement>(null);
+
+  // Fetch place + user data
   useEffect(() => {
-    fetch(`/api/place/${id}`)
-      .then((res) => res.json())
-      .then(({ place }) => setPlaceData(place))
-      .catch((e) => console.error('Error fetching place data:', e));
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`/api/place/${id}`);
+        const data: PlaceResponse = await res.json();
+        setPlace(data?.placeResponse ?? null);
+      } catch {
+        toast({
+          title: 'Error loading place',
+          description: 'Unable to fetch details for this place.',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
 
-    if (session?.user?.email) {
-      fetch(`/api/user/${session?.user?.email}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setUser(data);
-          const userReview: UserReview = data.reviews.find(
+      if (session?.user?.email) {
+        try {
+          const res = await fetch(`/api/user/${session.user.email}`);
+          const data = await res.json();
+
+          const review: UserReview | undefined = data.reviews.find(
             (r: UserReview) => r.placeId === id
           );
-          if (userReview) {
-            setUserReview(userReview);
+          if (review) {
+            setUserReview(review);
+            setIsReview(true); // auto-show review card
           }
-          setIsVisited(
-            data.visited.some((place: { id: string }) => place.id === id)
-          );
-          setIsSaved(
-            data.saved.some((place: { id: string }) => place.id === id)
-          );
-        })
-        .catch((e) => console.error('Error fetching user data:', e));
-    }
-  }, [id, session]);
 
-  const toggleSave = async () => {
-    if (!session?.user?.email) {
-      toast({
-        title: 'Login Required',
-        description: 'Please login to save this place.',
-        variant: 'default',
-      });
-      return;
-    }
-
-    // Optimistically update the UI
-    setIsSaved((prev) => !prev);
-
-    try {
-      const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id,
-          name: placeData?.name,
-          category: placeData?.categories[0].name,
-          rating: placeData?.rating,
-          address: placeData?.location.formatted_address,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save place');
-      }
-
-      const data = await response.json();
-      setIsSaved(data.saved.some((p: SavedPlace) => p.id === id));
-    } catch (error) {
-      console.error('Error saving place:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save place. Please try again.',
-        variant: 'destructive',
-      });
-      // Revert the optimistic update if there's an error
-      setIsSaved((prev) => !prev);
-    }
-  };
-
-  const toggleMustVisit = async () => {
-    if (!session?.user?.email) {
-      toast({
-        title: 'Login Required',
-        description: 'Please login to add this place to your visited list.',
-        variant: 'default',
-      });
-      return;
-    }
-
-    // Optimistically update the UI
-    setIsVisited((prev) => !prev);
-
-    try {
-      const response = await fetch(
-        `/api/user/visited/${session?.user?.email}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id,
-            name: placeData?.name,
-            category: placeData?.categories[0].name,
-            rating: placeData?.rating,
-            address: placeData?.location.formatted_address,
-          }),
+          setIsVisited(data.visited.some((p: { id: string }) => p.id === id));
+          setIsSaved(data.saved.some((p: { id: string }) => p.id === id));
+        } catch (e) {
+          console.error('Error fetching user data:', e);
         }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to update visited list');
       }
+    };
 
-      const data = await response.json();
-      setIsVisited(data.visited.some((p: SavedPlace) => p.id === id));
-    } catch (error) {
-      console.error('Error updating visited list:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update visited list. Please try again.',
-        variant: 'destructive',
-      });
-      // Revert the optimistic update if there's an error
-      setIsVisited((prev) => !prev);
+    fetchData();
+  }, [id, session?.user?.email, toast]);
+
+  // Scroll review into view when opened
+  useEffect(() => {
+    if (isReview && reviewRef.current) {
+      reviewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  };
+  }, [isReview]);
 
-  const shareOnSocialMedia = (platform: string) => {
-    const url = `https://cheapbites.com/restaurant/${placeData?.fsq_id}`;
-    const text = `Check out ${placeData?.name} on CheapBites!`;
-
-    switch (platform) {
-      case 'facebook':
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-            url
-          )}`,
-          '_blank'
-        );
-        break;
-      case 'twitter':
-        window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-            text
-          )}&url=${encodeURIComponent(url)}`,
-          '_blank'
-        );
-        break;
-      case 'instagram':
-        navigator.clipboard.writeText(`${text} ${url}`);
-        alert('Link copied! You can now paste it on Instagram.');
-        break;
-    }
-  };
-
-  const getPriceRange = (price: number): string => {
-    switch (price) {
-      case 1:
-        return 'Affordable';
-      case 2:
-        return 'Moderate';
-      case 3:
-        return 'Expensive';
-      case 4:
-        return 'Very Expensive';
-      default:
-        return 'Not specified';
-    }
-  };
-
-  const getRatingColor = (rating: number): string => {
-    if (rating >= 9.0) return 'text-green-600';
-    if (rating >= 8.0) return 'text-green-500';
-    if (rating >= 7.0) return 'text-lime-500';
-    if (rating >= 6.0) return 'text-yellow-500';
-    if (rating >= 5.0) return 'text-orange-500';
-    if (rating >= 4.0) return 'text-orange-600';
-    return 'text-red-500';
-  };
-
-  const openMap = () => {
-    if (placeData?.geocodes?.main) {
-      const { latitude, longitude } = placeData.geocodes.main;
-      if (latitude && longitude) {
-        window.open(
-          `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
-          '_blank'
-        );
-      } else {
-        window.open(
-          `https://www.google.com/maps/search/?api=1&query=${placeData.name},${placeData.location.formatted_address}`,
-          '_blank'
-        );
-      }
-    }
+  // === Actions ===
+  const handleShowReview = () => {
+    setIsReview(true);
+    setIsEditing(false);
+    setTempRating(0);
+    setTempReview('');
   };
 
   const handleReviewSubmit = async () => {
     if (tempReview.trim() === '' || tempRating === 0) {
       toast({
         title: 'Incomplete Review',
-        description:
-          'Please provide both a rating and a review before submitting.',
+        description: 'Please provide both a rating and review.',
         variant: 'destructive',
       });
       return;
@@ -333,8 +134,7 @@ export default function Place() {
     ) {
       toast({
         title: 'No Changes',
-        description: 'Your review is already the same. No changes made.',
-        variant: 'default',
+        description: 'Your review is unchanged.',
       });
       return;
     }
@@ -346,24 +146,19 @@ export default function Place() {
       review: tempReview,
       created_at: new Date().toISOString(),
       placeId: id as string,
-      name: placeData?.name || '',
+      name: place?.name || '',
     };
 
     try {
       const res = await fetch(`/api/user/review/${session?.user?.email}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newReview),
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to submit review');
-      }
+      if (!res.ok) throw new Error('Failed to submit review');
 
       const userWithNewReview = await res.json();
-
       const updatedReview: UserReview = userWithNewReview.reviews.find(
         (r: UserReview) => r.placeId === id
       );
@@ -375,15 +170,14 @@ export default function Place() {
         setTempReview('');
         toast({
           title: 'Review Submitted',
-          description: 'Your review has been successfully saved.',
-          variant: 'default',
+          description: 'Saved successfully.',
         });
       }
     } catch (error) {
-      console.error('Error submitting review:', error);
+      console.error(error);
       toast({
         title: 'Error',
-        description: 'Failed to submit review. Please try again.',
+        description: 'Failed to submit review.',
         variant: 'destructive',
       });
     } finally {
@@ -396,6 +190,7 @@ export default function Place() {
       setTempRating(userReview.rating);
       setTempReview(userReview.review);
       setIsEditing(true);
+      setIsReview(true);
     }
   };
 
@@ -404,27 +199,20 @@ export default function Place() {
     try {
       const res = await fetch(`/api/user/review/${session?.user?.email}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userReview?.placeId),
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to delete review');
-      }
+      if (!res.ok) throw new Error('Failed to delete review');
 
       setUserReview(undefined);
-      toast({
-        title: 'Review Deleted',
-        description: 'Your review has been successfully deleted.',
-        variant: 'default',
-      });
+      setIsReview(false);
+      toast({ title: 'Review Deleted', description: 'Deleted successfully.' });
     } catch (error) {
-      console.error('Error deleting review:', error);
+      console.error(error);
       toast({
         title: 'Error',
-        description: 'Failed to delete review. Please try again.',
+        description: 'Failed to delete review.',
         variant: 'destructive',
       });
     } finally {
@@ -432,421 +220,405 @@ export default function Place() {
     }
   };
 
-  if (!placeData) {
+  // const toggleSave = async () => {
+  //   if (!session?.user?.email) {
+  //     toast({
+  //       title: 'Login Required',
+  //       description: 'Please login to save this place.',
+  //       variant: 'default',
+  //     });
+  //     return;
+  //   }
+
+  //   // Optimistically update the UI
+  //   setIsSaved((prev) => !prev);
+
+  //   try {
+  //     const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         id,
+  //         name: place?.name,
+  //         category: place?.categories[0].name,
+  //         rating: place?.rating,
+  //         address: place?.location.formatted_address,
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to save place');
+  //     }
+
+  //     const data = await response.json();
+  //     setIsSaved(data.saved.some((p: SavedPlace) => p.id === id));
+  //   } catch (error) {
+  //     console.error('Error saving place:', error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Failed to save place. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //     // Revert the optimistic update if there's an error
+  //     setIsSaved((prev) => !prev);
+  //   }
+  // };
+
+  // const toggleMustVisit = async () => {
+  //   if (!session?.user?.email) {
+  //     toast({
+  //       title: 'Login Required',
+  //       description: 'Please login to add this place to your visited list.',
+  //       variant: 'default',
+  //     });
+  //     return;
+  //   }
+
+  //   // Optimistically update the UI
+  //   setIsVisited((prev) => !prev);
+
+  //   try {
+  //     const response = await fetch(
+  //       `/api/user/visited/${session?.user?.email}`,
+  //       {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({
+  //           id,
+  //           name: place?.name,
+  //           category: place?.categories[0].name,
+  //           rating: place?.rating,
+  //           address: place?.location.formatted_address,
+  //         }),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error('Failed to update visited list');
+  //     }
+
+  //     const data = await response.json();
+  //     setIsVisited(data.visited.some((p: SavedPlace) => p.id === id));
+  //   } catch (error) {
+  //     console.error('Error updating visited list:', error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Failed to update visited list. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //     // Revert the optimistic update if there's an error
+  //     setIsVisited((prev) => !prev);
+  //   }
+  // };
+
+  const toggleSave = async () => {
+    if (!session?.user?.email) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to save this place.',
+        variant: 'default',
+      });
+      return;
+    }
+
+    // Optimistically update UI
+    setIsSaved((prev) => !prev);
+    const newStatus = !isSaved;
+
+    try {
+      const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          name: place?.name,
+          category: place?.categories[0].name,
+          rating: place?.rating,
+          address: place?.location.formatted_address,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save place');
+
+      const data = await response.json();
+      setIsSaved(data.saved.some((p: SavedPlace) => p.id === id));
+
+      toast({
+        title: newStatus ? 'Place Saved' : 'Removed from Saved',
+        description: newStatus
+          ? `${place?.name} has been saved to your list.`
+          : `${place?.name} was removed from your saved places.`,
+      });
+    } catch (error) {
+      console.error('Error saving place:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save place. Please try again.',
+        variant: 'destructive',
+      });
+      setIsSaved((prev) => !prev); // revert
+    }
+  };
+
+  const toggleMustVisit = async () => {
+    if (!session?.user?.email) {
+      toast({
+        title: 'Login Required',
+        description: 'Please login to update your visited list.',
+        variant: 'default',
+      });
+      return;
+    }
+
+    setIsVisited((prev) => !prev);
+    const newStatus = !isVisited;
+
+    try {
+      const response = await fetch(
+        `/api/user/visited/${session?.user?.email}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id,
+            name: place?.name,
+            category: place?.categories[0].name,
+            rating: place?.rating,
+            address: place?.location.formatted_address,
+          }),
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to update visited list');
+
+      const data = await response.json();
+      setIsVisited(data.visited.some((p: SavedPlace) => p.id === id));
+
+      toast({
+        title: newStatus ? 'Marked as Visited' : 'Removed from Visited',
+        description: newStatus
+          ? `${place?.name} has been added to your visited list.`
+          : `${place?.name} was removed from your visited list.`,
+      });
+    } catch (error) {
+      console.error('Error updating visited list:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update visited list. Please try again.',
+        variant: 'destructive',
+      });
+      setIsVisited((prev) => !prev); // revert
+    }
+  };
+
+  // === Loading / Error states ===
+  if (loading) {
     return (
       <div className='flex justify-center items-center h-screen'>
-        <Loader className='w-8 h-8 animate-spin text-primary' />
+        <Loader2 className='w-8 h-8 animate-spin text-primary' />
       </div>
     );
   }
 
-  const imageToUse = placeData?.photos[0]?.prefix
-    ? `${placeData.photos[0]?.prefix}original${placeData.photos[0]?.suffix}`
-    : '/placeholder-place.png';
+  if (!place) {
+    return (
+      <div className='flex justify-center items-center h-screen text-gray-500'>
+        <AlertCircle className='w-6 h-6 mr-2' />
+        Place not found
+      </div>
+    );
+  }
+
+  const categoryIcon = place?.categories[0]?.icon
+    ? `${place.categories[0].icon.prefix}bg_64${place.categories[0].icon.suffix}`
+    : '';
 
   return (
     <div className='max-w-4xl mx-auto p-4 space-y-6'>
-      <div className='relative h-48 sm:h-64 md:h-96 rounded-lg overflow-hidden'>
+      {/* Header */}
+      <div className='relative h-56 sm:h-72 md:h-96 rounded-lg overflow-hidden'>
         <Image
-          src={imageToUse}
-          alt={placeData.name}
-          layout='fill'
-          objectFit='cover'
-          sizes='(min-width: 640px) 50vw, 100vw'
+          src={'/placeholder-place.png'}
+          alt={place?.name}
+          fill
+          className='object-cover'
+          sizes='100vw'
+          priority
         />
-        <div className='absolute inset-0 bg-black bg-opacity-40 flex items-end'>
+        <div className='absolute inset-0 bg-black/40 flex items-end'>
           <div className='p-4 text-white'>
-            <h1 className='text-xl sm:text-2xl md:text-4xl font-bold'>
-              {placeData.name}
-            </h1>
-            <p className='text-sm md:text-base'>
-              {placeData.categories[0].name}
-            </p>
+            <h1 className='text-2xl md:text-4xl font-bold'>{place?.name}</h1>
+            {place.categories.length > 0 && (
+              <p className='text-sm md:text-base'>{place.categories[0].name}</p>
+            )}
           </div>
         </div>
+        {categoryIcon && (
+          <div className='absolute right-0 bottom-0 p-2'>
+            <Image src={categoryIcon} alt='icon' width={48} height={48} />
+          </div>
+        )}
       </div>
 
-      <div className='flex flex-col sm:flex-row sm:flex-wrap gap-2 justify-between items-center'>
-        <div className='flex gap-2 w-full sm:w-auto'>
+      <ContactCard place={place} />
+
+      {/* User Actions */}
+      <div className='flex flex-wrap gap-3'>
+        <Button
+          onClick={toggleSave}
+          variant='secondary'
+          disabled={!session?.user}
+          title={!session?.user ? 'Sign in to save' : undefined}
+        >
+          <BookmarkPlus className='w-4 h-4 mr-2' />
+          {isSaved ? 'Saved' : 'Save'}
+        </Button>
+        <Button
+          onClick={toggleMustVisit}
+          variant='secondary'
+          disabled={!session?.user}
+          title={!session?.user ? 'Sign in to mark visited' : undefined}
+        >
+          <CheckCircle className='w-4 h-4 mr-2' />
+          {isVisited ? 'Visited' : 'Mark Visited'}
+        </Button>
+        {!userReview && !isReview && (
           <Button
-            variant={isSaved ? 'default' : 'outline'}
-            size='sm'
-            onClick={toggleSave}
-            className='flex-1 sm:flex-none'
+            onClick={session?.user ? handleShowReview : undefined}
+            disabled={!session?.user}
+            title={!session?.user ? 'Sign in to review' : undefined}
           >
-            <Bookmark
-              className={`w-4 h-4 mr-2 ${isSaved ? 'fill-current' : ''}`}
-            />
-            {isSaved ? 'Saved' : 'Save'}
+            <Pencil className='w-4 h-4 mr-2' />
+            Review
           </Button>
-          <Button
-            variant={isVisited ? 'default' : 'outline'}
-            size='sm'
-            onClick={toggleMustVisit}
-            className='flex-1 sm:flex-none'
-          >
-            <MapPinIcon
-              className={`w-4 h-4 mr-2 ${isVisited ? 'fill-current' : ''}`}
-            />
-            {isVisited ? 'Visited' : 'Add to Visited List'}
-          </Button>
-        </div>
-        <div className='flex gap-2 mt-2 sm:mt-0'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => shareOnSocialMedia('facebook')}
-          >
-            <Facebook className='w-4 h-4' />
-            <span className='sr-only'>Share on Facebook</span>
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => shareOnSocialMedia('twitter')}
-          >
-            <Twitter className='w-4 h-4' />
-            <span className='sr-only'>Share on Twitter</span>
-          </Button>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => shareOnSocialMedia('instagram')}
-          >
-            <Instagram className='w-4 h-4' />
-            <span className='sr-only'>Share on Instagram</span>
-          </Button>
-        </div>
+        )}
       </div>
 
-      <Card>
-        <CardContent className='p-4 space-y-4'>
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
-            <div className='flex items-center mb-2 sm:mb-0'>
-              <MapPin className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
-              <p className='text-sm'>{placeData.location.formatted_address}</p>
-            </div>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={openMap}
-              className='w-full sm:w-auto'
-            >
-              <ExternalLink className='w-4 h-4 mr-2' />
-              Open Map
-            </Button>
-          </div>
-          <div className='flex items-center'>
-            <Clock className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
-            <p className='text-sm'>
-              {placeData.hours?.display || 'Hours not available'}
-            </p>
-          </div>
-          {placeData.closed_bucket && (
-            <div className='flex items-center mt-2'>
-              <div
-                className={`w-3 h-3 rounded-full mr-2 ${
-                  placeData.closed_bucket === 'LikelyOpen' ||
-                  placeData.closed_bucket === 'VeryLikelyOpen'
-                    ? 'bg-green-500'
-                    : 'bg-red-500'
-                }`}
-              ></div>
-              <p className='text-sm'>
-                {placeData.closed_bucket.replace(/([A-Z])/g, ' $1').trim()}
-              </p>
-            </div>
-          )}
-          <div className='flex items-center'>
-            <Phone className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
-            <p className='text-sm'>{placeData.tel || 'Phone not available'}</p>
-          </div>
-          <div className='flex items-center'>
-            <Globe className='w-5 h-5 mr-2 text-gray-500 flex-shrink-0' />
-            {placeData.website ? (
-              <a
-                href={placeData.website}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-sm text-blue-500 hover:underline break-all'
-              >
-                {placeData.website}
-              </a>
-            ) : (
-              <p className='text-sm'>Website not available</p>
-            )}
-          </div>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center'>
-              <DollarSign className='w-5 h-5 mr-2 text-gray-500' />
-              <p className='text-sm'>{getPriceRange(placeData.price || 0)}</p>
-            </div>
-            <div className='flex items-center'>
-              <Star
-                className={`w-5 h-5 mr-2 ${getRatingColor(
-                  placeData.rating || 0
-                )}`}
-              />
-              <p className='text-sm font-bold'>
-                {placeData.rating?.toFixed(1) || 'N/A'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className='p-4 space-y-4'>
-          <h2 className='text-lg font-semibold'>Features</h2>
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-            {placeData.features?.payment?.credit_cards
-              ?.accepts_credit_cards && (
-              <div className='flex items-center'>
-                <DollarSign className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Accepts Credit Cards</p>
-              </div>
-            )}
-            {placeData.features?.food_and_drink?.meals?.brunch && (
-              <div className='flex items-center'>
-                <Soup className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Brunch</p>
-              </div>
-            )}
-            {placeData.features?.food_and_drink?.meals?.happy_hour && (
-              <div className='flex items-center'>
-                <Wine className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Happy Hour</p>
-              </div>
-            )}
-            {placeData.features?.food_and_drink?.alcohol?.cocktails && (
-              <div className='flex items-center'>
-                <Martini className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Cocktails</p>
-              </div>
-            )}
-            {placeData.features?.food_and_drink?.alcohol?.full_bar && (
-              <div className='flex items-center'>
-                <Beer className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Full Bar</p>
-              </div>
-            )}
-            {placeData.features?.services?.dine_in?.reservations && (
-              <div className='flex items-center'>
-                <Users className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Reservations</p>
-              </div>
-            )}
-            {placeData.features?.services?.delivery && (
-              <div className='flex items-center'>
-                <Package className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Delivery</p>
-              </div>
-            )}
-            {placeData.features?.amenities?.outdoor_seating && (
-              <div className='flex items-center'>
-                <Utensils className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Outdoor Seating</p>
-              </div>
-            )}
-            {placeData.features?.amenities?.wifi !== 'n' && (
-              <div className='flex items-center'>
-                <Wifi className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Wi-Fi Available</p>
-              </div>
-            )}
-            {placeData.features?.amenities?.live_music && (
-              <div className='flex items-center'>
-                <Music className='w-5 h-5 mr-2 text-gray-500' />
-                <p className='text-sm'>Live Music</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {placeData?.features?.attributes && (
-        <Attributes attributes={placeData.features.attributes} />
+      {!session?.user && (
+        <div className='text-xs text-gray-500'>Sign in to perform actions.</div>
       )}
 
-      {placeData.tastes && placeData.tastes.length > 0 && (
-        <Card>
+      {/* Review Card */}
+      {isReview && (
+        <Card ref={reviewRef}>
           <CardHeader>
-            <CardTitle className='text-lg'>Tastes</CardTitle>
+            <CardTitle className='text-lg'>Your Review</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className='flex flex-wrap gap-2'>
-              {placeData.tastes.map((taste, index) => (
-                <Badge key={index} variant='secondary'>
-                  {taste}
-                </Badge>
-              ))}
-            </div>
+          <CardContent className='space-y-4'>
+            {userReview && !isEditing ? (
+              <>
+                <div className='flex items-center space-x-2'>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-5 h-5 ${
+                        star <= userReview.rating
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className='text-xs text-gray-600'>
+                  {new Date(userReview.created_at).toLocaleDateString()}
+                </p>
+                <p className='text-sm'>{userReview.review}</p>
+                <div className='flex gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={handleEditReview}
+                  >
+                    <Edit className='w-4 h-4 mr-2' />
+                    Edit
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        disabled={isDeletingReview}
+                      >
+                        {isDeletingReview ? (
+                          <>
+                            <Loader className='w-4 h-4 mr-2 animate-spin' />
+                            Deleting...
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className='w-4 h-4 mr-2' />
+                            Delete
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteReview}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className='flex items-center space-x-2 mb-4'>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-6 h-6 cursor-pointer ${
+                        star <= tempRating
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                      }`}
+                      onClick={() => setTempRating(star)}
+                    />
+                  ))}
+                </div>
+                <Textarea
+                  placeholder={
+                    session
+                      ? 'Write your review here...'
+                      : 'Sign in to write reviews...'
+                  }
+                  value={tempReview}
+                  onChange={(e) => setTempReview(e.target.value)}
+                  rows={4}
+                  disabled={!session}
+                />
+                <Button
+                  onClick={handleReviewSubmit}
+                  disabled={isSubmittingReview || !session}
+                >
+                  {isSubmittingReview ? (
+                    <>
+                      <Loader className='w-4 h-4 mr-2 animate-spin' />
+                      {isEditing ? 'Updating...' : 'Submitting...'}
+                    </>
+                  ) : isEditing ? (
+                    'Update Review'
+                  ) : (
+                    'Submit Review'
+                  )}
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle className='text-lg'>Your Review</CardTitle>
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          {userReview && !isEditing ? (
-            <div className='space-y-4'>
-              <div className='flex items-center space-x-2'>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-5 h-5 ${
-                      star <= userReview.rating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className='text-xs text-gray-600'>
-                {new Date(userReview.created_at).toLocaleDateString()}
-              </p>
-              <p className='text-sm'>{userReview.review}</p>
-              <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2'>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={handleEditReview}
-                  className='w-full sm:w-auto'
-                >
-                  <Edit className='w-4 h-4 mr-2' />
-                  Edit Review
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      className='w-full sm:w-auto'
-                      disabled={isDeletingReview}
-                    >
-                      {isDeletingReview ? (
-                        <>
-                          <Loader className='w-4 h-4 mr-2 animate-spin' />
-                          Deleting...
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className='w-4 h-4 mr-2' />
-                          Delete Review
-                        </>
-                      )}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete your review.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteReview}>
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          ) : (
-            <div className='space-y-4'>
-              <div className='flex items-center space-x-2 mb-4'>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-6 h-6 cursor-pointer ${
-                      star <= tempRating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                    }`}
-                    onClick={() => setTempRating(star)}
-                  />
-                ))}
-              </div>
-              <Textarea
-                placeholder={session ? 'Write your review here...' : 'Sign in to create reviews...'}
-                value={tempReview}
-                onChange={(e) => setTempReview(e.target.value)}
-                rows={4}
-                className='w-full p-2 border rounded-md text-sm'
-                disabled={!session}
-              />
-              <Button
-                onClick={handleReviewSubmit}
-                className='w-full sm:w-auto'
-                disabled={isSubmittingReview || !session}
-              >
-                {isSubmittingReview ? (
-                  <>
-                    <Loader className='w-4 h-4 mr-2 animate-spin' />
-                    {isEditing ? 'Updating...' : 'Submitting...'}
-                  </>
-                ) : isEditing ? (
-                  'Update Review'
-                ) : (
-                  'Submit Review'
-                )}
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue='photos'>
-        <TabsList className='w-full justify-start'>
-          <TabsTrigger value='photos'>Photos</TabsTrigger>
-          <TabsTrigger value='tips'>Tips</TabsTrigger>
-        </TabsList>
-        <TabsContent value='photos' className='mt-4'>
-          {placeData.photos ? (
-            <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4'>
-              {placeData.photos.length > 0 ? (
-                placeData.photos.map((photo) => (
-                  <div
-                    key={photo.id}
-                    className='aspect-square rounded-lg overflow-hidden'
-                  >
-                    <Image
-                      src={`${photo.prefix}300x300${photo.suffix}`}
-                      alt={placeData.name}
-                      width={300}
-                      height={300}
-                      objectFit='cover'
-                    />
-                  </div>
-                ))
-              ) : (
-                <p className='text-sm text-gray-600'>No photos available</p>
-              )}
-            </div>
-          ) : (
-            <div className='flex justify-center items-center h-32'>
-              <Loader className='w-6 h-6 animate-spin text-primary' />
-            </div>
-          )}
-        </TabsContent>
-        <TabsContent value='tips' className='mt-4 space-y-4'>
-          {placeData.tips?.map((tip, index) => (
-            <Card key={index}>
-              <CardContent className='p-4'>
-                <p className='text-xs text-gray-600 mb-2'>
-                  {new Date(tip.created_at).toLocaleDateString()}
-                </p>
-                <p className='text-sm'>{tip.text}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }

@@ -3,12 +3,12 @@
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import TrendingPlaceCard from './trending-place-card';
-import { ReturnedPlace } from '@/types/places';
+import { FSQPlace } from '@/types/places';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface UserRecommendationsProps {
-  recommendations: ReturnedPlace[];
+  recommendations: FSQPlace[];
   onChangePreferences: () => void;
   error: string | null;
   isLoading: boolean;
@@ -57,18 +57,19 @@ const UserRecommendations = ({
       </div>
       <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
         <div className='flex w-max space-x-4 p-4'>
-          {recommendations.map((place: ReturnedPlace) => (
-            <div key={place.id} className='w-40 sm:w-72 flex-shrink-0'>
+          {recommendations.map((place: FSQPlace) => (
+            <div
+              key={place.fsq_place_id}
+              className='w-40 sm:w-72 flex-shrink-0'
+            >
               <TrendingPlaceCard
                 name={place.name}
                 category={place.categories[0].name}
                 priceForTwo={0}
-                address={place.address}
-                id={place.id}
-                latitude={place.lat}
-                longitude={place.lon}
+                address={place.location.address}
+                id={place.fsq_place_id}
                 distance={place.distance}
-                images={place.images}
+                images={place.categories[0].icon}
               />
             </div>
           ))}

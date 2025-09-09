@@ -13,6 +13,8 @@ interface PlaceCardProps {
   isLiked: boolean;
   onLike: (e: React.MouseEvent) => void;
   goToPage: (e: React.MouseEvent) => void;
+  priority?: boolean;
+  isFocused: boolean;
 }
 
 export default function PlaceCard({
@@ -25,6 +27,8 @@ export default function PlaceCard({
   isLiked,
   onLike,
   goToPage,
+  priority,
+  isFocused,
 }: PlaceCardProps) {
   const formatDistance = (distanceInMeters: number): string => {
     if (distanceInMeters < 1000) {
@@ -36,8 +40,14 @@ export default function PlaceCard({
 
   return (
     <Card
-      className='mb-2 cursor-pointer hover:bg-gray-50 transition-colors duration-200 shadow-sm'
       onClick={onFocus}
+      className={`p-4 rounded-xl shadow-sm cursor-pointer border transition 
+        ${
+          isFocused
+            ? 'border-primary bg-primary/5 shadow-md'
+            : 'border-gray-200 hover:border-primary/50'
+        }
+      `}
     >
       <CardContent className='p-3 flex items-start'>
         <div className='w-20 h-20 mr-3 flex-shrink-0'>
@@ -47,6 +57,7 @@ export default function PlaceCard({
             className='w-full h-full object-cover rounded'
             width={20}
             height={20}
+            priority={priority}
           />
         </div>
         <div className='flex-grow min-w-0'>

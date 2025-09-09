@@ -88,7 +88,8 @@ export default function Dashboard() {
     }
   };
 
-  const kmorMiles = (distance: number) => {
+  const kmorMiles = (distance: number | undefined) => {
+    if (!distance) return 'unavailable';
     return distance > 1000
       ? `${(distance / 1000).toFixed(1)} km`
       : `${distance} m`;
@@ -297,16 +298,18 @@ export default function Dashboard() {
                 ) : (
                   user?.recommendations.map((place) => (
                     <Card
-                      key={place.id}
+                      key={place.fsq_place_id}
                       className='mb-4 hover:bg-accent transition-colors'
                     >
-                      <Link href={`/places/${place.id}`} passHref>
+                      <Link href={`/places/${place.fsq_place_id}`} passHref>
                         <CardContent className='flex items-center p-4 cursor-pointer'>
                           <div className='w-16 h-16 mr-4 rounded-md overflow-hidden flex-shrink-0'>
                             <Image
                               src={
-                                place?.images[0]?.prefix
-                                  ? `${place.images[0].prefix}original${place.images[0].suffix}`
+                                place.photos
+                                  ? place?.photos[0]?.prefix
+                                    ? `${place.photos[0].prefix}original${place.photos[0].suffix}`
+                                    : '/placeholder-place.png'
                                   : '/placeholder-place.png'
                               }
                               alt={place.name}
@@ -329,7 +332,9 @@ export default function Dashboard() {
                             </p>
                             <p className='text-xs text-muted-foreground flex items-center mt-1'>
                               <MapPin className='w-3 h-3 mr-1 flex-shrink-0' />
-                              <span className='truncate'>{place.address}</span>
+                              <span className='truncate'>
+                                {place.location.address}
+                              </span>
                             </p>
                             <p className='text-xs text-muted-foreground mt-1'>
                               {kmorMiles(place.distance)} away

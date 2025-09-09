@@ -1,4 +1,4 @@
-import { ReturnedPlace } from './places';
+import { FSQPlace } from './places';
 
 type Icon = {
   prefix: string;
@@ -22,16 +22,16 @@ type Image = {
   height?: number;
 };
 
-export type Place = {
-  id: string;
-  name: string;
-  categories: Category[];
-  address?: string;
-  lat?: number;
-  lon?: number;
-  distance?: number;
-  images?: Image[];
-};
+// export type Place = {
+//   id: string;
+//   name: string;
+//   categories: Category[];
+//   address?: string;
+//   lat?: number;
+//   lon?: number;
+//   distance?: number;
+//   images?: Image[];
+// };
 
 export type Review = {
   placeId: string;
@@ -55,5 +55,5 @@ export type User = {
   saved: SavedPlace[];
   visited: SavedPlace[];
   dietaryPreferences: string[];
-  recommendations: ReturnedPlace[];
+  recommendations: FSQPlace[];
 };

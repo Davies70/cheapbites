@@ -1,25 +1,29 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { ReturnedPlace } from '@/types/places';
+import { useEffect, useState, useRef } from 'react';
+import { FSQPlace } from '@/types/places';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import TrendingPlaceCard from '@/components/trending-place-card';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
 interface TrendingPlacesProps {
   userLocation: { lat: number; lon: number };
 }
 
 const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
-  const [trendingPlaces, setTrendingPlaces] = useState<ReturnedPlace[]>([]);
+  const [trendingPlaces, setTrendingPlaces] = useState<FSQPlace[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch places
   useEffect(() => {
     const fetchLocationAndTrendingPlaces = async () => {
       try {
+        setIsLoading(true);
         const resPlaces = await fetch(
           `/api/places/trending/${userLocation?.lat}/${userLocation?.lon}`
         );
@@ -34,8 +38,8 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
       }
     };
 
-    fetchLocationAndTrendingPlaces();
-  }, [isLoading, userLocation]);
+    if (userLocation) fetchLocationAndTrendingPlaces();
+  }, [userLocation]);
 
   if (error) {
     return (
@@ -59,24 +63,29 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
   }
 
   return (
-    <div className='mt-12'>
+    <div className='mt-12 relative'>
       <h2 className='text-xl sm:text-2xl font-semibold mb-4'>
         Trending Places
       </h2>
-      <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
-        <div className='flex w-max space-x-4 p-4'>
+
+      <ScrollArea className='w-full rounded-md border custom-scrollbar'>
+        <div
+          ref={scrollRef}
+          className='flex w-max space-x-4 p-4 scroll-smooth overflow-auto'
+        >
           {trendingPlaces.map((place) => (
-            <div key={place.id} className='w-40 sm:w-72 flex-shrink-0'>
+            <div
+              key={place.fsq_place_id}
+              className='w-48 sm:w-72 flex-shrink-0'
+            >
               <TrendingPlaceCard
                 name={place.name}
-                category={place.categories[0].name}
+                category={place.categories[0]?.name || 'Unknown'}
                 priceForTwo={0}
-                address={place.address}
-                id={place.id}
-                latitude={place.lat}
-                longitude={place.lon}
+                address={place.location.address}
+                id={place.fsq_place_id}
                 distance={place.distance}
-                images={place.images}
+                images={place.categories[0]?.icon}
               />
             </div>
           ))}
@@ -86,6 +95,11 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
           className='custom-scrollbar-thumb'
         />
       </ScrollArea>
+
+      {/* Mobile swipe hint */}
+      <p className='text-center text-sm text-muted-foreground mt-2 md:hidden'>
+        👉 Swipe to explore more places
+      </p>
     </div>
   );
 };
