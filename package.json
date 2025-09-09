@@ -44,7 +44,6 @@
     "recharts": "^2.13.3",
     "shadcn": "^2.1.0",
     "slider": "^1.0.4",
-    "sqlite3": "^5.1.7",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "tsx": "^4.19.2"
