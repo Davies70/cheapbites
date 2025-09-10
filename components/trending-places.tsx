@@ -68,15 +68,12 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
         Trending Places
       </h2>
 
-      <ScrollArea className='w-full rounded-md border custom-scrollbar'>
-        <div
-          ref={scrollRef}
-          className='flex w-max space-x-4 p-4 scroll-smooth overflow-auto'
-        >
+      <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
+        <div ref={scrollRef} className='flex w-max space-x-4 p-4'>
           {trendingPlaces.map((place) => (
             <div
               key={place.fsq_place_id}
-              className='w-48 sm:w-72 flex-shrink-0'
+              className='w-40 sm:w-72 flex-shrink-0'
             >
               <TrendingPlaceCard
                 name={place.name}

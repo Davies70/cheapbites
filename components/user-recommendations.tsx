@@ -79,6 +79,10 @@ const UserRecommendations = ({
           className='custom-scrollbar-thumb'
         />
       </ScrollArea>
+      {/* Mobile swipe hint */}
+      <p className='text-center text-sm text-muted-foreground mt-2 md:hidden'>
+        👉 Swipe to explore more places
+      </p>
     </div>
   );
 };
