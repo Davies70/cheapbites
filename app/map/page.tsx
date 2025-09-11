@@ -187,6 +187,7 @@ export default function DiscoveryMap() {
   // Memoize callbacks to prevent child re-renders
   const focusOnPlace = useCallback(
     (latitude: number, longitude: number, placeId: string) => {
+      setIsExpanded(false);
       setCenter({ latitude, longitude });
       setZoom(18);
       setFocusedPlaceId(placeId);
@@ -214,12 +215,10 @@ export default function DiscoveryMap() {
   }, []);
 
   // Memoize the place click handler
-  const handlePlaceClick = useCallback(
-    (placeId: string) => {
-      router.push(`/places/${placeId}`);
-    },
-    [router]
-  );
+  const handlePlaceClick = useCallback((placeId: string) => {
+    setFocusedPlaceId(placeId);
+    // router.push(`/places/${placeId}`);
+  }, []);
 
   const handlePlaceCardClick = useCallback(
     (e: React.MouseEvent, placeId: string) => {
