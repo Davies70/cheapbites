@@ -292,13 +292,15 @@ export default function DiscoveryMap() {
                 Distance:{' '}
                 <span className='font-bold'>{distance.toFixed(1)} km</span>
               </label>
-              <Slider
-                value={[distance]}
-                onValueChange={handleDistanceChange}
-                max={5}
-                step={0.5}
-                min={1}
-              />
+              <div className='touch-none'>
+                <Slider
+                  value={[distance]}
+                  onValueChange={handleDistanceChange}
+                  max={5}
+                  step={0.5}
+                  min={1}
+                />
+              </div>
             </div>
             <div className='flex space-x-2'>
               <div className='flex-1'>
