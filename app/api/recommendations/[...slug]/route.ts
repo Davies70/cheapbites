@@ -7,21 +7,21 @@ const apiKey = process.env.z || '';
 
 // Cuisine category mappings
 const cuisineCategoryMap: Record<string, string> = {
-  italian: '13236', // Italian Restaurant
-  mexican: '13303', // Mexican Restaurant
-  asian: '13072', // Asian Restaurant, Sushi Restaurant
-  american: '13068', // American Restaurant
-  vegan: '13377', // Vegetarian / Vegan Restaurant
-  indian: '13199', // Indian Restaurant
-  african: '13067', // African Restaurant
-  kosher: '13287', // Kosher Restaurant
-  glutenfree: '13390',
-  thai: '13352',
-  halal: '13191', // Halal Restaurant
-  french: '13148',
-  japanese: '13263', // Japanese Restaurant
-  chinese: '13099', // Chinese Restaurant
-  default: '13000', // General Food & Dining
+  italian: '4bf58dd8d48988d110941735', // Italian Restaurant
+  mexican: '4bf58dd8d48988d1c1941735', // Mexican Restaurant
+  asian: '4bf58dd8d48988d142941735', // Asian Restaurant, Sushi Restaurant
+  american: '4bf58dd8d48988d14e941735', // American Restaurant
+  vegan: '4bf58dd8d48988d1d3941735', // Vegetarian / Vegan Restaurant
+  indian: '4bf58dd8d48988d10f941735', // Indian Restaurant
+  african: '4bf58dd8d48988d1c8941735', // African Restaurant
+  kosher: '52e81612bcbc57f1066b79fc', // Kosher Restaurant
+  glutenfree: '4c2cd86ed066bed06c3c5209',
+  thai: '4bf58dd8d48988d149941735',
+  halal: '52e81612bcbc57f1066b79ff', // Halal Restaurant
+  french: '4bf58dd8d48988d10c941735',
+  japanese: '4bf58dd8d48988d111941735', // Japanese Restaurant
+  chinese: '4bf58dd8d48988d145941735', // Chinese Restaurant
+  default: '4d4b7105d754a06374d81259', // General Food & Dining
 };
 
 const getCategoryIds = (
