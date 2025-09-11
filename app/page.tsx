@@ -25,12 +25,23 @@ import { User } from '@/types/user';
 import { FSQSearchResponse, FSQPlace } from '@/types/places';
 import SignInOverlay from '@/components/sign-in-overlay';
 
-
 // Mock data for featured collections
 const featuredCollections = [
-  { id: 13352, name: 'Best Thai this week', image: '/thai-food.jpg' },
-  { id: 13030, name: 'Hidden Gems', image: '/hidden-gem.jpg' },
-  { id: 13236, name: 'Top-rated Italian', image: '/italian.jpg' },
+  {
+    id: '4bf58dd8d48988d149941735',
+    name: 'Best Thai this week',
+    image: '/thai-food.jpg',
+  },
+  {
+    id: '52e81612bcbc57f1066b79f4,4bf58dd8d48988d16c941735,4bf58dd8d48988d1c8941735',
+    name: 'Hidden Gems',
+    image: '/hidden-gem.jpg',
+  },
+  {
+    id: '4bf58dd8d48988d110941735',
+    name: 'Top-rated Italian',
+    image: '/italian.jpg',
+  },
 ];
 
 export default function HomePage() {

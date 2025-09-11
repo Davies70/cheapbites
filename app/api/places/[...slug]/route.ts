@@ -269,13 +269,13 @@ export async function GET(
 
   const lat = slug[1];
   const lon = slug[2];
-  const catId = slug[3] ? slug[3] : '13000';
+  const catId = slug[3] ? slug[3] : '63be6904847c3692a84b9bb5';
   const isSearch = slug[0] === 'search';
 
   const queryParams = {
     ll: `${lat},${lon}`,
     limit: '50',
-    categories: catId, // Food & Dining
+    fsq_category_ids: catId, // Food & Dining
     ...(isSearch ? {} : { query: 'restaurant', sort: 'RATING', limit: '10' }),
   };
 

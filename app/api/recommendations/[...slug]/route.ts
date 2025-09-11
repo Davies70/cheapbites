@@ -136,7 +136,7 @@ export async function GET(
   const lat = params.slug[0];
   const lon = params.slug[1];
   const email = params.slug[2] || 'ajayid89@gmail.com';
-  const quizAnwerFromUser = params.slug[3] || '13000';
+  const quizAnwerFromUser = params.slug[3] || '63be6904847c3692a84b9bb5';
   const dietaryPreferencesFromUser = params.slug[4] || '';
 
   const catIds = getCategoryIds(quizAnwerFromUser, dietaryPreferencesFromUser);
@@ -144,7 +144,7 @@ export async function GET(
   const queryParams = {
     ll: `${lat},${lon}`,
     limit: '10',
-    categories: catIds,
+    fsq_category_ids: catIds,
     query: 'restaurant',
     sort: 'RATING',
   };
@@ -165,7 +165,6 @@ export async function GET(
       { status: 404 }
     );
   }
-
 
   // const placesWithImages = await mapPlacesToImages(placesData.results);
 

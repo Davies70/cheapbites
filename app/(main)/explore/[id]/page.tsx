@@ -10,11 +10,11 @@ import TrendingPlaceCard from '@/components/trending-place-card';
 
 const codeToHeader = (id: string) => {
   switch (id) {
-    case '13352':
+    case '4bf58dd8d48988d149941735':
       return 'Best Thai this week';
-    case '13030':
+    case '52e81612bcbc57f1066b79f4,4bf58dd8d48988d16c941735,4bf58dd8d48988d1c8941735':
       return 'Hidden Gems';
-    case '13236':
+    case '4bf58dd8d48988d110941735':
       return 'Top-rated Italian';
     default:
       return 'Hot and Trending';
