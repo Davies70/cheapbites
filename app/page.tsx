@@ -22,7 +22,7 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useSession } from 'next-auth/react';
 import { User } from '@/types/user';
-import { FSQSearchResponse, FSQPlace } from '@/types/places';
+import { FSQPlace } from '@/types/places';
 import SignInOverlay from '@/components/sign-in-overlay';
 
 // Mock data for featured collections

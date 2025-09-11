@@ -1,7 +1,7 @@
 // components/Map.tsx
 'use client';
 
-import { useEffect, useMemo, useState, memo } from 'react';
+import { useEffect, useMemo, useCallback, memo } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -24,6 +24,7 @@ interface MapProps {
   distance: number;
   onPlaceClick: (placeId: string) => void;
   selectedPlaceId?: string; // 👈 add this prop
+  handlePlaceView: (placeId: string) => void;
 }
 
 function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
@@ -36,10 +37,10 @@ function MapView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
 
 const CustomPopup = ({
   place,
-  onPlaceClick,
+  handlePlaceView,
 }: {
   place: FSQPlace;
-  onPlaceClick: (placeId: string) => void;
+  handlePlaceView: (placeId: string) => void;
 }) => (
   <div className='w-64 p-3 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow'>
     {/* Header with name + distance */}
@@ -87,7 +88,7 @@ const CustomPopup = ({
         variant='outline'
         size='sm'
         className='text-xs flex items-center gap-1'
-        onClick={() => onPlaceClick(place.fsq_place_id)}
+        onClick={() => handlePlaceView(place.fsq_place_id)}
       >
         <ExternalLink className='w-3 h-3' />
         View
@@ -101,9 +102,11 @@ const MemoMarker = memo(
     place,
     onPlaceClick,
     icon,
+    handlePlaceView,
   }: {
     place: FSQPlace;
     onPlaceClick: (id: string) => void;
+    handlePlaceView: (placeId: string) => void;
     icon: Icon;
   }) => (
     <Marker
@@ -114,7 +117,7 @@ const MemoMarker = memo(
       }}
     >
       <Popup>
-        <CustomPopup place={place} onPlaceClick={onPlaceClick} />
+        <CustomPopup place={place} handlePlaceView={handlePlaceView} />
       </Popup>
     </Marker>
   ),
@@ -132,6 +135,7 @@ export default function Map({
   distance,
   onPlaceClick,
   selectedPlaceId,
+  handlePlaceView,
 }: MapProps) {
   const initialPosition: LatLngExpression = [
     center.latitude || 0,
@@ -187,6 +191,7 @@ export default function Map({
             place.fsq_place_id === selectedPlaceId ? highlightIcon : defaultIcon
           }
           onPlaceClick={onPlaceClick}
+          handlePlaceView={handlePlaceView}
         />
       ))}
 

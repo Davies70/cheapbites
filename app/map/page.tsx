@@ -217,12 +217,10 @@ export default function DiscoveryMap() {
   // Memoize the place click handler
   const handlePlaceClick = useCallback((placeId: string) => {
     setFocusedPlaceId(placeId);
-    // router.push(`/places/${placeId}`);
   }, []);
 
   const handlePlaceCardClick = useCallback(
-    (e: React.MouseEvent, placeId: string) => {
-      e.stopPropagation();
+    (placeId: string) => {
       router.push(`/places/${placeId}`);
     },
     [router]
@@ -257,6 +255,7 @@ export default function DiscoveryMap() {
           distance={distance}
           onPlaceClick={handlePlaceClick}
           selectedPlaceId={focusedPlaceId ?? ''}
+          handlePlaceView={handlePlaceCardClick}
         />
       </div>
 
@@ -359,7 +358,7 @@ export default function DiscoveryMap() {
               isLiked={likedPlaces.has(place.fsq_place_id)}
               onLike={(e) => toggleLike(place.fsq_place_id, e)}
               mood={assignMood(place.categories)}
-              goToPage={(e) => handlePlaceCardClick(e, place.fsq_place_id)}
+              goToPage={(e) => handlePlaceCardClick(place.fsq_place_id)}
               priority={index < 3}
               isFocused={focusedPlaceId === place.fsq_place_id}
             />
