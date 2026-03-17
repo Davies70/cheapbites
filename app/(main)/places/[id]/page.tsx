@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
-import { useParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Loader2,
   AlertCircle,
@@ -16,9 +16,9 @@ import {
   Trash2,
   Star,
   Edit,
-} from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
+} from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,10 +29,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { PlaceResponse, Place } from '@/types/place';
-import { SavedPlace } from '@/types/user';
-import ContactCard from '@/components/info-card';
+} from "@/components/ui/alert-dialog";
+import { PlaceResponse, Place } from "@/types/place";
+import { SavedPlace } from "@/types/user";
+import ContactCard from "@/components/info-card";
 
 interface UserReview {
   rating: number;
@@ -56,7 +56,7 @@ export default function PlacePage() {
   const [isReview, setIsReview] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [tempRating, setTempRating] = useState(0);
-  const [tempReview, setTempReview] = useState('');
+  const [tempReview, setTempReview] = useState("");
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [isDeletingReview, setIsDeletingReview] = useState(false);
 
@@ -71,9 +71,9 @@ export default function PlacePage() {
         setPlace(data?.placeResponse ?? null);
       } catch {
         toast({
-          title: 'Error loading place',
-          description: 'Unable to fetch details for this place.',
-          variant: 'destructive',
+          title: "Error loading place",
+          description: "Unable to fetch details for this place.",
+          variant: "destructive",
         });
       } finally {
         setLoading(false);
@@ -85,7 +85,7 @@ export default function PlacePage() {
           const data = await res.json();
 
           const review: UserReview | undefined = data.reviews.find(
-            (r: UserReview) => r.placeId === id
+            (r: UserReview) => r.placeId === id,
           );
           if (review) {
             setUserReview(review);
@@ -95,7 +95,7 @@ export default function PlacePage() {
           setIsVisited(data.visited.some((p: { id: string }) => p.id === id));
           setIsSaved(data.saved.some((p: { id: string }) => p.id === id));
         } catch (e) {
-          console.error('Error fetching user data:', e);
+          console.error("Error fetching user data:", e);
         }
       }
     };
@@ -106,7 +106,7 @@ export default function PlacePage() {
   // Scroll review into view when opened
   useEffect(() => {
     if (isReview && reviewRef.current) {
-      reviewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      reviewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [isReview]);
 
@@ -115,15 +115,15 @@ export default function PlacePage() {
     setIsReview(true);
     setIsEditing(false);
     setTempRating(0);
-    setTempReview('');
+    setTempReview("");
   };
 
   const handleReviewSubmit = async () => {
-    if (tempReview.trim() === '' || tempRating === 0) {
+    if (tempReview.trim() === "" || tempRating === 0) {
       toast({
-        title: 'Incomplete Review',
-        description: 'Please provide both a rating and review.',
-        variant: 'destructive',
+        title: "Incomplete Review",
+        description: "Please provide both a rating and review.",
+        variant: "destructive",
       });
       return;
     }
@@ -133,8 +133,8 @@ export default function PlacePage() {
       tempRating === userReview?.rating
     ) {
       toast({
-        title: 'No Changes',
-        description: 'Your review is unchanged.',
+        title: "No Changes",
+        description: "Your review is unchanged.",
       });
       return;
     }
@@ -146,39 +146,39 @@ export default function PlacePage() {
       review: tempReview,
       created_at: new Date().toISOString(),
       placeId: id as string,
-      name: place?.name || '',
+      name: place?.name || "",
     };
 
     try {
       const res = await fetch(`/api/user/review/${session?.user?.email}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newReview),
       });
 
-      if (!res.ok) throw new Error('Failed to submit review');
+      if (!res.ok) throw new Error("Failed to submit review");
 
       const userWithNewReview = await res.json();
       const updatedReview: UserReview = userWithNewReview.reviews.find(
-        (r: UserReview) => r.placeId === id
+        (r: UserReview) => r.placeId === id,
       );
 
       if (updatedReview) {
         setUserReview(updatedReview);
         setIsEditing(false);
         setTempRating(0);
-        setTempReview('');
+        setTempReview("");
         toast({
-          title: 'Review Submitted',
-          description: 'Saved successfully.',
+          title: "Review Submitted",
+          description: "Saved successfully.",
         });
       }
     } catch (error) {
       console.error(error);
       toast({
-        title: 'Error',
-        description: 'Failed to submit review.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to submit review.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmittingReview(false);
@@ -198,129 +198,34 @@ export default function PlacePage() {
     setIsDeletingReview(true);
     try {
       const res = await fetch(`/api/user/review/${session?.user?.email}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userReview?.placeId),
       });
 
-      if (!res.ok) throw new Error('Failed to delete review');
+      if (!res.ok) throw new Error("Failed to delete review");
 
       setUserReview(undefined);
       setIsReview(false);
-      toast({ title: 'Review Deleted', description: 'Deleted successfully.' });
+      toast({ title: "Review Deleted", description: "Deleted successfully." });
     } catch (error) {
       console.error(error);
       toast({
-        title: 'Error',
-        description: 'Failed to delete review.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to delete review.",
+        variant: "destructive",
       });
     } finally {
       setIsDeletingReview(false);
     }
   };
 
-  // const toggleSave = async () => {
-  //   if (!session?.user?.email) {
-  //     toast({
-  //       title: 'Login Required',
-  //       description: 'Please login to save this place.',
-  //       variant: 'default',
-  //     });
-  //     return;
-  //   }
-
-  //   // Optimistically update the UI
-  //   setIsSaved((prev) => !prev);
-
-  //   try {
-  //     const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         id,
-  //         name: place?.name,
-  //         category: place?.categories[0].name,
-  //         rating: place?.rating,
-  //         address: place?.location.formatted_address,
-  //       }),
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to save place');
-  //     }
-
-  //     const data = await response.json();
-  //     setIsSaved(data.saved.some((p: SavedPlace) => p.id === id));
-  //   } catch (error) {
-  //     console.error('Error saving place:', error);
-  //     toast({
-  //       title: 'Error',
-  //       description: 'Failed to save place. Please try again.',
-  //       variant: 'destructive',
-  //     });
-  //     // Revert the optimistic update if there's an error
-  //     setIsSaved((prev) => !prev);
-  //   }
-  // };
-
-  // const toggleMustVisit = async () => {
-  //   if (!session?.user?.email) {
-  //     toast({
-  //       title: 'Login Required',
-  //       description: 'Please login to add this place to your visited list.',
-  //       variant: 'default',
-  //     });
-  //     return;
-  //   }
-
-  //   // Optimistically update the UI
-  //   setIsVisited((prev) => !prev);
-
-  //   try {
-  //     const response = await fetch(
-  //       `/api/user/visited/${session?.user?.email}`,
-  //       {
-  //         method: 'POST',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //         body: JSON.stringify({
-  //           id,
-  //           name: place?.name,
-  //           category: place?.categories[0].name,
-  //           rating: place?.rating,
-  //           address: place?.location.formatted_address,
-  //         }),
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error('Failed to update visited list');
-  //     }
-
-  //     const data = await response.json();
-  //     setIsVisited(data.visited.some((p: SavedPlace) => p.id === id));
-  //   } catch (error) {
-  //     console.error('Error updating visited list:', error);
-  //     toast({
-  //       title: 'Error',
-  //       description: 'Failed to update visited list. Please try again.',
-  //       variant: 'destructive',
-  //     });
-  //     // Revert the optimistic update if there's an error
-  //     setIsVisited((prev) => !prev);
-  //   }
-  // };
-
   const toggleSave = async () => {
     if (!session?.user?.email) {
       toast({
-        title: 'Login Required',
-        description: 'Please login to save this place.',
-        variant: 'default',
+        title: "Login Required",
+        description: "Please login to save this place.",
+        variant: "default",
       });
       return;
     }
@@ -331,8 +236,8 @@ export default function PlacePage() {
 
     try {
       const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id,
           name: place?.name,
@@ -342,23 +247,23 @@ export default function PlacePage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to save place');
+      if (!response.ok) throw new Error("Failed to save place");
 
       const data = await response.json();
       setIsSaved(data.saved.some((p: SavedPlace) => p.id === id));
 
       toast({
-        title: newStatus ? 'Place Saved' : 'Removed from Saved',
+        title: newStatus ? "Place Saved" : "Removed from Saved",
         description: newStatus
           ? `${place?.name} has been saved to your list.`
           : `${place?.name} was removed from your saved places.`,
       });
     } catch (error) {
-      console.error('Error saving place:', error);
+      console.error("Error saving place:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to save place. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to save place. Please try again.",
+        variant: "destructive",
       });
       setIsSaved((prev) => !prev); // revert
     }
@@ -367,9 +272,9 @@ export default function PlacePage() {
   const toggleMustVisit = async () => {
     if (!session?.user?.email) {
       toast({
-        title: 'Login Required',
-        description: 'Please login to update your visited list.',
-        variant: 'default',
+        title: "Login Required",
+        description: "Please login to update your visited list.",
+        variant: "default",
       });
       return;
     }
@@ -381,8 +286,8 @@ export default function PlacePage() {
       const response = await fetch(
         `/api/user/visited/${session?.user?.email}`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             id,
             name: place?.name,
@@ -390,26 +295,26 @@ export default function PlacePage() {
             rating: place?.rating,
             address: place?.location.formatted_address,
           }),
-        }
+        },
       );
 
-      if (!response.ok) throw new Error('Failed to update visited list');
+      if (!response.ok) throw new Error("Failed to update visited list");
 
       const data = await response.json();
       setIsVisited(data.visited.some((p: SavedPlace) => p.id === id));
 
       toast({
-        title: newStatus ? 'Marked as Visited' : 'Removed from Visited',
+        title: newStatus ? "Marked as Visited" : "Removed from Visited",
         description: newStatus
           ? `${place?.name} has been added to your visited list.`
           : `${place?.name} was removed from your visited list.`,
       });
     } catch (error) {
-      console.error('Error updating visited list:', error);
+      console.error("Error updating visited list:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to update visited list. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to update visited list. Please try again.",
+        variant: "destructive",
       });
       setIsVisited((prev) => !prev); // revert
     }
@@ -418,16 +323,16 @@ export default function PlacePage() {
   // === Loading / Error states ===
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-screen'>
-        <Loader2 className='w-8 h-8 animate-spin text-primary' />
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!place) {
     return (
-      <div className='flex justify-center items-center h-screen text-gray-500'>
-        <AlertCircle className='w-6 h-6 mr-2' />
+      <div className="flex justify-center items-center h-screen text-gray-500">
+        <AlertCircle className="w-6 h-6 mr-2" />
         Place not found
       </div>
     );
@@ -435,31 +340,37 @@ export default function PlacePage() {
 
   const categoryIcon = place?.categories[0]?.icon
     ? `${place.categories[0].icon.prefix}bg_64${place.categories[0].icon.suffix}`
-    : '';
+    : "";
+
+  // 1. Determine the best image to use dynamically
+  const heroImage =
+    place.photos && place.photos.length > 0
+      ? `${place.photos[0].prefix}original${place.photos[0].suffix}`
+      : "/placeholder-place.png";
 
   return (
-    <div className='max-w-4xl mx-auto p-4 space-y-6'>
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
       {/* Header */}
-      <div className='relative h-56 sm:h-72 md:h-96 rounded-lg overflow-hidden'>
+      <div className="relative h-56 sm:h-72 md:h-96 rounded-lg overflow-hidden shadow-lg">
         <Image
-          src={'/placeholder-place.png'}
-          alt={place?.name}
+          src={heroImage}
+          alt={place?.name || "Place image"}
           fill
-          className='object-cover'
-          sizes='100vw'
+          className="object-cover"
+          sizes="100vw"
           priority
         />
-        <div className='absolute inset-0 bg-black/40 flex items-end'>
-          <div className='p-4 text-white'>
-            <h1 className='text-2xl md:text-4xl font-bold'>{place?.name}</h1>
+        <div className="absolute inset-0 bg-black/40 flex items-end">
+          <div className="p-4 text-white">
+            <h1 className="text-2xl md:text-4xl font-bold">{place?.name}</h1>
             {place.categories.length > 0 && (
-              <p className='text-sm md:text-base'>{place.categories[0].name}</p>
+              <p className="text-sm md:text-base">{place.categories[0].name}</p>
             )}
           </div>
         </div>
         {categoryIcon && (
-          <div className='absolute right-0 bottom-0 p-2'>
-            <Image src={categoryIcon} alt='icon' width={48} height={48} />
+          <div className="absolute right-0 bottom-0 p-2">
+            <Image src={categoryIcon} alt="icon" width={48} height={48} />
           </div>
         )}
       </div>
@@ -467,90 +378,94 @@ export default function PlacePage() {
       <ContactCard place={place} />
 
       {/* User Actions */}
-      <div className='flex flex-wrap gap-3'>
+      <div className="flex flex-wrap gap-3">
         <Button
           onClick={toggleSave}
-          variant='secondary'
+          variant={isSaved ? "default" : "secondary"}
           disabled={!session?.user}
-          title={!session?.user ? 'Sign in to save' : undefined}
+          title={!session?.user ? "Sign in to save" : undefined}
         >
-          <BookmarkPlus className='w-4 h-4 mr-2' />
-          {isSaved ? 'Saved' : 'Save'}
+          <BookmarkPlus
+            className={`w-4 h-4 mr-2 ${isSaved ? "fill-current" : ""}`}
+          />
+          {isSaved ? "Saved" : "Save"}
         </Button>
         <Button
           onClick={toggleMustVisit}
-          variant='secondary'
+          variant={isVisited ? "default" : "secondary"}
           disabled={!session?.user}
-          title={!session?.user ? 'Sign in to mark visited' : undefined}
+          title={!session?.user ? "Sign in to mark visited" : undefined}
         >
-          <CheckCircle className='w-4 h-4 mr-2' />
-          {isVisited ? 'Visited' : 'Mark Visited'}
+          <CheckCircle
+            className={`w-4 h-4 mr-2 ${isVisited ? "fill-current" : ""}`}
+          />
+          {isVisited ? "Visited" : "Mark Visited"}
         </Button>
         {!userReview && !isReview && (
           <Button
             onClick={session?.user ? handleShowReview : undefined}
             disabled={!session?.user}
-            title={!session?.user ? 'Sign in to review' : undefined}
+            title={!session?.user ? "Sign in to review" : undefined}
           >
-            <Pencil className='w-4 h-4 mr-2' />
+            <Pencil className="w-4 h-4 mr-2" />
             Review
           </Button>
         )}
       </div>
 
       {!session?.user && (
-        <div className='text-xs text-gray-500'>Sign in to perform actions.</div>
+        <div className="text-xs text-gray-500">Sign in to perform actions.</div>
       )}
 
       {/* Review Card */}
       {isReview && (
         <Card ref={reviewRef}>
           <CardHeader>
-            <CardTitle className='text-lg'>Your Review</CardTitle>
+            <CardTitle className="text-lg">Your Review</CardTitle>
           </CardHeader>
-          <CardContent className='space-y-4'>
+          <CardContent className="space-y-4">
             {userReview && !isEditing ? (
               <>
-                <div className='flex items-center space-x-2'>
+                <div className="flex items-center space-x-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
                       className={`w-5 h-5 ${
                         star <= userReview.rating
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-300'
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
                       }`}
                     />
                   ))}
                 </div>
-                <p className='text-xs text-gray-600'>
+                <p className="text-xs text-gray-600">
                   {new Date(userReview.created_at).toLocaleDateString()}
                 </p>
-                <p className='text-sm'>{userReview.review}</p>
-                <div className='flex gap-2'>
+                <p className="text-sm">{userReview.review}</p>
+                <div className="flex gap-2">
                   <Button
-                    variant='outline'
-                    size='sm'
+                    variant="outline"
+                    size="sm"
                     onClick={handleEditReview}
                   >
-                    <Edit className='w-4 h-4 mr-2' />
+                    <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                        variant='outline'
-                        size='sm'
+                        variant="outline"
+                        size="sm"
                         disabled={isDeletingReview}
                       >
                         {isDeletingReview ? (
                           <>
-                            <Loader className='w-4 h-4 mr-2 animate-spin' />
+                            <Loader className="w-4 h-4 mr-2 animate-spin" />
                             Deleting...
                           </>
                         ) : (
                           <>
-                            <Trash2 className='w-4 h-4 mr-2' />
+                            <Trash2 className="w-4 h-4 mr-2" />
                             Delete
                           </>
                         )}
@@ -575,14 +490,14 @@ export default function PlacePage() {
               </>
             ) : (
               <>
-                <div className='flex items-center space-x-2 mb-4'>
+                <div className="flex items-center space-x-2 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
                       className={`w-6 h-6 cursor-pointer ${
                         star <= tempRating
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-300'
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
                       }`}
                       onClick={() => setTempRating(star)}
                     />
@@ -591,8 +506,8 @@ export default function PlacePage() {
                 <Textarea
                   placeholder={
                     session
-                      ? 'Write your review here...'
-                      : 'Sign in to write reviews...'
+                      ? "Write your review here..."
+                      : "Sign in to write reviews..."
                   }
                   value={tempReview}
                   onChange={(e) => setTempReview(e.target.value)}
@@ -605,13 +520,13 @@ export default function PlacePage() {
                 >
                   {isSubmittingReview ? (
                     <>
-                      <Loader className='w-4 h-4 mr-2 animate-spin' />
-                      {isEditing ? 'Updating...' : 'Submitting...'}
+                      <Loader className="w-4 h-4 mr-2 animate-spin" />
+                      {isEditing ? "Updating..." : "Submitting..."}
                     </>
                   ) : isEditing ? (
-                    'Update Review'
+                    "Update Review"
                   ) : (
-                    'Submit Review'
+                    "Submit Review"
                   )}
                 </Button>
               </>

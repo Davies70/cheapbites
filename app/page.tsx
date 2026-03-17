@@ -1,46 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Utensils, Clock, TrendingUp, Users, Search } from 'lucide-react';
-import Image from 'next/image';
-import FoodQuiz from '@/components/food-quiz';
-import DietaryPreference from '@/components/dietary-preference';
-import UserRecommendations from '@/components/user-recommendations';
-import TrendingPlaces from '@/components/trending-places';
-import Nav from '@/components/nav';
-import getClientLocation from '@/helpers/get-client-location';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useSession } from 'next-auth/react';
-import { User } from '@/types/user';
-import { FSQPlace } from '@/types/places';
-import SignInOverlay from '@/components/sign-in-overlay';
+  Utensils,
+  Clock,
+  TrendingUp,
+  Users,
+  Search,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import Image from "next/image";
+import FoodQuiz from "@/components/food-quiz";
+import DietaryPreference from "@/components/dietary-preference";
+import UserRecommendations from "@/components/user-recommendations";
+import TrendingPlaces from "@/components/trending-places";
+import Nav from "@/components/nav";
+import getClientLocation from "@/helpers/get-client-location";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useSession } from "next-auth/react";
+import { User } from "@/types/user";
+import { FSQPlace } from "@/types/places";
+import SignInOverlay from "@/components/sign-in-overlay";
 
-// Mock data for featured collections
 const featuredCollections = [
   {
-    id: '4bf58dd8d48988d149941735',
-    name: 'Best Thai this week',
-    image: '/thai-food.jpg',
+    id: "4bf58dd8d48988d149941735",
+    name: "Best Thai this week",
+    image: "/thai-food.jpg",
   },
   {
-    id: '52e81612bcbc57f1066b79f4,4bf58dd8d48988d16c941735,4bf58dd8d48988d1c8941735',
-    name: 'Hidden Gems',
-    image: '/hidden-gem.jpg',
+    id: "52e81612bcbc57f1066b79f4,4bf58dd8d48988d16c941735,4bf58dd8d48988d1c8941735",
+    name: "Hidden Gems",
+    image: "/hidden-gem.jpg",
   },
   {
-    id: '4bf58dd8d48988d110941735',
-    name: 'Top-rated Italian',
-    image: '/italian.jpg',
+    id: "4bf58dd8d48988d110941735",
+    name: "Top-rated Italian",
+    image: "/italian.jpg",
   },
 ];
 
@@ -53,142 +53,163 @@ export default function HomePage() {
     lat: number;
     lon: number;
   } | null>(null);
+
+  // Loading States
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckingPrefs, setIsCheckingPrefs] = useState(true); // Prevents the quiz flicker
+
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [recommendations, setRecommendations] = useState<FSQPlace[]>([]);
   const [recommendationError, setRecommendationError] = useState<string | null>(
-    null
+    null,
   );
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
   const { data: session, status } = useSession();
 
+  // Consolidated Initialization Flow
   useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        const resLocation = await getClientLocation();
-        const { latitude, longitude } = resLocation;
-        setUserLocation({ lat: latitude, lon: longitude });
-      } catch (error) {
-        setError('Failed to fetch location');
-        console.error('Error fetching location:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (status === "loading") return; // Wait for NextAuth to figure out the session
 
-    const getUser = async () => {
-      if (!session?.user?.email) {
-        return;
-      }
-      try {
-        const res = await fetch(`/api/user/${session.user.email}`);
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          if (data.recommendations.length > 0) {
-            setRecommendations(data.recommendations);
-            setShowRecommendations(true);
-          } else {
-            // Check local storage for quiz and preferences
-            const storedQuizCompleted = localStorage.getItem('quizCompleted');
-            const storedQuizAnswers = localStorage.getItem('quizAnswers');
-            const storedDietaryPreferences =
-              localStorage.getItem('dietaryPreferences');
+    const initializeApp = async () => {
+      // 1. Explicitly type our variables as strictly numbers
+      let currentLat: number;
+      let currentLon: number;
 
-            if (
-              storedQuizCompleted &&
-              storedQuizAnswers &&
-              storedDietaryPreferences
-            ) {
-              setQuizCompleted(JSON.parse(storedQuizCompleted));
-              await fetchRecommendations(
-                session.user.email,
-                JSON.parse(storedDietaryPreferences),
-                JSON.parse(storedQuizAnswers)
-              );
+      // 2. Fetch location if we don't have it yet
+      if (!userLocation) {
+        try {
+          const resLocation = await getClientLocation();
+          currentLat = resLocation.latitude;
+          currentLon = resLocation.longitude;
+          setUserLocation({ lat: currentLat, lon: currentLon });
+        } catch (error) {
+          setError("Failed to fetch location");
+          setIsLoading(false);
+          return; // Stop execution if we can't get location
+        }
+      } else {
+        // If we already have it, TS now strictly knows these are numbers
+        currentLat = userLocation.lat;
+        currentLon = userLocation.lon;
+      }
+
+      setIsLoading(false); // Unblocks the hero section and navbar
+
+      // Helper function to check local storage
+      const checkLocalPrefs = async (email: string) => {
+        const storedQuizCompleted = localStorage.getItem("quizCompleted");
+        const storedQuizAnswers = localStorage.getItem("quizAnswers");
+        const storedDietaryPreferences =
+          localStorage.getItem("dietaryPreferences");
+
+        if (
+          storedQuizCompleted &&
+          storedQuizAnswers &&
+          storedDietaryPreferences
+        ) {
+          setQuizCompleted(JSON.parse(storedQuizCompleted));
+          await fetchRecommendations(
+            email,
+            JSON.parse(storedDietaryPreferences),
+            JSON.parse(storedQuizAnswers),
+            currentLat, // <-- Passed explicitly as numbers
+            currentLon,
+          );
+        }
+      };
+
+      // 3. Check Database / Local Storage
+      if (session?.user?.email) {
+        try {
+          const res = await fetch(`/api/user/${session.user.email}`);
+          if (res.ok) {
+            const data = await res.json();
+            setUser(data);
+            if (data.recommendations?.length > 0) {
+              setRecommendations(data.recommendations);
+              setShowRecommendations(true);
+            } else {
+              await checkLocalPrefs(session.user.email);
             }
           }
-        } else {
-          console.error('Error fetching user:', res.statusText);
+        } catch (error) {
+          await checkLocalPrefs(session.user.email);
         }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        setError('Failed to fetch user data');
+      } else {
+        await checkLocalPrefs("");
       }
+
+      // 4. Mark preferences as fully checked (unblocks the quiz UI)
+      setIsCheckingPrefs(false);
     };
 
-    fetchLocation();
-    if (session) {
-      getUser();
-    }
-  }, [session]);
+    initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, status]);
 
   const handleQuizComplete = (answers: string[]) => {
     setQuizAnswers(answers);
     setQuizCompleted(true);
-    localStorage.setItem('quizCompleted', JSON.stringify(true));
-    localStorage.setItem('quizAnswers', JSON.stringify(answers));
+    localStorage.setItem("quizCompleted", JSON.stringify(true));
+    localStorage.setItem("quizAnswers", JSON.stringify(answers));
   };
 
   const handleDietaryPreferencesSubmit = async (preferences: string[]) => {
     setDietaryPreferences(preferences);
-    localStorage.setItem('dietaryPreferences', JSON.stringify(preferences));
+    localStorage.setItem("dietaryPreferences", JSON.stringify(preferences));
     if (!session) {
       setShowSignIn(true);
     } else if (session.user?.email) {
-      await fetchRecommendations(session.user?.email, preferences, quizAnswers);
+      await fetchRecommendations(
+        session.user.email,
+        preferences,
+        quizAnswers,
+        userLocation?.lat,
+        userLocation?.lon,
+      );
     }
   };
 
   const handleChangePreferences = () => {
     setQuizCompleted(false);
     setShowRecommendations(false);
-    setUser((prevUser) => ({ ...prevUser!, recommendations: [] }));
-    localStorage.removeItem('quizCompleted');
-    localStorage.removeItem('quizAnswers');
-    localStorage.removeItem('dietaryPreferences');
+    setUser((prevUser) =>
+      prevUser ? { ...prevUser, recommendations: [] } : null,
+    );
+    localStorage.removeItem("quizCompleted");
+    localStorage.removeItem("quizAnswers");
+    localStorage.removeItem("dietaryPreferences");
   };
 
-  const handleSignInSuccess = () => {
-    setShowSignIn(false);
-    // We'll fetch recommendations in useEffect when session changes
-  };
+  const handleSignInSuccess = () => setShowSignIn(false);
 
   const hour = new Date().getHours();
-  let greeting = '';
-  if (hour < 12) {
-    greeting = 'Good morning';
-  } else if (hour < 18) {
-    greeting = 'Good afternoon';
-  } else {
-    greeting = 'Good evening';
-  }
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
+  // Updated to accept lat/lon directly to avoid stale state issues
   const fetchRecommendations = async (
-    email: string = '',
+    email: string = "",
     diet: string[] = dietaryPreferences,
-    quiz: string[] = quizAnswers
+    quiz: string[] = quizAnswers,
+    lat: number | undefined = userLocation?.lat,
+    lon: number | undefined = userLocation?.lon,
   ) => {
+    if (!lat || !lon) return;
     try {
       setShowRecommendations(true);
       setIsRecommendationLoading(true);
-      console.log('Fetching recommendations...');
+      const dietString = diet.join(",").toLowerCase().replace("-", "");
       const res = await fetch(
-        `api/recommendations/${userLocation?.lat}/${
-          userLocation?.lon
-        }/${email}/${quiz[0].toLowerCase()}/${diet
-          .join(',')
-          .toLowerCase()
-          .replace('-', '')}`
+        `api/recommendations/${lat}/${lon}/${email}/${quiz[0].toLowerCase()}/${dietString}`,
       );
       const data = await res.json();
       setRecommendations(data.places);
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
-      setRecommendationError('Failed to fetch recommendations');
+      setRecommendationError("Failed to fetch recommendations");
     } finally {
       setIsRecommendationLoading(false);
     }
@@ -196,18 +217,21 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <Alert variant='destructive' className='mt-12'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive" className="mt-12">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
+  // Initial Full-Screen Loader
   if (isLoading && !userLocation) {
     return (
-      <div className='flex items-center justify-center h-screen'>
-        <Loader2 className='h-8 w-8 animate-spin text-primary' />
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -215,163 +239,182 @@ export default function HomePage() {
   return (
     <>
       <Nav />
-      <div className='min-h-screen bg-gray-50'>
-        <div className='relative h-[40vh] md:h-[50vh] bg-gradient-to-r from-primary to-primary-foreground flex items-center justify-center text-white'>
-          <div className='absolute inset-0'>
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {/* HERO SECTION */}
+        <div className="relative h-[45vh] md:h-[55vh] flex items-center justify-center text-white">
+          <div className="absolute inset-0 bg-black">
             <Image
-              src='/food-spread.jpg'
-              alt='Delicious food spread'
-              className='w-full h-full object-cover opacity-30'
+              src="/food-spread.jpg"
+              alt="Delicious food spread"
+              className="w-full h-full object-cover opacity-50"
               fill
               priority
-              rel='preload'
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-black/40 to-transparent" />
           </div>
-          <div className='relative z-10 text-center space-y-3 md:space-y-4 px-4'>
-            <h1 className='text-3xl md:text-4xl lg:text-6xl font-bold'>
-              {greeting}, food explorer!
+          <div className="relative z-10 text-center space-y-4 px-4 w-full max-w-3xl">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight drop-shadow-md">
+              {greeting},<br className="md:hidden" /> food explorer!
             </h1>
-            <p className='text-lg md:text-xl lg:text-2xl'>
-              Discover amazing local eats with CheapBites
+            <p className="text-lg md:text-2xl font-medium drop-shadow-sm opacity-90">
+              Discover amazing local eats without breaking the bank.
             </p>
-            <Button
-              asChild
-              size='lg'
-              variant='secondary'
-              className='px-3 py-2 text-sm md:px-4 md:py-2 md:text-base'
-            >
-              <Link href='/map'>
-                <Search className='mr-2 h-4 w-4 md:h-5 md:w-5' /> Find Cheap
-                Bites Near Me
-              </Link>
-            </Button>
+            <div className="pt-4">
+              <Button
+                asChild
+                size="lg"
+                className="h-14 px-8 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-transform"
+              >
+                <Link href="/map">
+                  <Search className="mr-2 h-5 w-5" /> Find Cheap Bites Near Me
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className='max-w-4xl mx-auto px-4 py-8'>
-          <div className='flex justify-center'>
-            <div className='w-full max-w-md'>
-              {!showRecommendations ? (
-                <>
-                  {!quizCompleted && (
-                    <FoodQuiz onQuizComplete={handleQuizComplete} />
-                  )}
-                  {quizCompleted && (
-                    <DietaryPreference
-                      onPreferencesSubmit={handleDietaryPreferencesSubmit}
-                    />
-                  )}
-                </>
-              ) : null}
+        {/* MAIN CONTENT */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+          {/* QUIZ / PREFERENCES AREA */}
+          <div className="relative z-20 flex justify-center w-full">
+            <div className="w-full max-w-xl">
+              {/* 1. Show a loading skeleton while checking local storage/database */}
+              {isCheckingPrefs ? (
+                <div className="shadow-2xl rounded-2xl bg-white p-12 border border-gray-100 min-h-[300px] flex items-center justify-center">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                </div>
+              ) : (
+                !showRecommendations && (
+                  /* 2. Once checked, show either the Quiz or the Dietary Preferences */
+                  <div className="shadow-2xl rounded-2xl bg-white overflow-hidden border border-gray-100">
+                    {!quizCompleted ? (
+                      <FoodQuiz onQuizComplete={handleQuizComplete} />
+                    ) : (
+                      <DietaryPreference
+                        onPreferencesSubmit={handleDietaryPreferencesSubmit}
+                      />
+                    )}
+                  </div>
+                )
+              )}
             </div>
           </div>
 
+          {/* RECOMMENDATIONS (Renders smoothly after checking completes) */}
           {showRecommendations && (
-            <>
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <UserRecommendations
                 recommendations={recommendations}
                 onChangePreferences={handleChangePreferences}
                 error={recommendationError}
                 isLoading={isRecommendationLoading}
               />
-            </>
+            </div>
           )}
 
-          {userLocation && <TrendingPlaces userLocation={userLocation} />}
+          {userLocation && (
+            <div className="mt-12 md:mt-16">
+              <TrendingPlaces userLocation={userLocation} />
+            </div>
+          )}
 
-          <div className='mt-16'>
-            <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center'>
-              Featured Collections
-            </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {/* FEATURED COLLECTIONS */}
+          <div className="mt-16 md:mt-24">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Featured Collections
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredCollections.map((collection) => (
-                <Card key={collection.id} className='overflow-hidden shadow-lg'>
-                  <Image
-                    src={collection.image}
-                    alt={collection.name}
-                    className='w-full h-48 object-cover'
-                    height={400}
-                    width={300}
-                  />
-                  <CardContent className='p-4'>
-                    <h3 className='font-semibold text-lg mb-2'>
-                      {collection.name}
-                    </h3>
-                    <Button asChild className='w-full'>
-                      <Link href={`/explore/${collection.id}`}>Explore</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <Link
+                  href={`/explore/${collection.id}`}
+                  key={collection.id}
+                  className="group"
+                >
+                  <Card className="overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl h-full flex flex-col cursor-pointer">
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <Image
+                        src={collection.image}
+                        alt={collection.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <CardContent className="p-5 flex-grow">
+                      <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors">
+                        {collection.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Explore hand-picked spots
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
 
-          <div className='mt-16 relative'>
-            <div className='absolute inset-0 bg-gray-100 bg-opacity-90 z-10 flex items-center justify-center'>
-              <div className='bg-primary text-primary-foreground px-6 py-3 rounded-full text-xl font-semibold shadow-lg'>
+          {/* COMING SOON SECTION */}
+          <div className="mt-20 md:mt-32 relative">
+            <div className="text-center mb-8">
+              <span className="bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase px-4 py-1.5 rounded-full">
                 Coming Soon
-              </div>
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold mt-4 text-gray-900">
+                More ways to explore
+              </h2>
             </div>
-            <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center text-gray-700'>
-              Explore CheapBites Features
-            </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 opacity-60 grayscale-[30%] pointer-events-none">
               {[
                 {
-                  title: 'Time Machine',
+                  title: "Time Machine",
                   icon: Clock,
-                  description:
-                    'Explore restaurants from different eras and relive culinary history.',
-                  link: '/time-machine',
+                  desc: "Explore restaurants from different eras.",
                 },
                 {
-                  title: 'Price Pulse',
+                  title: "Price Pulse",
                   icon: TrendingUp,
-                  description:
-                    'Track price trends and find the best deals on your favorite dishes.',
-                  link: '/price-pulse',
+                  desc: "Track price trends and find the best deals.",
                 },
                 {
-                  title: 'Food Journey',
+                  title: "Food Journey",
                   icon: Utensils,
-                  description:
-                    'Embark on a culinary adventure and discover new flavors.',
-                  link: '/food-journey',
+                  desc: "Embark on a guided culinary adventure.",
                 },
                 {
-                  title: 'Social Dining',
+                  title: "Social Dining",
                   icon: Users,
-                  description:
-                    'Connect with fellow food lovers and share dining experiences.',
-                  link: '/social-dining',
+                  desc: "Connect with fellow food lovers.",
                 },
               ].map((feature, index) => (
-                <Card key={index} className='shadow-md bg-white'>
-                  <CardHeader>
-                    <CardTitle className='flex items-center text-lg text-gray-600'>
-                      <feature.icon className='mr-2 h-5 w-5' />
+                <Card
+                  key={index}
+                  className="border-gray-200 shadow-none rounded-2xl"
+                >
+                  <CardHeader className="pb-2">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <feature.icon className="h-5 w-5 text-gray-500" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-700">
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className='text-sm text-gray-500'>
-                      {feature.description}
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      {feature.desc}
                     </p>
                   </CardContent>
-                  <CardFooter>
-                    <Button
-                      disabled
-                      className='w-full cursor-not-allowed opacity-50'
-                    >
-                      Explore
-                    </Button>
-                  </CardFooter>
                 </Card>
               ))}
             </div>
           </div>
         </div>
       </div>
+
       {showSignIn && (
         <SignInOverlay
           onClose={() => setShowSignIn(false)}
