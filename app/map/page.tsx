@@ -318,31 +318,35 @@ export default function DiscoveryMap() {
         />
       </div>
 
-      <div className="absolute top-4 left-0 right-0 z-10 px-4 pointer-events-none">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-2 pointer-events-auto">
-          <div
-            className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-3 flex-1 flex flex-col justify-center"
-            onPointerDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-          >
-            <label className="text-xs font-semibold text-gray-600 mb-1 flex justify-between">
+      {/* FLOATING TOP BAR (Filters) */}
+      <div className="absolute top-4 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
+        {/* CRITICAL FIX: Added `w-full` here to prevent Brave from collapsing the container */}
+        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-3 pointer-events-auto">
+          {/* Distance Slider Panel */}
+          {/* CRITICAL FIX: Changed `flex-1` to `w-full` */}
+          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-4 w-full flex flex-col justify-center">
+            <label className="text-xs font-semibold text-gray-600 mb-3 flex justify-between">
               <span>Search Radius</span>
               <span className="text-primary">{distance.toFixed(1)} km</span>
             </label>
-            <Slider
-              value={[distance]}
-              onValueChange={handleDistanceChange}
+            <input
+              type="range"
+              min={1}
               max={5}
               step={0.5}
-              min={1}
-              className="cursor-grab"
+              value={distance}
+              onChange={(e) =>
+                handleDistanceChange([parseFloat(e.target.value)])
+              }
+              className="w-full h-2 bg-primary/20 rounded-lg appearance-none cursor-pointer accent-primary touch-none"
             />
           </div>
 
-          <div className="flex gap-2 flex-1">
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl flex-1">
+          {/* Dropdown Filters */}
+          <div className="flex flex-row gap-3 w-full">
+            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[72px] md:h-full flex items-center">
               <Select onValueChange={setCategoryFilter}>
-                <SelectTrigger className="border-0 bg-transparent h-full focus:ring-0">
+                <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-sm font-medium">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -355,9 +359,9 @@ export default function DiscoveryMap() {
               </Select>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl flex-1">
+            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[72px] md:h-full flex items-center">
               <Select onValueChange={setMoodFilter}>
-                <SelectTrigger className="border-0 bg-transparent h-full focus:ring-0">
+                <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-sm font-medium">
                   <SelectValue placeholder="Mood" />
                 </SelectTrigger>
                 <SelectContent>
@@ -373,7 +377,8 @@ export default function DiscoveryMap() {
         </div>
       </div>
 
-      <div className="absolute bottom-6 left-0 right-0 z-10 pointer-events-none">
+      {/* FLOATING BOTTOM CAROUSEL (Mobile) / SIDE PANEL (Desktop) */}
+      <div className="absolute bottom-6 inset-x-0 z-40 pointer-events-none">
         <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory hide-scrollbar pointer-events-auto">
           {filteredPlaces.length === 0 ? (
             <div className="bg-white shadow-lg rounded-xl p-4 mx-auto text-sm text-gray-500">
@@ -415,23 +420,6 @@ export default function DiscoveryMap() {
           )}
         </div>
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `,
-        }}
-      />
-
-      {/* Render SignInOverlay when unauthenticated user attempts to like a place */}
-      {showSignIn && (
-        <SignInOverlay
-          onClose={() => setShowSignIn(false)}
-          onSuccess={() => setShowSignIn(false)}
-        />
-      )}
     </div>
   );
 }
