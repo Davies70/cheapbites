@@ -320,7 +320,11 @@ export default function DiscoveryMap() {
 
       <div className="absolute top-4 left-0 right-0 z-10 px-4 pointer-events-none">
         <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-2 pointer-events-auto">
-          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-3 flex-1 flex flex-col justify-center">
+          <div
+            className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-3 flex-1 flex flex-col justify-center"
+            onPointerDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
             <label className="text-xs font-semibold text-gray-600 mb-1 flex justify-between">
               <span>Search Radius</span>
               <span className="text-primary">{distance.toFixed(1)} km</span>
