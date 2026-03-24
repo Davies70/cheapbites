@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader, Filter } from "lucide-react";
+import { Loader, Filter, Heart } from "lucide-react"; // Added Heart icon for the modal
 import { Button } from "@/components/ui/button";
 import PlaceCard from "@/components/place-card";
 import { FSQPlace, Coordinates } from "@/types/places";
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import dynamic from "next/dynamic";
 import getClientLocation from "@/helpers/get-client-location";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react"; // Imported signIn
 import { useToast } from "@/hooks/use-toast";
 
 // Dynamically import the Map component with no SSR
@@ -103,7 +103,7 @@ export default function DiscoveryMap() {
 
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
   const [showSignIn, setShowSignIn] = useState<boolean>(false);
-  const [showFilters, setShowFilters] = useState<boolean>(false); // NEW: Mobile filter toggle
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   const initialLoadComplete = useRef(false);
 
@@ -211,6 +211,8 @@ export default function DiscoveryMap() {
       setCenter({ latitude, longitude });
       setZoom(18);
       setFocusedPlaceId(placeId);
+      // Automatically hide the mobile filter when a place is clicked
+      setShowFilters(false);
     },
     [],
   );
@@ -219,6 +221,7 @@ export default function DiscoveryMap() {
     async (place: FSQPlace, e: React.MouseEvent) => {
       e.stopPropagation();
 
+      // IF USER IS NOT LOGGED IN, SHOW OVERLAY AND STOP
       if (!session?.user?.email) {
         setShowSignIn(true);
         return;
@@ -274,7 +277,7 @@ export default function DiscoveryMap() {
 
   const handleDistanceChange = useCallback((value: number[]) => {
     setDistance(value[0]);
-    setFocusedPlaceId(null); // Reset focus to allow map to zoom out to new bounds
+    setFocusedPlaceId(null);
   }, []);
 
   const handlePlaceClick = useCallback((placeId: string) => {
@@ -309,6 +312,36 @@ export default function DiscoveryMap() {
 
   return (
     <div className="relative h-[calc(100vh-64px)] w-full overflow-hidden bg-gray-50">
+      {/* SIGN IN OVERLAY (Triggers when logged out user clicks 'Like') */}
+      {showSignIn && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Heart className="w-6 h-6 text-primary fill-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Save your favorites
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Sign in to save places to your personal list and access them
+              anytime.
+            </p>
+            <div className="flex w-full gap-3">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowSignIn(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="w-full" onClick={() => signIn()}>
+                Sign In
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0 w-screen">
         <Map
           center={center}
@@ -328,7 +361,7 @@ export default function DiscoveryMap() {
           <div className="flex justify-end md:hidden pointer-events-auto mb-2">
             <Button
               onClick={() => setShowFilters(!showFilters)}
-              className="rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-100 h-9 px-4"
+              className="rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-100 h-9 px-4 transition-all"
             >
               <Filter className="w-4 h-4 mr-2" />
               {showFilters ? "Hide Filters" : "Filters"}
@@ -337,12 +370,14 @@ export default function DiscoveryMap() {
 
           {/* Filter Container */}
           <div
-            className={`w-full flex-col md:flex-row gap-3 pointer-events-auto ${
-              showFilters ? "flex" : "hidden md:flex"
+            className={`w-full flex-col md:flex-row gap-2 md:gap-3 pointer-events-auto ${
+              showFilters
+                ? "flex animate-in fade-in slide-in-from-top-2 duration-200"
+                : "hidden md:flex"
             }`}
           >
             {/* Distance Slider Panel */}
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-3 md:p-4 w-full flex flex-col justify-center">
+            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl p-3 md:p-4 w-full flex flex-col justify-center">
               <label className="text-xs font-semibold text-gray-600 mb-2 md:mb-3 flex justify-between">
                 <span>Search Radius</span>
                 <span className="text-primary">{distance.toFixed(1)} km</span>
@@ -361,10 +396,16 @@ export default function DiscoveryMap() {
             </div>
 
             {/* Dropdown Filters */}
-            <div className="flex flex-row gap-3 w-full">
-              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[50px] md:h-[72px] flex items-center">
-                <Select onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-xs md:text-sm font-medium">
+            <div className="flex flex-row gap-2 md:gap-3 w-full">
+              {/* Shrunken mobile dropdowns: h-10 vs h-14 */}
+              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl w-full h-10 md:h-14 flex items-center">
+                <Select
+                  onValueChange={(val) => {
+                    setCategoryFilter(val);
+                    setShowFilters(false); // Auto-hide filters on selection
+                  }}
+                >
+                  <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-xs md:text-sm font-medium px-3">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -377,9 +418,14 @@ export default function DiscoveryMap() {
                 </Select>
               </div>
 
-              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[50px] md:h-[72px] flex items-center">
-                <Select onValueChange={setMoodFilter}>
-                  <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-xs md:text-sm font-medium">
+              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl w-full h-10 md:h-14 flex items-center">
+                <Select
+                  onValueChange={(val) => {
+                    setMoodFilter(val);
+                    setShowFilters(false); // Auto-hide filters on selection
+                  }}
+                >
+                  <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-xs md:text-sm font-medium px-3">
                     <SelectValue placeholder="Mood" />
                   </SelectTrigger>
                   <SelectContent>
