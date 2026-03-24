@@ -17,6 +17,7 @@ interface MapProps {
   onPlaceClick: (placeId: string) => void;
   selectedPlaceId?: string;
   handlePlaceView: (placeId: string) => void;
+  setShowFilters: (show: boolean) => void;
 }
 
 const createGeoJSONCircle = (
@@ -55,6 +56,7 @@ export default function DiscoveryMap({
   onPlaceClick,
   selectedPlaceId,
   handlePlaceView,
+  setShowFilters,
 }: MapProps) {
   const [popupInfo, setPopupInfo] = useState<FSQPlace | null>(null);
   const mapRef = useRef<MapRef>(null);
@@ -158,6 +160,7 @@ export default function DiscoveryMap({
             onClick={(e) => {
               e.originalEvent.stopPropagation();
               onPlaceClick(place.fsq_place_id);
+              setShowFilters(false);
             }}
           >
             <div

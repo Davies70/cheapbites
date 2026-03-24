@@ -351,6 +351,7 @@ export default function DiscoveryMap() {
           onPlaceClick={handlePlaceClick}
           selectedPlaceId={focusedPlaceId ?? ""}
           handlePlaceView={handlePlaceCardClick}
+          setShowFilters={setShowFilters}
         />
       </div>
 
