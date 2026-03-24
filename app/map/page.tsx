@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+
 import {
   Select,
   SelectContent,
@@ -19,7 +18,6 @@ import dynamic from "next/dynamic";
 import getClientLocation from "@/helpers/get-client-location";
 import { useSession } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
-import SignInOverlay from "@/components/sign-in-overlay";
 
 // Dynamically import the Map component with no SSR
 const Map = dynamic(() => import("@/components/map"), {
@@ -152,10 +150,10 @@ export default function DiscoveryMap() {
       try {
         const location = await getClientLocation();
         setCenter({
-          latitude: location.latitude,
-          longitude: location.longitude,
+          latitude: location?.latitude || 0,
+          longitude: location?.longitude || 0,
         });
-        await getPlaces(location.latitude, location.longitude);
+        await getPlaces(location?.latitude || 0, location?.longitude || 0);
       } catch (error) {
         console.error("Error fetching user location:", error);
         setError("Failed to get your location. Using default location.");

@@ -82,6 +82,8 @@ export async function GET(
 
   const cachedData = await getFromCache(cacheKey, "places");
 
+  console.log("cachedData", cachedData);
+
   if (cachedData) {
     return new Response(
       JSON.stringify({

@@ -4,7 +4,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import Map, { Marker, Popup, Source, Layer, MapRef } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { FSQPlace, Coordinates } from "@/types/places";
-import { ExternalLink, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
