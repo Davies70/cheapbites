@@ -139,10 +139,6 @@ types/user.ts
 <files>
 This section contains the contents of the repository's files.
 
-<file path="types/map.d.ts">
-declare module "react-map-gl";
-</file>
-
 <file path="app/api/location/route.ts">
 const apiKey = process.env.GEOAPIFY_API_KEY;
 
@@ -430,90 +426,6 @@ export default function ContactCard({ place }: { place: Place }) {
         </div>
       </CardContent>
     </Card>
-  );
-}
-</file>
-
-<file path="components/sign-in-overlay.tsx">
-"use client";
-
-import { signIn } from "next-auth/react";
-import { Button } from "@/components/ui/button";
-import { X, Utensils } from "lucide-react";
-
-interface SignInOverlayProps {
-  onClose: () => void;
-  onSuccess: () => void;
-}
-
-export default function SignInOverlay({
-  onClose,
-  onSuccess,
-}: SignInOverlayProps) {
-  const handleGoogleSignIn = async () => {
-    try {
-      // callbackUrl ensures they return exactly to the page they were on
-      await signIn("google", { callbackUrl: window.location.href });
-    } catch (error) {
-      console.error("Failed to sign in with Google:", error);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl relative max-w-sm w-full p-8 text-center animate-in zoom-in-95 duration-200">
-        {/* Close Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-3 right-3 rounded-full hover:bg-gray-100"
-          onClick={onClose}
-        >
-          <X className="h-5 w-5 text-gray-500" />
-        </Button>
-
-        {/* Foodie Icon */}
-        <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 text-primary">
-          <Utensils className="w-8 h-8" />
-        </div>
-
-        {/* Text Content */}
-        <h2 className="text-2xl font-bold mb-2 text-gray-900">
-          Save your favorites
-        </h2>
-        <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-          Sign in to save this place, track your visits, and get personalized
-          cheap bite recommendations.
-        </p>
-
-        {/* Action Button */}
-        <Button
-          onClick={handleGoogleSignIn}
-          size="lg"
-          className="w-full flex items-center justify-center space-x-3 text-base h-12 rounded-xl"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="currentColor"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="currentColor"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-            />
-            <path
-              fill="currentColor"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            />
-          </svg>
-          <span>Continue with Google</span>
-        </Button>
-      </div>
-    </div>
   );
 }
 </file>
@@ -2364,6 +2276,10 @@ export default config;
 </svg>
 </file>
 
+<file path="types/map.d.ts">
+declare module "react-map-gl";
+</file>
+
 <file path="types/place.ts">
 // Base types
 type PrimitiveId = string | number;
@@ -2854,6 +2770,90 @@ export async function DELETE(
 }
 </file>
 
+<file path="components/sign-in-overlay.tsx">
+"use client";
+
+import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { X, Utensils } from "lucide-react";
+
+interface SignInOverlayProps {
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+export default function SignInOverlay({
+  onClose,
+  onSuccess,
+}: SignInOverlayProps) {
+  const handleGoogleSignIn = async () => {
+    try {
+      // callbackUrl ensures they return exactly to the page they were on
+      await signIn("google", { callbackUrl: window.location.href });
+    } catch (error) {
+      console.error("Failed to sign in with Google:", error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl relative max-w-sm w-full p-8 text-center animate-in zoom-in-95 duration-200">
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-3 right-3 rounded-full hover:bg-gray-100"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5 text-gray-500" />
+        </Button>
+
+        {/* Foodie Icon */}
+        <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 text-primary">
+          <Utensils className="w-8 h-8" />
+        </div>
+
+        {/* Text Content */}
+        <h2 className="text-2xl font-bold mb-2 text-gray-900">
+          Save your favorites
+        </h2>
+        <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+          Sign in to save this place, track your visits, and get personalized
+          cheap bite recommendations.
+        </p>
+
+        {/* Action Button */}
+        <Button
+          onClick={handleGoogleSignIn}
+          size="lg"
+          className="w-full flex items-center justify-center space-x-3 text-base h-12 rounded-xl"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="currentColor"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="currentColor"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            />
+            <path
+              fill="currentColor"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            />
+          </svg>
+          <span>Continue with Google</span>
+        </Button>
+      </div>
+    </div>
+  );
+}
+</file>
+
 <file path="models/placeCache.ts">
 // import mongoose from 'mongoose';
 
@@ -3256,192 +3256,6 @@ export default function MapLayout({
 }
 </file>
 
-<file path="components/dietary-preference.tsx">
-'use client';
-
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-interface DietaryPreferenceProps {
-  onPreferencesSubmit: (preferences: string[]) => void;
-}
-
-const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
-  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
-
-  const handleDietaryRestriction = (value: string) => {
-    if (value === 'None') {
-      onPreferencesSubmit([]);
-      return;
-    }
-    setDietaryRestrictions(
-      dietaryRestrictions.includes(value)
-        ? dietaryRestrictions.filter((item) => item !== value)
-        : [...dietaryRestrictions, value]
-    );
-  };
-
-  const handleSubmit = () => {
-    onPreferencesSubmit(dietaryRestrictions);
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dietary Preferences</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className='mb-4'>Select any dietary restrictions or preferences:</p>
-        <div className='flex flex-wrap gap-2 mb-4'>
-          {[
-            'Vegan',
-            'Vegetarian',
-            'Gluten-Free',
-            'Halal',
-            'Kosher',
-            'None',
-          ].map((restriction) => (
-            <Button
-              key={restriction}
-              variant={
-                dietaryRestrictions.includes(restriction)
-                  ? 'default'
-                  : 'outline'
-              }
-              onClick={() => handleDietaryRestriction(restriction)}
-            >
-              {restriction}
-            </Button>
-          ))}
-        </div>
-        <Button onClick={handleSubmit} className='w-full'>
-          Submit Preferences
-        </Button>
-      </CardContent>
-    </Card>
-  );
-};
-
-export default DietaryPreference;
-</file>
-
-<file path="components/place-card.tsx">
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Heart, Navigation } from "lucide-react";
-import Image from "next/image";
-
-interface PlaceCardProps {
-  category: string;
-  icon: string;
-  name: string;
-  mood: string;
-  distance: number;
-  onFocus: () => void;
-  isLiked: boolean;
-  onLike: (e: React.MouseEvent) => void;
-  goToPage: (e: React.MouseEvent) => void;
-  priority?: boolean;
-  isFocused: boolean;
-}
-
-export default function PlaceCard({
-  category,
-  icon,
-  name,
-  mood,
-  distance,
-  onFocus,
-  isLiked,
-  onLike,
-  goToPage,
-  priority,
-  isFocused,
-}: PlaceCardProps) {
-  const formatDistance = (distanceInMeters: number): string => {
-    if (distanceInMeters < 1000) {
-      return `${distanceInMeters} m`;
-    } else {
-      return `${(distanceInMeters / 1000).toFixed(1)} km`;
-    }
-  };
-
-  return (
-    <Card
-      onClick={onFocus}
-      className={`overflow-hidden cursor-pointer transition-all duration-300 w-full h-[120px] flex flex-row bg-white
-        ${
-          isFocused
-            ? "ring-2 ring-primary shadow-lg scale-[1.02] border-transparent"
-            : "border-gray-200 shadow-sm hover:shadow-md"
-        }
-      `}
-    >
-      <div className="relative w-[110px] sm:w-[120px] h-full shrink-0 bg-gray-100">
-        <Image
-          src={icon}
-          alt={name}
-          fill
-          className="object-cover"
-          sizes="120px"
-          priority={priority}
-          placeholder="blur"
-          blurDataURL="/placeholder-place.png"
-        />
-      </div>
-
-      <CardContent className="p-3 flex flex-col justify-between flex-grow min-w-0">
-        <div>
-          <div className="flex justify-between items-start gap-2">
-            <h3 className="font-bold text-sm text-gray-900 truncate">{name}</h3>
-            {/* Parent handles the onLike logic entirely now */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onLike(e);
-              }}
-              className="shrink-0 -mt-1 -mr-1 p-1"
-              aria-label={isLiked ? "Unlike place" : "Like place"}
-            >
-              <Heart
-                className={`w-4 h-4 transition-colors ${
-                  isLiked
-                    ? "fill-red-500 text-red-500"
-                    : "text-gray-300 hover:text-red-400"
-                }`}
-              />
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 truncate mt-0.5">
-            {category} • {mood}
-          </p>
-          <div className="flex items-center text-xs mt-1 font-medium text-primary">
-            <Navigation className="w-3 h-3 mr-1 fill-primary" />
-            {formatDistance(distance)} away
-          </div>
-        </div>
-
-        <div className="flex justify-end mt-1">
-          <Button
-            variant={isFocused ? "default" : "secondary"}
-            size="sm"
-            className="h-7 text-xs px-3 py-0"
-            onClick={(e) => {
-              e.stopPropagation();
-              goToPage(e);
-            }}
-          >
-            View Details
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-</file>
-
 <file path="models/placesCache.ts">
 // import mongoose from 'mongoose';
 
@@ -3745,6 +3559,222 @@ export default config;
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/api/test.js"],
   "exclude": ["node_modules"]
+}
+</file>
+
+<file path="components/dietary-preference.tsx">
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Check } from "lucide-react";
+
+interface DietaryPreferenceProps {
+  onPreferencesSubmit: (preferences: string[]) => void;
+}
+
+const restrictionsList = [
+  "Vegan",
+  "Vegetarian",
+  "Gluten-Free",
+  "Halal",
+  "Kosher",
+];
+
+const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
+  const [dietaryRestrictions, setDietaryRestrictions] = useState<string[]>([]);
+
+  const toggleRestriction = (value: string) => {
+    setDietaryRestrictions((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value],
+    );
+  };
+
+  const handleNone = () => {
+    setDietaryRestrictions([]);
+    onPreferencesSubmit(["None"]);
+  };
+
+  const handleSubmit = () => {
+    onPreferencesSubmit(
+      dietaryRestrictions.length > 0 ? dietaryRestrictions : ["None"],
+    );
+  };
+
+  return (
+    <Card className="border-0 shadow-none">
+      <CardHeader className="text-center pb-4 pt-8">
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          Any Dietary Restrictions?
+        </CardTitle>
+        <CardDescription>Select all that apply to you.</CardDescription>
+      </CardHeader>
+      <CardContent className="px-8 pb-8">
+        <div className="flex flex-wrap justify-center gap-3 mb-8">
+          {restrictionsList.map((restriction) => {
+            const isSelected = dietaryRestrictions.includes(restriction);
+            return (
+              <button
+                key={restriction}
+                onClick={() => toggleRestriction(restriction)}
+                className={`flex items-center px-4 py-2.5 rounded-full text-sm font-semibold border-2 transition-all duration-200 ${
+                  isSelected
+                    ? "border-primary bg-primary text-primary-foreground shadow-md"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-primary/50 hover:bg-gray-50"
+                }`}
+              >
+                {isSelected && <Check className="w-4 h-4 mr-1.5" />}
+                {restriction}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            variant="outline"
+            onClick={handleNone}
+            className="flex-1 h-12 rounded-xl font-semibold text-gray-600"
+          >
+            None, I eat everything
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            className="flex-1 h-12 rounded-xl font-bold shadow-md"
+          >
+            Show My Results
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default DietaryPreference;
+</file>
+
+<file path="components/place-card.tsx">
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Heart, Navigation } from "lucide-react";
+import Image from "next/image";
+
+interface PlaceCardProps {
+  category: string;
+  icon: string;
+  name: string;
+  mood: string;
+  distance: number;
+  onFocus: () => void;
+  isLiked: boolean;
+  onLike: (e: React.MouseEvent) => void;
+  goToPage: (e: React.MouseEvent) => void;
+  priority?: boolean;
+  isFocused: boolean;
+}
+
+export default function PlaceCard({
+  category,
+  icon,
+  name,
+  mood,
+  distance,
+  onFocus,
+  isLiked,
+  onLike,
+  goToPage,
+  priority,
+  isFocused,
+}: PlaceCardProps) {
+  const formatDistance = (distanceInMeters: number): string => {
+    if (distanceInMeters < 1000) {
+      return `${distanceInMeters} m`;
+    } else {
+      return `${(distanceInMeters / 1000).toFixed(1)} km`;
+    }
+  };
+
+  return (
+    <Card
+      onClick={onFocus}
+      className={`overflow-hidden cursor-pointer transition-all duration-300 w-full h-[120px] flex flex-row bg-white
+        ${
+          isFocused
+            ? "ring-2 ring-primary shadow-lg scale-[1.02] border-transparent"
+            : "border-gray-200 shadow-sm hover:shadow-md"
+        }
+      `}
+    >
+      <div className="relative w-[110px] sm:w-[120px] h-full shrink-0 bg-gray-100">
+        <Image
+          src={icon}
+          alt={name}
+          fill
+          className="object-cover"
+          sizes="120px"
+          priority={priority}
+          placeholder="blur"
+          blurDataURL="/placeholder-place.png"
+        />
+      </div>
+
+      <CardContent className="p-3 flex flex-col justify-between flex-grow min-w-0">
+        <div>
+          <div className="flex justify-between items-start gap-2">
+            <h3 className="font-bold text-sm text-gray-900 truncate">{name}</h3>
+            {/* Parent handles the onLike logic entirely now */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onLike(e);
+              }}
+              className="shrink-0 -mt-1 -mr-1 p-1"
+              aria-label={isLiked ? "Unlike place" : "Like place"}
+            >
+              <Heart
+                className={`w-4 h-4 transition-colors ${
+                  isLiked
+                    ? "fill-red-500 text-red-500"
+                    : "text-gray-300 hover:text-red-400"
+                }`}
+              />
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-500 truncate mt-0.5">
+            {category} • {mood}
+          </p>
+          <div className="flex items-center text-xs mt-1 font-medium text-primary">
+            <Navigation className="w-3 h-3 mr-1 fill-primary" />
+            {formatDistance(distance)} away
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-1">
+          <Button
+            variant={isFocused ? "default" : "secondary"}
+            size="sm"
+            className="h-7 text-xs px-3 py-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              goToPage(e);
+            }}
+          >
+            View Details
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 </file>
 
@@ -4619,99 +4649,6 @@ export default function RootLayout({
 }
 </file>
 
-<file path="components/user-recommendations.tsx">
-'use client';
-
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Button } from '@/components/ui/button';
-import TrendingPlaceCard from './trending-place-card';
-import { FSQPlace } from '@/types/places';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-
-interface UserRecommendationsProps {
-  recommendations: FSQPlace[];
-  onChangePreferences: () => void;
-  error: string | null;
-  isLoading: boolean;
-}
-
-const UserRecommendations = ({
-  recommendations,
-  onChangePreferences,
-  error,
-  isLoading,
-}: UserRecommendationsProps) => {
-  if (error) {
-    return (
-      <Alert variant='destructive' className='mt-12'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className='mt-12 flex items-center justify-center'>
-        <Loader2 className='h-8 w-8 animate-spin text-primary' />
-        <span className='ml-2 text-lg font-medium sm:text-base'>
-          Loading places based on your preferences...
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <div className='mt-12'>
-      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-2 sm:space-y-0'>
-        <h2 className='text-xl sm:text-2xl font-semibold'>
-          Your Personalized Recommendations
-        </h2>
-        <Button
-          onClick={onChangePreferences}
-          variant='outline'
-          className='w-full sm:w-auto'
-        >
-          Change Preferences
-        </Button>
-      </div>
-      <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
-        <div className='flex w-max space-x-4 p-4'>
-          {recommendations.map((place: FSQPlace) => (
-            <div
-              key={place.fsq_place_id}
-              className='w-40 sm:w-72 flex-shrink-0'
-            >
-              <TrendingPlaceCard
-                name={place.name}
-                category={place.categories[0].name}
-                priceForTwo={0}
-                address={place.location.address}
-                id={place.fsq_place_id}
-                distance={place.distance}
-                images={place.categories[0].icon}
-              />
-            </div>
-          ))}
-        </div>
-        <ScrollBar
-          orientation='horizontal'
-          className='custom-scrollbar-thumb'
-        />
-      </ScrollArea>
-      {/* Mobile swipe hint */}
-      <p className='text-center text-sm text-muted-foreground mt-2 md:hidden'>
-        👉 Swipe to explore more places
-      </p>
-    </div>
-  );
-};
-
-export default UserRecommendations;
-</file>
-
 <file path="helpers/get-client-location.ts">
 const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
 
@@ -5270,24 +5207,6 @@ export default function ExplorePage() {
 }
 </file>
 
-<file path="app/api/auth/[...nextauth]/route.ts">
-import NextAuth from "next-auth";
-
-import GoogleProvider from "next-auth/providers/google";
-
-const handler = NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-});
-
-export { handler as GET, handler as POST };
-</file>
-
 <file path="app/api/place/[id]/route.ts">
 import { PlaceResponse } from '@/types/place';
 import { saveToCache, getFromCache } from '@/lib/cacheUtils';
@@ -5386,35 +5305,191 @@ export async function GET(
 }
 </file>
 
-<file path="components/food-quiz.tsx">
-'use client';
+<file path="components/user-recommendations.tsx">
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Button } from '@/components/ui/button';
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import TrendingPlaceCard from "./trending-place-card";
+import { FSQPlace } from "@/types/places";
+import { AlertCircle, SearchX } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+
+interface UserRecommendationsProps {
+  recommendations: FSQPlace[];
+  onChangePreferences: () => void;
+  error: string | null;
+  isLoading: boolean;
+}
+
+const UserRecommendations = ({
+  recommendations,
+  onChangePreferences,
+  error,
+  isLoading,
+}: UserRecommendationsProps) => {
+  // 1. Error State
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mt-12">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="mt-12">
+      {/* Title always stays visible to prevent layout jumping */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-3 sm:space-y-0 px-2">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Your Personalized Recommendations
+        </h2>
+        <Button
+          onClick={onChangePreferences}
+          variant="outline"
+          className="w-full sm:w-auto rounded-full font-medium shadow-sm hover:bg-gray-50"
+        >
+          Change Preferences
+        </Button>
+      </div>
+
+      {isLoading ? (
+        /* 2. Skeleton Loading State (Prevents layout shift by matching the height of the final cards) */
+        <div className="flex overflow-hidden space-x-4 px-2 pb-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="w-[85vw] max-w-[280px] sm:w-72 flex-shrink-0 flex flex-col gap-3"
+            >
+              {/* Image Skeleton */}
+              <Skeleton className="h-36 sm:h-40 w-full rounded-2xl" />
+              {/* Text Skeletons */}
+              <div className="space-y-2 mt-1">
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-1/2 rounded-md" />
+                <Skeleton className="h-4 w-full mt-4 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : recommendations && recommendations.length > 0 ? (
+        /* 3. Actual Data State */
+        <>
+          <ScrollArea className="w-full whitespace-nowrap rounded-md border-0 custom-scrollbar">
+            <div className="flex w-max space-x-4 p-4 snap-x snap-mandatory pt-1">
+              {recommendations.map((place: FSQPlace) => (
+                <div
+                  key={place.fsq_place_id}
+                  className="w-[85vw] max-w-[280px] sm:w-72 flex-shrink-0 snap-center"
+                >
+                  <TrendingPlaceCard
+                    name={place.name}
+                    category={place.categories[0]?.name || "Unknown"}
+                    priceForTwo={0}
+                    address={place.location.address}
+                    id={place.fsq_place_id}
+                    distance={place.distance}
+                    images={place.categories[0]?.icon}
+                  />
+                </div>
+              ))}
+            </div>
+            <ScrollBar
+              orientation="horizontal"
+              className="custom-scrollbar-thumb"
+            />
+          </ScrollArea>
+
+          {/* Mobile swipe hint */}
+          <p className="text-center text-sm font-medium text-gray-400 mt-2 md:hidden animate-pulse">
+            Swipe to explore more
+          </p>
+        </>
+      ) : (
+        /* 4. Empty State (If the user's specific dietary requests yield 0 results) */
+        <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center shadow-sm mx-4 my-4 flex flex-col items-center justify-center animate-in fade-in duration-500">
+          <div className="bg-primary/10 p-5 rounded-full mb-5 text-primary">
+            <SearchX className="w-10 h-10" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
+            No exact matches found
+          </h3>
+          <p className="text-gray-500 mb-8 max-w-md leading-relaxed">
+            We couldn't find any places matching those specific preferences
+            nearby. Try loosening your filters to discover more great spots!
+          </p>
+          <Button
+            onClick={onChangePreferences}
+            size="lg"
+            className="rounded-full font-bold px-8 h-12 shadow-md"
+          >
+            Adjust Preferences
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default UserRecommendations;
+</file>
+
+<file path="app/api/auth/[...nextauth]/route.ts">
+import NextAuth from "next-auth";
+
+import GoogleProvider from "next-auth/providers/google";
+
+const handler = NextAuth({
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+    }),
+  ],
+  secret: process.env.NEXTAUTH_SECRET,
+});
+
+export { handler as GET, handler as POST };
+</file>
+
+<file path="components/food-quiz.tsx">
+"use client";
+
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Sparkles, ArrowRight } from "lucide-react";
 
 const quizQuestions = [
   {
     question: "What's your preferred spice level?",
-    options: ['Mild', 'Medium', 'Spicy', 'Extra Spicy'],
+    options: ["Mild", "Medium", "Spicy", "Extra Spicy"],
   },
   {
-    question: 'How often do you try new cuisines?',
-    options: ['Rarely', 'Sometimes', 'Often', 'Always'],
+    question: "How often do you try new cuisines?",
+    options: ["Rarely", "Sometimes", "Often", "Always"],
   },
   {
     question: "What's your favorite type of cuisine?",
     options: [
-      'Italian',
-      'Chinese',
-      'Mexican',
-      'American',
-      'Indian',
-      'French',
-      'Japanese',
-      'Thai',
+      "Italian",
+      "Chinese",
+      "Mexican",
+      "American",
+      "Indian",
+      "French",
+      "Japanese",
+      "Thai",
     ],
   },
 ];
@@ -5427,69 +5502,72 @@ const FoodQuiz = ({ onQuizComplete }: FoodQuizProps) => {
   const [showQuiz, setShowQuiz] = useState(false);
   const [quizStep, setQuizStep] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
-  const [quizFinished, setQuizFinished] = useState(false);
 
   const handleQuizAnswer = (answer: string) => {
     const newAnswers = [...quizAnswers, answer];
-    setQuizAnswers(newAnswers);
     if (quizStep < quizQuestions.length - 1) {
+      setQuizAnswers(newAnswers);
       setQuizStep(quizStep + 1);
     } else {
-      setQuizFinished(true);
+      onQuizComplete(newAnswers);
     }
   };
 
-  const handleSubmit = () => {
-    onQuizComplete([quizAnswers[2]]);
-    setShowQuiz(false);
-  };
+  const progress = ((quizStep + 1) / quizQuestions.length) * 100;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Personalize Your Experience</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {!showQuiz ? (
-          <>
-            <p className='mb-4'>
-              Tell us about your food preferences to get personalized
-              recommendations.
-            </p>
-            <Button onClick={() => setShowQuiz(true)} className='w-full'>
-              Take Food Preference Quiz
-            </Button>
-          </>
-        ) : (
-          <div className='space-y-4'>
-            {!quizFinished ? (
-              <>
-                <h3 className='font-semibold'>
-                  {quizQuestions[quizStep].question}
-                </h3>
-                <RadioGroup onValueChange={handleQuizAnswer}>
-                  {quizQuestions[quizStep].options.map((option, index) => (
-                    <div key={index} className='flex items-center space-x-2'>
-                      <RadioGroupItem value={option} id={`option-${index}`} />
-                      <Label htmlFor={`option-${index}`}>{option}</Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </>
-            ) : (
-              <>
-                <p>
-                  Great! You've completed the quiz. Ready to see your
-                  personalized recommendations?
-                </p>
-                <Button onClick={handleSubmit} className='w-full'>
-                  Submit Quiz
-                </Button>
-              </>
-            )}
+    <Card className="border-0 shadow-none">
+      {!showQuiz ? (
+        <div className="p-8 text-center flex flex-col items-center justify-center space-y-4">
+          <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-2">
+            <Sparkles className="w-8 h-8" />
           </div>
-        )}
-      </CardContent>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Personalize Your Experience
+          </CardTitle>
+          <CardDescription className="text-base">
+            Tell us about your food preferences to get tailored, budget-friendly
+            recommendations near you.
+          </CardDescription>
+          <Button
+            onClick={() => setShowQuiz(true)}
+            size="lg"
+            className="w-full sm:w-auto mt-4 h-12 px-8 rounded-full font-bold"
+          >
+            Take the Quiz <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      ) : (
+        <>
+          <CardHeader className="pb-4">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Question {quizStep + 1} of {quizQuestions.length}
+              </span>
+              <span className="text-xs font-bold text-primary">
+                {Math.round(progress)}%
+              </span>
+            </div>
+            <Progress value={progress} className="h-2 w-full" />
+            <CardTitle className="text-xl font-bold mt-6 leading-tight">
+              {quizQuestions[quizStep].question}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {quizQuestions[quizStep].options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuizAnswer(option)}
+                  className="p-4 rounded-xl border-2 border-gray-100 bg-white text-left font-semibold text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all duration-200 active:scale-95"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </>
+      )}
     </Card>
   );
 };
@@ -5584,7 +5662,7 @@ export default function DiscoveryMap({
   return (
     <Map
       ref={mapRef} // 3. Attach the ref to the Map
-      mapboxAccessToken={process.env.MAPBOX_TOKEN}
+      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
       initialViewState={{
         longitude: center.longitude || 0,
         latitude: center.latitude || 0,
@@ -5705,133 +5783,239 @@ export default function DiscoveryMap({
 "use client";
 
 import { useState } from "react";
-import { MapPin, User, Menu, LogOut } from "lucide-react";
+import {
+  MapPin,
+  User,
+  Menu,
+  LogOut,
+  Utensils,
+  LayoutDashboard,
+} from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import SignInOverlay from "./sign-in-overlay";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Nav = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const pathname = usePathname();
+  const { data: session } = useSession();
 
   const handleSignInSuccess = () => {
     setShowSignIn(false);
-    router.push("/dashboard"); // Redirect to dashboard after successful sign-in
+    router.push("/dashboard");
   };
 
-  const NavItems = ({
-    isMobile = false,
-    onSignInClick,
-  }: {
-    isMobile?: boolean;
-    onSignInClick: () => void;
-  }) => (
-    <div
-      className={
-        isMobile ? "flex flex-col space-y-4" : "flex items-center space-x-6"
-      }
-    >
-      <Button
-        variant="ghost"
-        asChild
-        className={isMobile ? "justify-start" : ""}
-      >
-        <Link href="/map">
-          <MapPin className="mr-2 h-4 w-4" /> Discovery Map
-        </Link>
-      </Button>
-      {session ? (
-        <>
-          <Button
-            variant="ghost"
-            asChild
-            className={isMobile ? "justify-start" : ""}
-          >
-            <Link href="/dashboard">
-              <User className="mr-2 h-4 w-4" /> Dashboard
-            </Link>
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => signOut({ callbackUrl: "/", redirect: true })}
-            className={isMobile ? "justify-start" : ""}
-          >
-            <LogOut className="mr-2 h-4 w-4" /> Sign Out
-          </Button>
-        </>
-      ) : (
-        <Button
-          variant="ghost"
-          onClick={onSignInClick}
-          className={isMobile ? "justify-start" : ""}
-        >
-          <User className="mr-2 h-4 w-4" /> Sign In
-        </Button>
-      )}
-    </div>
-  );
+  // Helper to check if a link is active
+  const isActive = (path: string) => pathname?.startsWith(path);
 
   return (
     <>
-      <nav className="bg-primary text-primary-foreground  top-0 z-40 shadow-md backdrop-blur-lg">
-        {" "}
-        {/* z-index lowered */}
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <nav className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-all">
+        <div className="container mx-auto px-4 h-16 flex justify-between items-center">
+          {/* Logo */}
           <Link
             href="/"
-            className="text-xl font-bold flex items-center hover:text-primary-foreground/80 transition-colors"
+            className="flex items-center gap-2 group transition-transform hover:scale-105"
           >
-            CheapBites
+            <div className="bg-primary text-white p-1.5 rounded-lg">
+              <Utensils className="w-5 h-5" />
+            </div>
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              CheapBites
+            </span>
           </Link>
 
-          <div className="hidden md:block">
-            <NavItems onSignInClick={() => setShowSignIn(true)} />
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-2">
+            <Button
+              variant={isActive("/map") ? "secondary" : "ghost"}
+              asChild
+              className={`rounded-full px-4 ${isActive("/map") ? "font-semibold text-primary bg-primary/10" : "text-gray-600"}`}
+            >
+              <Link href="/map">
+                <MapPin className="mr-2 h-4 w-4" /> Map
+              </Link>
+            </Button>
+
+            {session?.user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="relative h-10 w-10 rounded-full ml-2"
+                  >
+                    <Avatar className="h-10 w-10 border-2 border-primary/20 hover:border-primary transition-colors">
+                      <AvatarImage
+                        src={session.user.image || ""}
+                        alt={session.user.name || "User"}
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {session.user.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {session.user.name}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {session.user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="cursor-pointer">
+                      <LayoutDashboard className="mr-2 h-4 w-4 text-gray-500" />
+                      <span>Dashboard</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600 cursor-pointer"
+                    onClick={() =>
+                      signOut({ callbackUrl: "/", redirect: true })
+                    }
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                onClick={() => setShowSignIn(true)}
+                className="rounded-full ml-2 font-semibold shadow-sm"
+              >
+                <User className="mr-2 h-4 w-4" /> Sign In
+              </Button>
+            )}
           </div>
 
+          {/* Mobile Navigation Toggle */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden hover:bg-primary-foreground/10"
+                className="md:hidden text-gray-600"
               >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
+
             <SheetContent
               side="right"
-              className="w-[250px] sm:w-[300px] bg-primary text-primary-foreground"
+              className="w-[280px] sm:w-[320px] bg-white border-l border-gray-100 p-0"
             >
-              <SheetHeader>
-                <SheetTitle className="text-primary-foreground"></SheetTitle>
-                <SheetDescription className="text-primary-foreground"></SheetDescription>
+              <SheetHeader className="p-6 border-b border-gray-100 text-left">
+                <SheetTitle className="flex items-center gap-2">
+                  <div className="bg-primary text-white p-1 rounded-md">
+                    <Utensils className="w-4 h-4" />
+                  </div>
+                  CheapBites
+                </SheetTitle>
               </SheetHeader>
-              <div className="mt-6 flex flex-col space-y-4">
-                <NavItems
-                  isMobile
-                  onSignInClick={() => {
-                    setShowSignIn(true);
-                    setIsOpen(false);
-                  }}
-                />
+
+              <div className="flex flex-col py-4 px-3 space-y-1">
+                <Button
+                  variant={isActive("/map") ? "secondary" : "ghost"}
+                  asChild
+                  onClick={() => setIsOpen(false)}
+                  className={`justify-start h-12 ${isActive("/map") ? "text-primary bg-primary/10" : "text-gray-600"}`}
+                >
+                  <Link href="/map">
+                    <MapPin className="mr-3 h-5 w-5" /> Discovery Map
+                  </Link>
+                </Button>
+
+                {session?.user ? (
+                  <>
+                    <Button
+                      variant={isActive("/dashboard") ? "secondary" : "ghost"}
+                      asChild
+                      onClick={() => setIsOpen(false)}
+                      className={`justify-start h-12 ${isActive("/dashboard") ? "text-primary bg-primary/10" : "text-gray-600"}`}
+                    >
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-3 h-5 w-5" /> Dashboard
+                      </Link>
+                    </Button>
+
+                    <div className="my-4 border-t border-gray-100" />
+
+                    <div className="px-4 py-2 flex items-center gap-3 mb-2">
+                      <Avatar className="h-10 w-10 border border-gray-200">
+                        <AvatarImage
+                          src={session.user.image || ""}
+                          alt={session.user.name || "User"}
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {session.user.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-gray-900 line-clamp-1">
+                          {session.user.name}
+                        </span>
+                        <span className="text-xs text-gray-500 line-clamp-1">
+                          {session.user.email}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setIsOpen(false);
+                        signOut({ callbackUrl: "/", redirect: true });
+                      }}
+                      className="justify-start h-12 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <LogOut className="mr-3 h-5 w-5" /> Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      setIsOpen(false);
+                      setShowSignIn(true);
+                    }}
+                    className="justify-start h-12 mt-2 shadow-sm"
+                  >
+                    <User className="mr-3 h-5 w-5" /> Sign In
+                  </Button>
+                )}
               </div>
             </SheetContent>
           </Sheet>
         </div>
       </nav>
+
+      {/* Auth Overlay */}
       {showSignIn && (
         <div className="fixed inset-0 z-50">
           <SignInOverlay
@@ -6072,56 +6256,67 @@ export default function TrendingPlaceCard({
 </file>
 
 <file path="app/(main)/dashboard/page.tsx">
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Bookmark, MapPin, Clock, Utensils, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import { User, SavedPlace } from '@/types/user';
-import { useParams } from 'next/navigation';
-import Image from 'next/image';
-import { Loader } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Bookmark,
+  MapPin,
+  Clock,
+  Utensils,
+  ChevronRight,
+  Star,
+  MessageSquare,
+  Navigation,
+  Compass,
+} from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { User, SavedPlace } from "@/types/user";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import { Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
-
   const { id } = useParams();
   const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!session) return;
-    if (session?.user?.email) {
-      setIsLoading(true);
-      fetch(`/api/user/${session?.user?.email}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setUser(data);
-        })
-        .catch((e) => {
-          console.error('Error fetching user data:', e);
-          setError('An error occurred while fetching user data');
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
+    if (!session?.user?.email) return;
+
+    setIsLoading(true);
+    fetch(`/api/user/${session.user.email}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data);
+      })
+      .catch((e) => {
+        console.error("Error fetching user data:", e);
+        setError(
+          "An error occurred while fetching your data. Please try again.",
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, [session, id]);
 
   const unsaveRestaurant = async (savedPlace: SavedPlace) => {
@@ -6135,35 +6330,28 @@ export default function Dashboard() {
 
     try {
       const response = await fetch(`/api/user/saved/${session?.user?.email}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...savedPlace,
-        }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...savedPlace }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to save place');
-      }
+      if (!response.ok) throw new Error("Failed to save place");
+
       toast({
-        title: 'Place unsaved',
-        description: 'This place has been removed from your saved list',
-        variant: 'default',
+        title: "Removed from Saved",
+        description: `${savedPlace.name} has been removed.`,
       });
     } catch (error) {
-      console.error('Error saving place:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while saving the place',
-        variant: 'destructive',
+        title: "Error",
+        description: "An error occurred while removing the place.",
+        variant: "destructive",
       });
     }
   };
 
   const kmorMiles = (distance: number | undefined) => {
-    if (!distance) return 'unavailable';
+    if (!distance) return "unavailable";
     return distance > 1000
       ? `${(distance / 1000).toFixed(1)} km`
       : `${distance} m`;
@@ -6171,261 +6359,401 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className='flex items-center justify-center h-screen'>
-        <Alert variant='destructive' className='w-96'>
-          <AlertTitle>Error</AlertTitle>
+      <div className="flex items-center justify-center h-[calc(100vh-100px)]">
+        <Alert variant="destructive" className="w-full max-w-md shadow-lg">
+          <AlertTitle className="font-bold">Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
-      <div className='flex items-center justify-center h-screen'>
-        <Loader className='w-8 h-8 animate-spin text-primary' />
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] space-y-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-gray-500 font-medium animate-pulse">
+          Loading your foodie profile...
+        </p>
       </div>
     );
   }
 
-  return (
-    <div>
-      <h1 className='text-xl sm:text-2xl md:text-3xl font-bold mb-4 md:mb-6'>
-        Personal Dashboard
-      </h1>
+  const firstName = session?.user?.name?.split(" ")[0] || "Foodie";
 
-      <Tabs defaultValue='saved' className='space-y-4'>
-        <TabsList className='grid grid-cols-4 w-full '>
-          <TabsTrigger value='saved' className=' px-4 py-2 text-xs sm:text-sm'>
-            Saved
+  return (
+    <div className="py-8 max-w-5xl mx-auto animate-in fade-in duration-500">
+      {/* 1. Profile Header */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 text-center sm:text-left bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <Avatar className="h-24 w-24 shadow-md border-4 border-primary/10">
+          <AvatarImage
+            src={session?.user?.image || ""}
+            alt={session?.user?.name || "User"}
+          />
+          <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+            {firstName.charAt(0)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 mt-2 sm:mt-4">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+            Welcome back, {firstName}!
+          </h1>
+          <p className="text-gray-500 mt-1 text-base">
+            Here is a summary of your culinary adventures.
+          </p>
+        </div>
+
+        {/* 2. Quick Stats */}
+        <div className="flex gap-4 sm:gap-6 mt-4 sm:mt-2 w-full sm:w-auto justify-center">
+          <div className="text-center">
+            <p className="text-2xl font-black text-gray-900">
+              {user.saved.length}
+            </p>
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+              Saved
+            </p>
+          </div>
+          <div className="w-px h-10 bg-gray-200"></div>
+          <div className="text-center">
+            <p className="text-2xl font-black text-gray-900">
+              {user.visited.length}
+            </p>
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+              Visited
+            </p>
+          </div>
+          <div className="w-px h-10 bg-gray-200"></div>
+          <div className="text-center">
+            <p className="text-2xl font-black text-gray-900">
+              {user.reviews.length}
+            </p>
+            <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+              Reviews
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Main Content Tabs */}
+      <Tabs defaultValue="saved" className="space-y-6">
+        <TabsList className="grid grid-cols-4 w-full h-14 bg-white shadow-sm border border-gray-100 rounded-2xl p-1">
+          <TabsTrigger
+            value="saved"
+            className="rounded-xl text-xs sm:text-sm font-semibold data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
+          >
+            <Bookmark className="w-4 h-4 sm:mr-2 hidden sm:block" /> Saved
           </TabsTrigger>
-          <TabsTrigger value='visited' className='px-4 py-2 text-xs sm:text-sm'>
-            Visited
+          <TabsTrigger
+            value="visited"
+            className="rounded-xl text-xs sm:text-sm font-semibold data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
+          >
+            <MapPin className="w-4 h-4 sm:mr-2 hidden sm:block" /> Visited
           </TabsTrigger>
-          <TabsTrigger value='reviews' className='px-4 py-2 text-xs sm:text-sm'>
+          <TabsTrigger
+            value="reviews"
+            className="rounded-xl text-xs sm:text-sm font-semibold data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
+          >
+            <MessageSquare className="w-4 h-4 sm:mr-2 hidden sm:block" />{" "}
             Reviews
           </TabsTrigger>
           <TabsTrigger
-            value='recommendations'
-            className='px-4 py-2 text-xs sm:text-sm'
+            value="recommendations"
+            className="rounded-xl text-xs sm:text-sm font-semibold data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
           >
-            For You
+            <Compass className="w-4 h-4 sm:mr-2 hidden sm:block" /> For You
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value='saved'>
-          <Card className='mb-4'>
-            <CardHeader className='p-4 md:p-6'>
-              <CardTitle className='text-lg md:text-xl'>Saved Places</CardTitle>
-              <CardDescription className='text-sm'>
-                Your favorite spots to revisit
+        {/* SAVED PLACES */}
+        <TabsContent value="saved" className="focus-visible:outline-none">
+          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+              <CardTitle className="text-xl">Saved Places</CardTitle>
+              <CardDescription>
+                Your favorite spots ready for your next outing.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ScrollArea className='h-[400px] pr-4'>
-                {user?.saved.map((restaurant) => (
-                  <Card
-                    key={restaurant.id}
-                    className='mb-4 hover:bg-accent transition-colors'
-                  >
-                    <Link href={`/places/${restaurant.id}`} passHref>
-                      <CardContent className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 cursor-pointer'>
-                        <div className='flex-grow pr-2'>
-                          <h3 className='font-semibold'>{restaurant.name}</h3>
-                          <p className='text-sm text-muted-foreground'>
-                            {restaurant.category}
-                          </p>
-                          <p className='text-sm text-muted-foreground flex items-center mt-1'>
-                            <MapPin className='w-4 h-4 mr-1 flex-shrink-0' />
-                            <span className='truncate'>
-                              {restaurant.address}
-                            </span>
-                          </p>
-                        </div>
-                        <div className='flex items-center space-x-2 mt-2 md:mt-0'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='p-0 h-8 w-8'
-                          >
-                            <ChevronRight className='w-4 h-4' />
-                            <span className='sr-only'>View Details</span>
-                          </Button>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='p-2 h-8'
-                            onClick={(e) => {
-                              e.preventDefault();
-                              unsaveRestaurant(restaurant);
-                            }}
-                          >
-                            <Bookmark className='w-4 h-4 mr-2' />
-                            Unsave
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Link>
-                  </Card>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value='visited'>
-          <Card className='mb-4'>
-            <CardHeader className='p-4 md:p-6'>
-              <CardTitle className='text-lg md:text-xl'>
-                Visited Places
-              </CardTitle>
-              <CardDescription className='text-sm'>
-                Places you've been to
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className='h-[400px] pr-4'>
-                {user?.visited.map((place) => (
-                  <Card
-                    key={place.id}
-                    className='mb-4 hover:bg-accent transition-colors'
-                  >
-                    <Link href={`/places/${place.id}`} passHref>
-                      <CardContent className='flex flex-col md:flex-row items-start md:items-center justify-between p-4 cursor-pointer'>
-                        <div className='flex-grow'>
-                          <h3 className='font-semibold'>{place.name}</h3>
-                          <p className='text-sm text-muted-foreground'>
-                            {place.category}
-                          </p>
-                          <p className='text-sm text-muted-foreground flex items-center mt-1'>
-                            <MapPin className='w-4 h-4 mr-1 flex-shrink-0' />
-                            <span className='truncate'>{place.address}</span>
-                          </p>
-                        </div>
-                        <div className='flex items-center space-x-2 mt-2 md:mt-0'>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='p-0 h-8 w-8'
-                          >
-                            <ChevronRight className='w-4 h-4' />
-                            <span className='sr-only'>View Details</span>
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Link>
-                  </Card>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value='reviews'>
-          <Card className='mb-4'>
-            <CardHeader className='p-4 md:p-6'>
-              <CardTitle className='text-lg md:text-xl'>
-                Past Ratings and Reviews
-              </CardTitle>
-              <CardDescription className='text-sm'>
-                Your thoughts on places you've visited
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className='h-[400px] pr-4'>
-                {user?.reviews.map((review) => (
-                  <Card key={review.placeId} className='mb-4'>
-                    <CardContent className='p-4'>
-                      <div className='flex justify-between items-start mb-2 flex-wrap'>
-                        <h3 className='font-semibold mr-2'>{review.name}</h3>
-                        <Badge>{review.rating} / 5</Badge>
-                      </div>
-                      <p className='text-sm mb-2'>{review.review}</p>
-                      <p className='text-xs text-muted-foreground flex items-center'>
-                        <Clock className='w-3 h-3 mr-1 flex-shrink-0' />
-                        {new Date(review.created_at).toLocaleString()}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value='recommendations'>
-          <Card className='mb-4 hover:bg-accent transition-colors'>
-            <CardHeader className='p-4 md:p-6'>
-              <CardTitle className='text-lg md:text-xl'>
-                Personalized Recommendations
-              </CardTitle>
-              <CardDescription className='text-sm'>
-                Places we think you'll love
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className='h-[400px] pr-4'>
-                {user?.recommendations.length === 0 ? (
-                  <p className='text-center text-muted-foreground'>
-                    Change your preferences to get personalized recommendations
-                  </p>
-                ) : (
-                  user?.recommendations.map((place) => (
-                    <Card
-                      key={place.fsq_place_id}
-                      className='mb-4 hover:bg-accent transition-colors'
+            <CardContent className="p-0">
+              <ScrollArea className="h-[450px]">
+                {user.saved.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-[350px] text-gray-500">
+                    <Bookmark className="w-12 h-12 mb-4 text-gray-300" />
+                    <p className="font-medium text-lg text-gray-900">
+                      No saved places yet
+                    </p>
+                    <p className="text-sm">
+                      Click the heart icon on the map to save spots here.
+                    </p>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="mt-4 rounded-full"
                     >
-                      <Link href={`/places/${place.fsq_place_id}`} passHref>
-                        <CardContent className='flex items-center p-4 cursor-pointer'>
-                          <div className='w-16 h-16 mr-4 rounded-md overflow-hidden flex-shrink-0'>
-                            <Image
-                              src={
-                                place.photos
-                                  ? place?.photos[0]?.prefix
-                                    ? `${place.photos[0].prefix}original${place.photos[0].suffix}`
-                                    : '/placeholder-place.png'
-                                  : '/placeholder-place.png'
-                              }
-                              alt={place.name}
-                              className='w-full h-full object-cover'
-                              width={64}
-                              height={64}
-                            />
+                      <Link href="/map">Explore Map</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {user.saved.map((restaurant) => (
+                      <div
+                        key={restaurant.id}
+                        className="group hover:bg-gray-50 transition-colors p-4 sm:p-6"
+                      >
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <Link
+                            href={`/places/${restaurant.id}`}
+                            className="flex-grow flex items-start gap-4 cursor-pointer"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 mt-1">
+                              <Utensils className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900 text-lg group-hover:text-primary transition-colors">
+                                {restaurant.name}
+                              </h3>
+                              <p className="text-sm font-medium text-gray-500">
+                                {restaurant.category}
+                              </p>
+                              <p className="text-xs text-gray-400 flex items-center mt-1.5">
+                                <MapPin className="w-3 h-3 mr-1 shrink-0" />
+                                <span className="line-clamp-1">
+                                  {restaurant.address}
+                                </span>
+                              </p>
+                            </div>
+                          </Link>
+                          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end sm:justify-start pt-2 sm:pt-0">
+                            <Button
+                              variant="ghost"
+                              className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full shrink-0"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                unsaveRestaurant(restaurant);
+                              }}
+                            >
+                              <Bookmark className="w-4 h-4 mr-2 fill-current" />{" "}
+                              Unsave
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="icon"
+                              asChild
+                              className="rounded-full shrink-0 hidden sm:flex"
+                            >
+                              <Link href={`/places/${restaurant.id}`}>
+                                <ChevronRight className="w-4 h-4" />
+                              </Link>
+                            </Button>
                           </div>
-                          <div className='flex-grow min-w-0'>
-                            <h3 className='font-semibold truncate text-sm'>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* VISITED PLACES */}
+        <TabsContent value="visited" className="focus-visible:outline-none">
+          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+              <CardTitle className="text-xl">Visited Places</CardTitle>
+              <CardDescription>
+                Keep track of everywhere you've conquered.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[450px]">
+                {user.visited.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-[350px] text-gray-500">
+                    <MapPin className="w-12 h-12 mb-4 text-gray-300" />
+                    <p className="font-medium text-lg text-gray-900">
+                      No visited places yet
+                    </p>
+                    <p className="text-sm">
+                      Mark places as visited on their details page to build your
+                      history.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {user.visited.map((place) => (
+                      <Link
+                        key={place.id}
+                        href={`/places/${place.id}`}
+                        className="block group hover:bg-gray-50 transition-colors p-4 sm:p-6"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-grow pr-4">
+                            <h3 className="font-bold text-gray-900 text-lg group-hover:text-primary transition-colors">
                               {place.name}
                             </h3>
-                            <p className='text-xs text-muted-foreground flex items-center'>
-                              <Utensils className='w-3 h-3 mr-1 flex-shrink-0' />
-                              <span className='truncate'>
-                                {place.categories
-                                  .map((cat) => cat.name)
-                                  .join(', ')}
-                              </span>
+                            <p className="text-sm font-medium text-gray-500 mb-1">
+                              {place.category}
                             </p>
-                            <p className='text-xs text-muted-foreground flex items-center mt-1'>
-                              <MapPin className='w-3 h-3 mr-1 flex-shrink-0' />
-                              <span className='truncate'>
-                                {place.location.address}
-                              </span>
-                            </p>
-                            <p className='text-xs text-muted-foreground mt-1'>
-                              {kmorMiles(place.distance)} away
+                            <p className="text-xs text-gray-400 flex items-center">
+                              <Navigation className="w-3 h-3 mr-1 shrink-0" />
+                              <span className="truncate">{place.address}</span>
                             </p>
                           </div>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            className='p-0 h-8 w-8'
-                          >
-                            <ChevronRight className='w-4 h-4' />
-                            <span className='sr-only'>View Details</span>
-                          </Button>
-                        </CardContent>
+                          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+                            <ChevronRight className="w-5 h-5" />
+                          </div>
+                        </div>
                       </Link>
-                    </Card>
-                  ))
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* REVIEWS */}
+        <TabsContent value="reviews" className="focus-visible:outline-none">
+          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+              <CardTitle className="text-xl">Your Reviews</CardTitle>
+              <CardDescription>
+                Your honest opinions on the spots you've tried.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[450px]">
+                {user.reviews.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-[350px] text-gray-500">
+                    <MessageSquare className="w-12 h-12 mb-4 text-gray-300" />
+                    <p className="font-medium text-lg text-gray-900">
+                      No reviews yet
+                    </p>
+                    <p className="text-sm">
+                      Share your thoughts on a place page to help other foodies.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {user.reviews.map((review) => (
+                      <div
+                        key={review.placeId}
+                        className="p-6 hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex flex-col sm:flex-row justify-between items-start mb-3 gap-2">
+                          <Link href={`/places/${review.placeId}`}>
+                            <h3 className="font-bold text-lg text-gray-900 hover:text-primary hover:underline">
+                              {review.name}
+                            </h3>
+                          </Link>
+                          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border-0 flex items-center gap-1 px-2.5 py-1">
+                            <Star className="w-3 h-3 fill-current" />{" "}
+                            {review.rating} / 5
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed mb-3 italic border-l-2 border-primary/30 pl-3 py-1">
+                          "{review.review}"
+                        </p>
+                        <p className="text-xs font-medium text-gray-400 flex items-center">
+                          <Clock className="w-3 h-3 mr-1.5" />
+                          {new Date(review.created_at).toLocaleDateString(
+                            undefined,
+                            { year: "numeric", month: "short", day: "numeric" },
+                          )}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* RECOMMENDATIONS */}
+        <TabsContent
+          value="recommendations"
+          className="focus-visible:outline-none"
+        >
+          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
+              <CardTitle className="text-xl">For You</CardTitle>
+              <CardDescription>
+                Personalized picks based on your quiz and diet settings.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[450px]">
+                {user.recommendations.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-[350px] text-gray-500">
+                    <Compass className="w-12 h-12 mb-4 text-gray-300" />
+                    <p className="font-medium text-lg text-gray-900">
+                      No recommendations found
+                    </p>
+                    <p className="text-sm">
+                      Take the food quiz on the home page to get personalized
+                      picks.
+                    </p>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="mt-4 rounded-full"
+                    >
+                      <Link href="/">Take Quiz</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {user.recommendations.map((place) => (
+                      <Link
+                        key={place.fsq_place_id}
+                        href={`/places/${place.fsq_place_id}`}
+                        className="block group hover:bg-gray-50 transition-colors p-4 sm:p-6"
+                      >
+                        <div className="flex items-center">
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 mr-4 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200 relative">
+                            <Image
+                              src={
+                                place.photos && place.photos.length > 0
+                                  ? `${place.photos[0].prefix}original${place.photos[0].suffix}`
+                                  : "/placeholder-place.png"
+                              }
+                              alt={place.name}
+                              fill
+                              className="object-cover group-hover:scale-110 transition-transform duration-500"
+                              sizes="80px"
+                            />
+                          </div>
+                          <div className="flex-grow min-w-0 pr-4">
+                            <h3 className="font-bold text-gray-900 text-base sm:text-lg truncate group-hover:text-primary transition-colors">
+                              {place.name}
+                            </h3>
+                            <p className="text-xs sm:text-sm text-gray-500 flex items-center mt-1 truncate">
+                              <Utensils className="w-3.5 h-3.5 mr-1.5 shrink-0 text-gray-400" />
+                              <span className="truncate">
+                                {place.categories
+                                  .map((cat) => cat.name)
+                                  .join(", ")}
+                              </span>
+                            </p>
+                            <div className="flex items-center gap-4 mt-1.5">
+                              <p className="text-xs text-gray-500 flex items-center truncate">
+                                <MapPin className="w-3.5 h-3.5 mr-1.5 shrink-0 text-gray-400" />
+                                <span className="truncate">
+                                  {place.location.address}
+                                </span>
+                              </p>
+                              <p className="text-xs font-semibold text-primary shrink-0 hidden sm:block">
+                                {kmorMiles(place.distance)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-400 group-hover:border-primary group-hover:text-primary transition-colors">
+                            <ChevronRight className="w-5 h-5" />
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 )}
               </ScrollArea>
             </CardContent>
@@ -7525,15 +7853,15 @@ export async function GET(
 </file>
 
 <file path="components/trending-places.tsx">
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { FSQPlace } from '@/types/places';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import TrendingPlaceCard from '@/components/trending-place-card';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { useEffect, useState, useRef } from "react";
+import { FSQPlace } from "@/types/places";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import TrendingPlaceCard from "@/components/trending-place-card";
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface TrendingPlacesProps {
   userLocation: { lat: number; lon: number };
@@ -7552,14 +7880,14 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
       try {
         setIsLoading(true);
         const resPlaces = await fetch(
-          `/api/places/trending/${userLocation?.lat}/${userLocation?.lon}`
+          `/api/places/trending/${userLocation?.lat}/${userLocation?.lon}`,
         );
         const data = await resPlaces.json();
-        if (data.places.length === 0) setError('No trending places found');
+        if (data.places.length === 0) setError("No trending places found");
         setTrendingPlaces(data.places);
       } catch (error) {
-        console.error('Error fetching location or places:', error);
-        setError('Failed to fetch location or trending places');
+        console.error("Error fetching location or places:", error);
+        setError("Failed to fetch location or trending places");
       } finally {
         setIsLoading(false);
       }
@@ -7570,8 +7898,8 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
 
   if (error) {
     return (
-      <Alert variant='destructive' className='mt-12'>
-        <AlertCircle className='h-4 w-4' />
+      <Alert variant="destructive" className="mt-12">
+        <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
@@ -7580,9 +7908,9 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
 
   if (isLoading) {
     return (
-      <div className='mt-12 flex items-center justify-center'>
-        <Loader2 className='h-8 w-8 animate-spin text-primary' />
-        <span className='ml-2 text-lg font-medium sm:text-base'>
+      <div className="mt-12 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg font-medium sm:text-base">
           Loading trending places...
         </span>
       </div>
@@ -7590,21 +7918,25 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
   }
 
   return (
-    <div className='mt-12 relative'>
-      <h2 className='text-xl sm:text-2xl font-semibold mb-4'>
+    <div className="mt-12 relative">
+      <h2 className="text-xl sm:text-2xl font-semibold mb-4">
         Trending Places
       </h2>
 
-      <ScrollArea className='w-full whitespace-nowrap rounded-md border custom-scrollbar'>
-        <div ref={scrollRef} className='flex w-max space-x-4 p-4'>
+      <ScrollArea className="w-full whitespace-nowrap rounded-md border custom-scrollbar">
+        {/* Added snap-x and snap-mandatory here */}
+        <div
+          ref={scrollRef}
+          className="flex w-max space-x-4 p-4 snap-x snap-mandatory"
+        >
           {trendingPlaces.map((place) => (
             <div
               key={place.fsq_place_id}
-              className='w-40 sm:w-72 flex-shrink-0'
+              className="w-[85vw] max-w-[280px] sm:w-72 flex-shrink-0 snap-center" // Added snap-center and responsive width
             >
               <TrendingPlaceCard
                 name={place.name}
-                category={place.categories[0]?.name || 'Unknown'}
+                category={place.categories[0]?.name || "Unknown"}
                 priceForTwo={0}
                 address={place.location.address}
                 id={place.fsq_place_id}
@@ -7615,13 +7947,13 @@ const TrendingPlaces = ({ userLocation }: TrendingPlacesProps) => {
           ))}
         </div>
         <ScrollBar
-          orientation='horizontal'
-          className='custom-scrollbar-thumb'
+          orientation="horizontal"
+          className="custom-scrollbar-thumb"
         />
       </ScrollArea>
 
       {/* Mobile swipe hint */}
-      <p className='text-center text-sm text-muted-foreground mt-2 md:hidden'>
+      <p className="text-center text-sm text-muted-foreground mt-2 md:hidden">
         👉 Swipe to explore more places
       </p>
     </div>
@@ -7632,49 +7964,49 @@ export default TrendingPlaces;
 </file>
 
 <file path="app/page.tsx">
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Utensils, Clock, TrendingUp, Users, Search } from 'lucide-react';
-import Image from 'next/image';
-import FoodQuiz from '@/components/food-quiz';
-import DietaryPreference from '@/components/dietary-preference';
-import UserRecommendations from '@/components/user-recommendations';
-import TrendingPlaces from '@/components/trending-places';
-import Nav from '@/components/nav';
-import getClientLocation from '@/helpers/get-client-location';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useSession } from 'next-auth/react';
-import { User } from '@/types/user';
-import { FSQPlace } from '@/types/places';
-import SignInOverlay from '@/components/sign-in-overlay';
+  Utensils,
+  Clock,
+  TrendingUp,
+  Users,
+  Search,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import Image from "next/image";
+import FoodQuiz from "@/components/food-quiz";
+import DietaryPreference from "@/components/dietary-preference";
+import UserRecommendations from "@/components/user-recommendations";
+import TrendingPlaces from "@/components/trending-places";
+import Nav from "@/components/nav";
+import getClientLocation from "@/helpers/get-client-location";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useSession } from "next-auth/react";
+import { User } from "@/types/user";
+import { FSQPlace } from "@/types/places";
+import SignInOverlay from "@/components/sign-in-overlay";
 
-// Mock data for featured collections
 const featuredCollections = [
   {
-    id: '4bf58dd8d48988d149941735',
-    name: 'Best Thai this week',
-    image: '/thai-food.jpg',
+    id: "4bf58dd8d48988d149941735",
+    name: "Best Thai this week",
+    image: "/thai-food.jpg",
   },
   {
-    id: '52e81612bcbc57f1066b79f4,4bf58dd8d48988d16c941735,4bf58dd8d48988d1c8941735',
-    name: 'Hidden Gems',
-    image: '/hidden-gem.jpg',
+    id: "52e81612bcbc57f1066b79f4,4bf58dd8d48988d16c941735,4bf58dd8d48988d1c8941735",
+    name: "Hidden Gems",
+    image: "/hidden-gem.jpg",
   },
   {
-    id: '4bf58dd8d48988d110941735',
-    name: 'Top-rated Italian',
-    image: '/italian.jpg',
+    id: "4bf58dd8d48988d110941735",
+    name: "Top-rated Italian",
+    image: "/italian.jpg",
   },
 ];
 
@@ -7687,142 +8019,163 @@ export default function HomePage() {
     lat: number;
     lon: number;
   } | null>(null);
+
+  // Loading States
   const [isLoading, setIsLoading] = useState(true);
+  const [isCheckingPrefs, setIsCheckingPrefs] = useState(true); // Prevents the quiz flicker
+
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [recommendations, setRecommendations] = useState<FSQPlace[]>([]);
   const [recommendationError, setRecommendationError] = useState<string | null>(
-    null
+    null,
   );
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
   const { data: session, status } = useSession();
 
+  // Consolidated Initialization Flow
   useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        const resLocation = await getClientLocation();
-        const { latitude, longitude } = resLocation;
-        setUserLocation({ lat: latitude, lon: longitude });
-      } catch (error) {
-        setError('Failed to fetch location');
-        console.error('Error fetching location:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (status === "loading") return; // Wait for NextAuth to figure out the session
 
-    const getUser = async () => {
-      if (!session?.user?.email) {
-        return;
-      }
-      try {
-        const res = await fetch(`/api/user/${session.user.email}`);
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data);
-          if (data.recommendations.length > 0) {
-            setRecommendations(data.recommendations);
-            setShowRecommendations(true);
-          } else {
-            // Check local storage for quiz and preferences
-            const storedQuizCompleted = localStorage.getItem('quizCompleted');
-            const storedQuizAnswers = localStorage.getItem('quizAnswers');
-            const storedDietaryPreferences =
-              localStorage.getItem('dietaryPreferences');
+    const initializeApp = async () => {
+      // 1. Explicitly type our variables as strictly numbers
+      let currentLat: number;
+      let currentLon: number;
 
-            if (
-              storedQuizCompleted &&
-              storedQuizAnswers &&
-              storedDietaryPreferences
-            ) {
-              setQuizCompleted(JSON.parse(storedQuizCompleted));
-              await fetchRecommendations(
-                session.user.email,
-                JSON.parse(storedDietaryPreferences),
-                JSON.parse(storedQuizAnswers)
-              );
+      // 2. Fetch location if we don't have it yet
+      if (!userLocation) {
+        try {
+          const resLocation = await getClientLocation();
+          currentLat = resLocation.latitude;
+          currentLon = resLocation.longitude;
+          setUserLocation({ lat: currentLat, lon: currentLon });
+        } catch (error) {
+          setError("Failed to fetch location");
+          setIsLoading(false);
+          return; // Stop execution if we can't get location
+        }
+      } else {
+        // If we already have it, TS now strictly knows these are numbers
+        currentLat = userLocation.lat;
+        currentLon = userLocation.lon;
+      }
+
+      setIsLoading(false); // Unblocks the hero section and navbar
+
+      // Helper function to check local storage
+      const checkLocalPrefs = async (email: string) => {
+        const storedQuizCompleted = localStorage.getItem("quizCompleted");
+        const storedQuizAnswers = localStorage.getItem("quizAnswers");
+        const storedDietaryPreferences =
+          localStorage.getItem("dietaryPreferences");
+
+        if (
+          storedQuizCompleted &&
+          storedQuizAnswers &&
+          storedDietaryPreferences
+        ) {
+          setQuizCompleted(JSON.parse(storedQuizCompleted));
+          await fetchRecommendations(
+            email,
+            JSON.parse(storedDietaryPreferences),
+            JSON.parse(storedQuizAnswers),
+            currentLat, // <-- Passed explicitly as numbers
+            currentLon,
+          );
+        }
+      };
+
+      // 3. Check Database / Local Storage
+      if (session?.user?.email) {
+        try {
+          const res = await fetch(`/api/user/${session.user.email}`);
+          if (res.ok) {
+            const data = await res.json();
+            setUser(data);
+            if (data.recommendations?.length > 0) {
+              setRecommendations(data.recommendations);
+              setShowRecommendations(true);
+            } else {
+              await checkLocalPrefs(session.user.email);
             }
           }
-        } else {
-          console.error('Error fetching user:', res.statusText);
+        } catch (error) {
+          await checkLocalPrefs(session.user.email);
         }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-        setError('Failed to fetch user data');
+      } else {
+        await checkLocalPrefs("");
       }
+
+      // 4. Mark preferences as fully checked (unblocks the quiz UI)
+      setIsCheckingPrefs(false);
     };
 
-    fetchLocation();
-    if (session) {
-      getUser();
-    }
-  }, [session]);
+    initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, status]);
 
   const handleQuizComplete = (answers: string[]) => {
     setQuizAnswers(answers);
     setQuizCompleted(true);
-    localStorage.setItem('quizCompleted', JSON.stringify(true));
-    localStorage.setItem('quizAnswers', JSON.stringify(answers));
+    localStorage.setItem("quizCompleted", JSON.stringify(true));
+    localStorage.setItem("quizAnswers", JSON.stringify(answers));
   };
 
   const handleDietaryPreferencesSubmit = async (preferences: string[]) => {
     setDietaryPreferences(preferences);
-    localStorage.setItem('dietaryPreferences', JSON.stringify(preferences));
+    localStorage.setItem("dietaryPreferences", JSON.stringify(preferences));
     if (!session) {
       setShowSignIn(true);
     } else if (session.user?.email) {
-      await fetchRecommendations(session.user?.email, preferences, quizAnswers);
+      await fetchRecommendations(
+        session.user.email,
+        preferences,
+        quizAnswers,
+        userLocation?.lat,
+        userLocation?.lon,
+      );
     }
   };
 
   const handleChangePreferences = () => {
     setQuizCompleted(false);
     setShowRecommendations(false);
-    setUser((prevUser) => ({ ...prevUser!, recommendations: [] }));
-    localStorage.removeItem('quizCompleted');
-    localStorage.removeItem('quizAnswers');
-    localStorage.removeItem('dietaryPreferences');
+    setUser((prevUser) =>
+      prevUser ? { ...prevUser, recommendations: [] } : null,
+    );
+    localStorage.removeItem("quizCompleted");
+    localStorage.removeItem("quizAnswers");
+    localStorage.removeItem("dietaryPreferences");
   };
 
-  const handleSignInSuccess = () => {
-    setShowSignIn(false);
-    // We'll fetch recommendations in useEffect when session changes
-  };
+  const handleSignInSuccess = () => setShowSignIn(false);
 
   const hour = new Date().getHours();
-  let greeting = '';
-  if (hour < 12) {
-    greeting = 'Good morning';
-  } else if (hour < 18) {
-    greeting = 'Good afternoon';
-  } else {
-    greeting = 'Good evening';
-  }
+  const greeting =
+    hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
+  // Updated to accept lat/lon directly to avoid stale state issues
   const fetchRecommendations = async (
-    email: string = '',
+    email: string = "",
     diet: string[] = dietaryPreferences,
-    quiz: string[] = quizAnswers
+    quiz: string[] = quizAnswers,
+    lat: number | undefined = userLocation?.lat,
+    lon: number | undefined = userLocation?.lon,
   ) => {
+    if (!lat || !lon) return;
     try {
       setShowRecommendations(true);
       setIsRecommendationLoading(true);
-      console.log('Fetching recommendations...');
+      const dietString = diet.join(",").toLowerCase().replace("-", "");
       const res = await fetch(
-        `api/recommendations/${userLocation?.lat}/${
-          userLocation?.lon
-        }/${email}/${quiz[0].toLowerCase()}/${diet
-          .join(',')
-          .toLowerCase()
-          .replace('-', '')}`
+        `api/recommendations/${lat}/${lon}/${email}/${quiz[0].toLowerCase()}/${dietString}`,
       );
       const data = await res.json();
       setRecommendations(data.places);
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
-      setRecommendationError('Failed to fetch recommendations');
+      setRecommendationError("Failed to fetch recommendations");
     } finally {
       setIsRecommendationLoading(false);
     }
@@ -7830,18 +8183,21 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <Alert variant='destructive' className='mt-12'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="container mx-auto px-4 py-8">
+        <Alert variant="destructive" className="mt-12">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
+  // Initial Full-Screen Loader
   if (isLoading && !userLocation) {
     return (
-      <div className='flex items-center justify-center h-screen'>
-        <Loader2 className='h-8 w-8 animate-spin text-primary' />
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -7849,163 +8205,182 @@ export default function HomePage() {
   return (
     <>
       <Nav />
-      <div className='min-h-screen bg-gray-50'>
-        <div className='relative h-[40vh] md:h-[50vh] bg-gradient-to-r from-primary to-primary-foreground flex items-center justify-center text-white'>
-          <div className='absolute inset-0'>
+      <div className="min-h-screen bg-gray-50 pb-20">
+        {/* HERO SECTION */}
+        <div className="relative h-[45vh] md:h-[55vh] flex items-center justify-center text-white">
+          <div className="absolute inset-0 bg-black">
             <Image
-              src='/food-spread.jpg'
-              alt='Delicious food spread'
-              className='w-full h-full object-cover opacity-30'
+              src="/food-spread.jpg"
+              alt="Delicious food spread"
+              className="w-full h-full object-cover opacity-50"
               fill
               priority
-              rel='preload'
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-black/40 to-transparent" />
           </div>
-          <div className='relative z-10 text-center space-y-3 md:space-y-4 px-4'>
-            <h1 className='text-3xl md:text-4xl lg:text-6xl font-bold'>
-              {greeting}, food explorer!
+          <div className="relative z-10 text-center space-y-4 px-4 w-full max-w-3xl">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight drop-shadow-md">
+              {greeting},<br className="md:hidden" /> food explorer!
             </h1>
-            <p className='text-lg md:text-xl lg:text-2xl'>
-              Discover amazing local eats with CheapBites
+            <p className="text-lg md:text-2xl font-medium drop-shadow-sm opacity-90">
+              Discover amazing local eats without breaking the bank.
             </p>
-            <Button
-              asChild
-              size='lg'
-              variant='secondary'
-              className='px-3 py-2 text-sm md:px-4 md:py-2 md:text-base'
-            >
-              <Link href='/map'>
-                <Search className='mr-2 h-4 w-4 md:h-5 md:w-5' /> Find Cheap
-                Bites Near Me
-              </Link>
-            </Button>
+            <div className="pt-4">
+              <Button
+                asChild
+                size="lg"
+                className="h-14 px-8 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-transform"
+              >
+                <Link href="/map">
+                  <Search className="mr-2 h-5 w-5" /> Find Cheap Bites Near Me
+                </Link>
+              </Button>
+            </div>
           </div>
         </div>
 
-        <div className='max-w-4xl mx-auto px-4 py-8'>
-          <div className='flex justify-center'>
-            <div className='w-full max-w-md'>
-              {!showRecommendations ? (
-                <>
-                  {!quizCompleted && (
-                    <FoodQuiz onQuizComplete={handleQuizComplete} />
-                  )}
-                  {quizCompleted && (
-                    <DietaryPreference
-                      onPreferencesSubmit={handleDietaryPreferencesSubmit}
-                    />
-                  )}
-                </>
-              ) : null}
+        {/* MAIN CONTENT */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+          {/* QUIZ / PREFERENCES AREA */}
+          <div className="relative z-20 flex justify-center w-full">
+            <div className="w-full max-w-xl">
+              {/* 1. Show a loading skeleton while checking local storage/database */}
+              {isCheckingPrefs ? (
+                <div className="shadow-2xl rounded-2xl bg-white p-12 border border-gray-100 min-h-[300px] flex items-center justify-center">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                </div>
+              ) : (
+                !showRecommendations && (
+                  /* 2. Once checked, show either the Quiz or the Dietary Preferences */
+                  <div className="shadow-2xl rounded-2xl bg-white overflow-hidden border border-gray-100">
+                    {!quizCompleted ? (
+                      <FoodQuiz onQuizComplete={handleQuizComplete} />
+                    ) : (
+                      <DietaryPreference
+                        onPreferencesSubmit={handleDietaryPreferencesSubmit}
+                      />
+                    )}
+                  </div>
+                )
+              )}
             </div>
           </div>
 
+          {/* RECOMMENDATIONS (Renders smoothly after checking completes) */}
           {showRecommendations && (
-            <>
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <UserRecommendations
                 recommendations={recommendations}
                 onChangePreferences={handleChangePreferences}
                 error={recommendationError}
                 isLoading={isRecommendationLoading}
               />
-            </>
+            </div>
           )}
 
-          {userLocation && <TrendingPlaces userLocation={userLocation} />}
+          {userLocation && (
+            <div className="mt-12 md:mt-16">
+              <TrendingPlaces userLocation={userLocation} />
+            </div>
+          )}
 
-          <div className='mt-16'>
-            <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center'>
-              Featured Collections
-            </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {/* FEATURED COLLECTIONS */}
+          <div className="mt-16 md:mt-24">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                Featured Collections
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredCollections.map((collection) => (
-                <Card key={collection.id} className='overflow-hidden shadow-lg'>
-                  <Image
-                    src={collection.image}
-                    alt={collection.name}
-                    className='w-full h-48 object-cover'
-                    height={400}
-                    width={300}
-                  />
-                  <CardContent className='p-4'>
-                    <h3 className='font-semibold text-lg mb-2'>
-                      {collection.name}
-                    </h3>
-                    <Button asChild className='w-full'>
-                      <Link href={`/explore/${collection.id}`}>Explore</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <Link
+                  href={`/explore/${collection.id}`}
+                  key={collection.id}
+                  className="group"
+                >
+                  <Card className="overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl h-full flex flex-col cursor-pointer">
+                    <div className="relative h-48 w-full overflow-hidden">
+                      <Image
+                        src={collection.image}
+                        alt={collection.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <CardContent className="p-5 flex-grow">
+                      <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors">
+                        {collection.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Explore hand-picked spots
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
 
-          <div className='mt-16 relative'>
-            <div className='absolute inset-0 bg-gray-100 bg-opacity-90 z-10 flex items-center justify-center'>
-              <div className='bg-primary text-primary-foreground px-6 py-3 rounded-full text-xl font-semibold shadow-lg'>
+          {/* COMING SOON SECTION */}
+          <div className="mt-20 md:mt-32 relative">
+            <div className="text-center mb-8">
+              <span className="bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase px-4 py-1.5 rounded-full">
                 Coming Soon
-              </div>
+              </span>
+              <h2 className="text-2xl md:text-3xl font-bold mt-4 text-gray-900">
+                More ways to explore
+              </h2>
             </div>
-            <h2 className='text-2xl md:text-3xl font-bold mb-6 text-center text-gray-700'>
-              Explore CheapBites Features
-            </h2>
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 opacity-60 grayscale-[30%] pointer-events-none">
               {[
                 {
-                  title: 'Time Machine',
+                  title: "Time Machine",
                   icon: Clock,
-                  description:
-                    'Explore restaurants from different eras and relive culinary history.',
-                  link: '/time-machine',
+                  desc: "Explore restaurants from different eras.",
                 },
                 {
-                  title: 'Price Pulse',
+                  title: "Price Pulse",
                   icon: TrendingUp,
-                  description:
-                    'Track price trends and find the best deals on your favorite dishes.',
-                  link: '/price-pulse',
+                  desc: "Track price trends and find the best deals.",
                 },
                 {
-                  title: 'Food Journey',
+                  title: "Food Journey",
                   icon: Utensils,
-                  description:
-                    'Embark on a culinary adventure and discover new flavors.',
-                  link: '/food-journey',
+                  desc: "Embark on a guided culinary adventure.",
                 },
                 {
-                  title: 'Social Dining',
+                  title: "Social Dining",
                   icon: Users,
-                  description:
-                    'Connect with fellow food lovers and share dining experiences.',
-                  link: '/social-dining',
+                  desc: "Connect with fellow food lovers.",
                 },
               ].map((feature, index) => (
-                <Card key={index} className='shadow-md bg-white'>
-                  <CardHeader>
-                    <CardTitle className='flex items-center text-lg text-gray-600'>
-                      <feature.icon className='mr-2 h-5 w-5' />
+                <Card
+                  key={index}
+                  className="border-gray-200 shadow-none rounded-2xl"
+                >
+                  <CardHeader className="pb-2">
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                      <feature.icon className="h-5 w-5 text-gray-500" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-700">
                       {feature.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className='text-sm text-gray-500'>
-                      {feature.description}
+                    <p className="text-sm text-gray-500 leading-relaxed">
+                      {feature.desc}
                     </p>
                   </CardContent>
-                  <CardFooter>
-                    <Button
-                      disabled
-                      className='w-full cursor-not-allowed opacity-50'
-                    >
-                      Explore
-                    </Button>
-                  </CardFooter>
                 </Card>
               ))}
             </div>
           </div>
         </div>
       </div>
+
       {showSignIn && (
         <SignInOverlay
           onClose={() => setShowSignIn(false)}
@@ -8407,27 +8782,35 @@ export default function DiscoveryMap() {
         />
       </div>
 
-      <div className="absolute top-4 left-0 right-0 z-10 px-4 pointer-events-none">
-        <div className="max-w-3xl mx-auto flex flex-col md:flex-row gap-2 pointer-events-auto">
-          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-3 flex-1 flex flex-col justify-center">
-            <label className="text-xs font-semibold text-gray-600 mb-1 flex justify-between">
+      {/* FLOATING TOP BAR (Filters) */}
+      <div className="absolute top-4 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
+        {/* CRITICAL FIX: Added `w-full` here to prevent Brave from collapsing the container */}
+        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-3 pointer-events-auto">
+          {/* Distance Slider Panel */}
+          {/* CRITICAL FIX: Changed `flex-1` to `w-full` */}
+          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-4 w-full flex flex-col justify-center">
+            <label className="text-xs font-semibold text-gray-600 mb-3 flex justify-between">
               <span>Search Radius</span>
               <span className="text-primary">{distance.toFixed(1)} km</span>
             </label>
-            <Slider
-              value={[distance]}
-              onValueChange={handleDistanceChange}
+            <input
+              type="range"
+              min={1}
               max={5}
               step={0.5}
-              min={1}
-              className="cursor-grab"
+              value={distance}
+              onChange={(e) =>
+                handleDistanceChange([parseFloat(e.target.value)])
+              }
+              className="w-full h-2 bg-primary/20 rounded-lg appearance-none cursor-pointer accent-primary touch-none"
             />
           </div>
 
-          <div className="flex gap-2 flex-1">
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl flex-1">
+          {/* Dropdown Filters */}
+          <div className="flex flex-row gap-3 w-full">
+            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[72px] md:h-full flex items-center">
               <Select onValueChange={setCategoryFilter}>
-                <SelectTrigger className="border-0 bg-transparent h-full focus:ring-0">
+                <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-sm font-medium">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -8440,9 +8823,9 @@ export default function DiscoveryMap() {
               </Select>
             </div>
 
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl flex-1">
+            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[72px] md:h-full flex items-center">
               <Select onValueChange={setMoodFilter}>
-                <SelectTrigger className="border-0 bg-transparent h-full focus:ring-0">
+                <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-sm font-medium">
                   <SelectValue placeholder="Mood" />
                 </SelectTrigger>
                 <SelectContent>
@@ -8458,7 +8841,8 @@ export default function DiscoveryMap() {
         </div>
       </div>
 
-      <div className="absolute bottom-6 left-0 right-0 z-10 pointer-events-none">
+      {/* FLOATING BOTTOM CAROUSEL (Mobile) / SIDE PANEL (Desktop) */}
+      <div className="absolute bottom-6 inset-x-0 z-40 pointer-events-none">
         <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory hide-scrollbar pointer-events-auto">
           {filteredPlaces.length === 0 ? (
             <div className="bg-white shadow-lg rounded-xl p-4 mx-auto text-sm text-gray-500">
@@ -8500,23 +8884,6 @@ export default function DiscoveryMap() {
           )}
         </div>
       </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      `,
-        }}
-      />
-
-      {/* Render SignInOverlay when unauthenticated user attempts to like a place */}
-      {showSignIn && (
-        <SignInOverlay
-          onClose={() => setShowSignIn(false)}
-          onSuccess={() => setShowSignIn(false)}
-        />
-      )}
     </div>
   );
 }

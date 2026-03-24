@@ -17,17 +17,17 @@ CheapBites is a web application designed to help users discover affordable dinin
 ## Tech Stack
 
 - **Frontend**
-    - Next.js: For server-side rendering and a dynamic, SEO-friendly user interface.
-    - TypeScript: Ensures type safety, improving code quality and reducing runtime errors.
-    - Tailwind CSS: Provides a modern, responsive UI design.
+  - Next.js: For server-side rendering and a dynamic, SEO-friendly user interface.
+  - TypeScript: Ensures type safety, improving code quality and reducing runtime errors.
+  - Tailwind CSS: Provides a modern, responsive UI design.
 - **Backend**
-    - Next.js API Routes: Manages backend services, including user authentication, geolocation, and data retrieval.
-    - MongoDB: A flexible, document-oriented database for storing user preferences, reviews, and restaurant data.
-    - Authentication: Secure OAuth-based authentication using NextAuth.
+  - Next.js API Routes: Manages backend services, including user authentication, geolocation, and data retrieval.
+  - MongoDB: A flexible, document-oriented database for storing user preferences, reviews, and restaurant data.
+  - Authentication: Secure OAuth-based authentication using NextAuth.
 - **APIs & Services**
-    - FourSquare API: Provides rich restaurant data for discovery.
-    - Geoapify API: Powers geolocation features to enhance user experience.
-    - Leaflet: Enables interactive map functionality.
+  - FourSquare API: Provides rich restaurant data for discovery.
+  - Geoapify API: Powers geolocation features to enhance user experience.
+  - Leaflet: Enables interactive map functionality.
 
 ---
 
@@ -96,7 +96,7 @@ Ensure you have the following installed:
    Create a `.env.local` file in the project root and add the following variables:
 
    ```plaintext
-   FOURSQUARE_API_KEY=fsq33uhuuYycdX/rClU+A0JznEPjfiR0ud+CrpwqaI2S3m8=
+   FOURSQUARE_API_KEY=<Your_FourSquare_API_Key>
    GEOAPIFY_API_KEY=<Your_Geoapify_API_Key>
    MONGODB_URI=<Your_MongoDB_URI>
    GOOGLE_CLIENT_ID=<Your_Google_Client_ID>
