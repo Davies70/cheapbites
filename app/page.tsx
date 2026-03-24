@@ -82,8 +82,8 @@ export default function HomePage() {
       if (!userLocation) {
         try {
           const resLocation = await getClientLocation();
-          currentLat = resLocation.latitude;
-          currentLon = resLocation.longitude;
+          currentLat = resLocation?.latitude || 0;
+          currentLon = resLocation?.longitude || 0;
           setUserLocation({ lat: currentLat, lon: currentLon });
         } catch (error) {
           setError("Failed to fetch location");
