@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useRef, useEffect } from "react";
 import Map, { Marker, Popup, Source, Layer, MapRef } from "react-map-gl/mapbox";
+import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { FSQPlace, Coordinates } from "@/types/places";
 import { MapPin } from "lucide-react";
@@ -56,8 +57,6 @@ export default function DiscoveryMap({
   handlePlaceView,
 }: MapProps) {
   const [popupInfo, setPopupInfo] = useState<FSQPlace | null>(null);
-
-  // 1. Create a reference to the map
   const mapRef = useRef<MapRef>(null);
 
   const circleGeoJSON = useMemo(
@@ -65,7 +64,30 @@ export default function DiscoveryMap({
     [center, distance],
   ) as any;
 
-  // 2. Add an effect that "flies" the camera to the selected place
+  // Automatically zoom/pan to fit ALL markers on the screen
+  useEffect(() => {
+    if (places.length > 0 && !selectedPlaceId && mapRef.current) {
+      const bounds = new mapboxgl.LngLatBounds();
+
+      if (center.latitude !== 0 && center.longitude !== 0) {
+        bounds.extend([center.longitude, center.latitude]);
+      }
+
+      places.forEach((place) => {
+        if (place.longitude && place.latitude) {
+          bounds.extend([place.longitude, place.latitude]);
+        }
+      });
+
+      mapRef.current.fitBounds(bounds, {
+        padding: 60,
+        duration: 1000,
+        maxZoom: 15,
+      });
+    }
+  }, [places, center, selectedPlaceId]);
+
+  // "Fly" the camera to the selected place when clicked
   useEffect(() => {
     if (selectedPlaceId) {
       const place = places.find((p) => p.fsq_place_id === selectedPlaceId);
@@ -73,17 +95,17 @@ export default function DiscoveryMap({
         mapRef.current?.flyTo({
           center: [place.longitude, place.latitude],
           zoom: 16,
-          duration: 1500, // Smooth 1.5 second animation
+          duration: 1500,
           essential: true,
         });
-        setPopupInfo(place); // Auto-open the popup!
+        setPopupInfo(place);
       }
     }
   }, [selectedPlaceId, places]);
 
   return (
     <Map
-      ref={mapRef} // 3. Attach the ref to the Map
+      ref={mapRef}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
       initialViewState={{
         longitude: center.longitude || 0,
@@ -95,7 +117,6 @@ export default function DiscoveryMap({
       mapStyle="mapbox://styles/mapbox/streets-v12"
       style={{ width: "100%", height: "100%" }}
     >
-      {/* Search Radius */}
       <Source id="search-radius" type="geojson" data={circleGeoJSON}>
         <Layer
           id="radius-fill"
@@ -113,7 +134,6 @@ export default function DiscoveryMap({
         />
       </Source>
 
-      {/* User Location (Pulsing Dot) - Now it stays put! */}
       {center.latitude !== 0 && (
         <Marker
           longitude={center.longitude}
@@ -127,7 +147,6 @@ export default function DiscoveryMap({
         </Marker>
       )}
 
-      {/* Restaurant Markers */}
       {places.map((place) => {
         const isSelected = place.fsq_place_id === selectedPlaceId;
         return (
@@ -142,11 +161,15 @@ export default function DiscoveryMap({
             }}
           >
             <div
-              className={`cursor-pointer transition-all duration-300 ${isSelected ? "scale-125 -translate-y-2" : "scale-100 hover:scale-110"}`}
+              className={`cursor-pointer transition-all duration-300 ${
+                isSelected
+                  ? "scale-125 -translate-y-2 z-50"
+                  : "scale-100 hover:scale-110 z-10"
+              }`}
             >
               <div className="relative drop-shadow-md">
                 <MapPin
-                  size={isSelected ? 40 : 32}
+                  size={isSelected ? 32 : 26} // Shrunken sizes for mobile optimization
                   className={
                     isSelected
                       ? "text-primary fill-primary"
@@ -159,7 +182,6 @@ export default function DiscoveryMap({
         );
       })}
 
-      {/* Popup */}
       {popupInfo && (
         <Popup
           anchor="bottom"
@@ -188,7 +210,7 @@ export default function DiscoveryMap({
             </div>
             <Button
               size="sm"
-              className="w-full mt-1"
+              className="w-full mt-1 h-8 text-xs"
               onClick={() => handlePlaceView(popupInfo.fsq_place_id)}
             >
               View Place

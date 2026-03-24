@@ -1,8 +1,26 @@
+const CACHE_KEY = "cheapbites_user_location";
+const CACHE_TIME_LIMIT_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
+
 export default async function getClientLocation(): Promise<{
   latitude: number;
   longitude: number;
 } | null> {
-  // 1. Wrap the HTML5 Web API in a Promise
+  // 1. Check if we have a valid cached location
+  try {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { latitude, longitude, timestamp } = JSON.parse(cachedData);
+
+      // If the cache is less than 15 minutes old, return it instantly!
+      if (Date.now() - timestamp < CACHE_TIME_LIMIT_MS) {
+        return { latitude, longitude };
+      }
+    }
+  } catch (error) {
+    console.warn("Failed to read location from cache", error);
+  }
+
+  // 2. Wrap the HTML5 Web API in a Promise
   const getBrowserLocation = () => {
     return new Promise<{ latitude: number; longitude: number }>(
       (resolve, reject) => {
@@ -10,19 +28,16 @@ export default async function getClientLocation(): Promise<{
           reject(new Error("Geolocation is not supported by your browser"));
         } else {
           navigator.geolocation.getCurrentPosition(
-            (position) => {
+            (position) =>
               resolve({
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
-              });
-            },
-            (error) => {
-              reject(error);
-            },
+              }),
+            (error) => reject(error),
             {
-              enableHighAccuracy: true, // Forces GPS over Wi-Fi/IP if available
-              timeout: 10000, // 10 seconds before failing
-              maximumAge: 0, // Don't use a cached location
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
             },
           );
         }
@@ -30,30 +45,46 @@ export default async function getClientLocation(): Promise<{
     );
   };
 
+  let finalLocation: { latitude: number; longitude: number } | null = null;
+
   try {
-    // 2. Attempt to get exact GPS coordinates first
-    const location = await getBrowserLocation();
-    return location;
+    // 3. Attempt to get exact GPS coordinates
+    finalLocation = await getBrowserLocation();
   } catch (error) {
     console.warn(
-      "Browser geolocation failed or was denied. Falling back to IP-based location...",
+      "Browser geolocation failed. Falling back to IP-based location...",
       error,
     );
 
-    // 3. Fallback to your internal Next.js backend route
-    // This uses your existing backend logic and keeps your API key secure!
+    // 4. Fallback to your internal Next.js backend route
     try {
       const res = await fetch("/api/location");
-      if (!res.ok) throw new Error("Backend IP location failed");
-
-      const data = await res.json();
-      return {
-        latitude: data.location.latitude,
-        longitude: data.location.longitude,
-      };
+      if (res.ok) {
+        const data = await res.json();
+        finalLocation = {
+          latitude: data.location.latitude,
+          longitude: data.location.longitude,
+        };
+      }
     } catch (fallbackError) {
       console.error("All location methods failed:", fallbackError);
-      return null;
     }
   }
+
+  // 5. If we successfully got a location, save it to the cache before returning
+  if (finalLocation) {
+    try {
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({
+          ...finalLocation,
+          timestamp: Date.now(),
+        }),
+      );
+    } catch (error) {
+      console.warn("Failed to save location to cache", error);
+    }
+  }
+
+  return finalLocation;
 }
