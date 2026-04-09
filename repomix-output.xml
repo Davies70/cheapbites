@@ -4488,28 +4488,6 @@ export default function RootLayout({
 }
 </file>
 
-<file path="helpers/get-client-location.ts">
-const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
-
-const getClientLocation = async () => {
-  if (!apiKey) {
-    throw new Error('API Key is missing');
-  }
-  try {
-    const res = await fetch(
-      `https://api.geoapify.com/v1/ipinfo?apiKey=${apiKey}`
-    );
-    const { location } = await res.json();
-    return location;
-  } catch (error) {
-    console.error('Error fetching client location:', error);
-    return null;
-  }
-};
-
-export default getClientLocation;
-</file>
-
 <file path="README.md">
 # CheapBites
 
@@ -5611,207 +5589,96 @@ const FoodQuiz = ({ onQuizComplete }: FoodQuizProps) => {
 export default FoodQuiz;
 </file>
 
-<file path="components/map.tsx">
-"use client";
+<file path="helpers/get-client-location.ts">
+const CACHE_KEY = "cheapbites_user_location";
+const CACHE_TIME_LIMIT_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
 
-import { useMemo, useState, useRef, useEffect } from "react";
-import Map, { Marker, Popup, Source, Layer, MapRef } from "react-map-gl/mapbox";
-import "mapbox-gl/dist/mapbox-gl.css";
-import { FSQPlace, Coordinates } from "@/types/places";
-import { ExternalLink, MapPin } from "lucide-react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
+export default async function getClientLocation(): Promise<{
+  latitude: number;
+  longitude: number;
+} | null> {
+  // 1. Check if we have a valid cached location
+  try {
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { latitude, longitude, timestamp } = JSON.parse(cachedData);
 
-interface MapProps {
-  center: Coordinates;
-  zoom: number;
-  places: FSQPlace[];
-  distance: number;
-  onPlaceClick: (placeId: string) => void;
-  selectedPlaceId?: string;
-  handlePlaceView: (placeId: string) => void;
-}
-
-const createGeoJSONCircle = (
-  center: Coordinates,
-  radiusInKm: number,
-  points = 64,
-) => {
-  const distanceX =
-    radiusInKm / (111.32 * Math.cos((center.latitude * Math.PI) / 180));
-  const distanceY = radiusInKm / 110.574;
-  const ret = [];
-  for (let i = 0; i < points; i++) {
-    const theta = (i / points) * (2 * Math.PI);
-    const x = distanceX * Math.cos(theta);
-    const y = distanceY * Math.sin(theta);
-    ret.push([center.longitude + x, center.latitude + y]);
-  }
-  ret.push(ret[0]);
-  return {
-    type: "FeatureCollection",
-    features: [
-      {
-        type: "Feature",
-        geometry: { type: "Polygon", coordinates: [ret] },
-        properties: {},
-      },
-    ],
-  };
-};
-
-export default function DiscoveryMap({
-  center,
-  zoom,
-  places,
-  distance,
-  onPlaceClick,
-  selectedPlaceId,
-  handlePlaceView,
-}: MapProps) {
-  const [popupInfo, setPopupInfo] = useState<FSQPlace | null>(null);
-
-  // 1. Create a reference to the map
-  const mapRef = useRef<MapRef>(null);
-
-  const circleGeoJSON = useMemo(
-    () => createGeoJSONCircle(center, distance),
-    [center, distance],
-  ) as any;
-
-  // 2. Add an effect that "flies" the camera to the selected place
-  useEffect(() => {
-    if (selectedPlaceId) {
-      const place = places.find((p) => p.fsq_place_id === selectedPlaceId);
-      if (place && place.latitude && place.longitude) {
-        mapRef.current?.flyTo({
-          center: [place.longitude, place.latitude],
-          zoom: 16,
-          duration: 1500, // Smooth 1.5 second animation
-          essential: true,
-        });
-        setPopupInfo(place); // Auto-open the popup!
+      // If the cache is less than 15 minutes old, return it instantly!
+      if (Date.now() - timestamp < CACHE_TIME_LIMIT_MS) {
+        return { latitude, longitude };
       }
     }
-  }, [selectedPlaceId, places]);
+  } catch (error) {
+    console.warn("Failed to read location from cache", error);
+  }
 
-  return (
-    <Map
-      ref={mapRef} // 3. Attach the ref to the Map
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-      initialViewState={{
-        longitude: center.longitude || 0,
-        latitude: center.latitude || 0,
-        zoom: zoom > 20 ? 14 : zoom,
-        pitch: 45,
-        bearing: 0,
-      }}
-      mapStyle="mapbox://styles/mapbox/streets-v12"
-      style={{ width: "100%", height: "100%" }}
-    >
-      {/* Search Radius */}
-      <Source id="search-radius" type="geojson" data={circleGeoJSON}>
-        <Layer
-          id="radius-fill"
-          type="fill"
-          paint={{ "fill-color": "#f97015", "fill-opacity": 0.05 }}
-        />
-        <Layer
-          id="radius-outline"
-          type="line"
-          paint={{
-            "line-color": "#f97015",
-            "line-width": 2,
-            "line-opacity": 0.5,
-          }}
-        />
-      </Source>
+  // 2. Wrap the HTML5 Web API in a Promise
+  const getBrowserLocation = () => {
+    return new Promise<{ latitude: number; longitude: number }>(
+      (resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation is not supported by your browser"));
+        } else {
+          navigator.geolocation.getCurrentPosition(
+            (position) =>
+              resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+              }),
+            (error) => reject(error),
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0,
+            },
+          );
+        }
+      },
+    );
+  };
 
-      {/* User Location (Pulsing Dot) - Now it stays put! */}
-      {center.latitude !== 0 && (
-        <Marker
-          longitude={center.longitude}
-          latitude={center.latitude}
-          anchor="center"
-        >
-          <div className="relative flex h-6 w-6 items-center justify-center">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border-2 border-white shadow-md"></span>
-          </div>
-        </Marker>
-      )}
+  let finalLocation: { latitude: number; longitude: number } | null = null;
 
-      {/* Restaurant Markers */}
-      {places.map((place) => {
-        const isSelected = place.fsq_place_id === selectedPlaceId;
-        return (
-          <Marker
-            key={place.fsq_place_id}
-            longitude={place.longitude}
-            latitude={place.latitude}
-            anchor="bottom"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation();
-              onPlaceClick(place.fsq_place_id);
-            }}
-          >
-            <div
-              className={`cursor-pointer transition-all duration-300 ${isSelected ? "scale-125 -translate-y-2" : "scale-100 hover:scale-110"}`}
-            >
-              <div className="relative drop-shadow-md">
-                <MapPin
-                  size={isSelected ? 40 : 32}
-                  className={
-                    isSelected
-                      ? "text-primary fill-primary"
-                      : "text-gray-800 fill-white"
-                  }
-                />
-              </div>
-            </div>
-          </Marker>
-        );
-      })}
+  try {
+    // 3. Attempt to get exact GPS coordinates
+    finalLocation = await getBrowserLocation();
+  } catch (error) {
+    console.warn(
+      "Browser geolocation failed. Falling back to IP-based location...",
+      error,
+    );
 
-      {/* Popup */}
-      {popupInfo && (
-        <Popup
-          anchor="bottom"
-          longitude={popupInfo.longitude}
-          latitude={popupInfo.latitude}
-          onClose={() => setPopupInfo(null)}
-          className="z-50 rounded-xl overflow-hidden shadow-2xl"
-          maxWidth="280px"
-          offset={40}
-        >
-          <div className="flex flex-col gap-2 p-1">
-            <h3 className="text-sm font-bold text-gray-900 truncate">
-              {popupInfo.name}
-            </h3>
-            <div className="relative w-full h-28 rounded-md overflow-hidden bg-gray-100">
-              <Image
-                src={
-                  popupInfo.categories[0]?.icon
-                    ? `${popupInfo.categories[0].icon.prefix}bg_64${popupInfo.categories[0].icon.suffix}`
-                    : "/placeholder-place.png"
-                }
-                alt={popupInfo.name}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <Button
-              size="sm"
-              className="w-full mt-1"
-              onClick={() => handlePlaceView(popupInfo.fsq_place_id)}
-            >
-              View Place
-            </Button>
-          </div>
-        </Popup>
-      )}
-    </Map>
-  );
+    // 4. Fallback to your internal Next.js backend route
+    try {
+      const res = await fetch("/api/location");
+      if (res.ok) {
+        const data = await res.json();
+        finalLocation = {
+          latitude: data.location.latitude,
+          longitude: data.location.longitude,
+        };
+      }
+    } catch (fallbackError) {
+      console.error("All location methods failed:", fallbackError);
+    }
+  }
+
+  // 5. If we successfully got a location, save it to the cache before returning
+  if (finalLocation) {
+    try {
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({
+          ...finalLocation,
+          timestamp: Date.now(),
+        }),
+      );
+    } catch (error) {
+      console.warn("Failed to save location to cache", error);
+    }
+  }
+
+  return finalLocation;
 }
 </file>
 
@@ -7228,6 +7095,235 @@ export default function PlacePage() {
 }
 </file>
 
+<file path="components/map.tsx">
+"use client";
+
+import { useMemo, useState, useRef, useEffect } from "react";
+import Map, { Marker, Popup, Source, Layer, MapRef } from "react-map-gl/mapbox";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { FSQPlace, Coordinates } from "@/types/places";
+import { MapPin } from "lucide-react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+
+interface MapProps {
+  center: Coordinates;
+  zoom: number;
+  places: FSQPlace[];
+  distance: number;
+  onPlaceClick: (placeId: string) => void;
+  selectedPlaceId?: string;
+  handlePlaceView: (placeId: string) => void;
+  setShowFilters: (show: boolean) => void;
+}
+
+const createGeoJSONCircle = (
+  center: Coordinates,
+  radiusInKm: number,
+  points = 64,
+) => {
+  const distanceX =
+    radiusInKm / (111.32 * Math.cos((center.latitude * Math.PI) / 180));
+  const distanceY = radiusInKm / 110.574;
+  const ret = [];
+  for (let i = 0; i < points; i++) {
+    const theta = (i / points) * (2 * Math.PI);
+    const x = distanceX * Math.cos(theta);
+    const y = distanceY * Math.sin(theta);
+    ret.push([center.longitude + x, center.latitude + y]);
+  }
+  ret.push(ret[0]);
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: { type: "Polygon", coordinates: [ret] },
+        properties: {},
+      },
+    ],
+  };
+};
+
+export default function DiscoveryMap({
+  center,
+  zoom,
+  places,
+  distance,
+  onPlaceClick,
+  selectedPlaceId,
+  handlePlaceView,
+  setShowFilters,
+}: MapProps) {
+  const [popupInfo, setPopupInfo] = useState<FSQPlace | null>(null);
+  const mapRef = useRef<MapRef>(null);
+
+  const circleGeoJSON = useMemo(
+    () => createGeoJSONCircle(center, distance),
+    [center, distance],
+  ) as any;
+
+  // Automatically zoom/pan to fit ALL markers on the screen
+  useEffect(() => {
+    if (places.length > 0 && !selectedPlaceId && mapRef.current) {
+      const bounds = new mapboxgl.LngLatBounds();
+
+      if (center.latitude !== 0 && center.longitude !== 0) {
+        bounds.extend([center.longitude, center.latitude]);
+      }
+
+      places.forEach((place) => {
+        if (place.longitude && place.latitude) {
+          bounds.extend([place.longitude, place.latitude]);
+        }
+      });
+
+      mapRef.current.fitBounds(bounds, {
+        padding: 60,
+        duration: 1000,
+        maxZoom: 15,
+      });
+    }
+  }, [places, center, selectedPlaceId]);
+
+  // "Fly" the camera to the selected place when clicked
+  useEffect(() => {
+    if (selectedPlaceId) {
+      const place = places.find((p) => p.fsq_place_id === selectedPlaceId);
+      if (place && place.latitude && place.longitude) {
+        mapRef.current?.flyTo({
+          center: [place.longitude, place.latitude],
+          zoom: 16,
+          duration: 1500,
+          essential: true,
+        });
+        setPopupInfo(place);
+      }
+    }
+  }, [selectedPlaceId, places]);
+
+  return (
+    <Map
+      ref={mapRef}
+      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
+      initialViewState={{
+        longitude: center.longitude || 0,
+        latitude: center.latitude || 0,
+        zoom: zoom > 20 ? 14 : zoom,
+        pitch: 45,
+        bearing: 0,
+      }}
+      mapStyle="mapbox://styles/mapbox/streets-v12"
+      style={{ width: "100%", height: "100%" }}
+    >
+      <Source id="search-radius" type="geojson" data={circleGeoJSON}>
+        <Layer
+          id="radius-fill"
+          type="fill"
+          paint={{ "fill-color": "#f97015", "fill-opacity": 0.05 }}
+        />
+        <Layer
+          id="radius-outline"
+          type="line"
+          paint={{
+            "line-color": "#f97015",
+            "line-width": 2,
+            "line-opacity": 0.5,
+          }}
+        />
+      </Source>
+
+      {center.latitude !== 0 && (
+        <Marker
+          longitude={center.longitude}
+          latitude={center.latitude}
+          anchor="center"
+        >
+          <div className="relative flex h-6 w-6 items-center justify-center">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500 border-2 border-white shadow-md"></span>
+          </div>
+        </Marker>
+      )}
+
+      {places.map((place) => {
+        const isSelected = place.fsq_place_id === selectedPlaceId;
+        return (
+          <Marker
+            key={place.fsq_place_id}
+            longitude={place.longitude}
+            latitude={place.latitude}
+            anchor="bottom"
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              onPlaceClick(place.fsq_place_id);
+              setShowFilters(false);
+            }}
+          >
+            <div
+              className={`cursor-pointer transition-all duration-300 ${
+                isSelected
+                  ? "scale-125 -translate-y-2 z-50"
+                  : "scale-100 hover:scale-110 z-10"
+              }`}
+            >
+              <div className="relative drop-shadow-md">
+                <MapPin
+                  size={isSelected ? 32 : 26} // Shrunken sizes for mobile optimization
+                  className={
+                    isSelected
+                      ? "text-primary fill-primary"
+                      : "text-gray-800 fill-white"
+                  }
+                />
+              </div>
+            </div>
+          </Marker>
+        );
+      })}
+
+      {popupInfo && (
+        <Popup
+          anchor="bottom"
+          longitude={popupInfo.longitude}
+          latitude={popupInfo.latitude}
+          onClose={() => setPopupInfo(null)}
+          className="z-50 rounded-xl overflow-hidden shadow-2xl"
+          maxWidth="280px"
+          offset={40}
+        >
+          <div className="flex flex-col gap-2 p-1">
+            <h3 className="text-sm font-bold text-gray-900 truncate">
+              {popupInfo.name}
+            </h3>
+            <div className="relative w-full h-28 rounded-md overflow-hidden bg-gray-100">
+              <Image
+                src={
+                  popupInfo.categories[0]?.icon
+                    ? `${popupInfo.categories[0].icon.prefix}bg_64${popupInfo.categories[0].icon.suffix}`
+                    : "/placeholder-place.png"
+                }
+                alt={popupInfo.name}
+                fill
+                className="object-cover"
+              />
+            </div>
+            <Button
+              size="sm"
+              className="w-full mt-1 h-8 text-xs"
+              onClick={() => handlePlaceView(popupInfo.fsq_place_id)}
+            >
+              View Place
+            </Button>
+          </div>
+        </Popup>
+      )}
+    </Map>
+  );
+}
+</file>
+
 <file path="app/api/recommendations/[...slug]/route.ts">
 import { FSQSearchResponse } from '@/types/places';
 // import { Image } from '@/types/images';
@@ -7524,8 +7620,6 @@ export async function GET(
 
   const cachedData = await getFromCache(cacheKey, "places");
 
-  console.log("cachedData", cachedData);
-
   if (cachedData) {
     return new Response(
       JSON.stringify({
@@ -7768,8 +7862,8 @@ export default function HomePage() {
       if (!userLocation) {
         try {
           const resLocation = await getClientLocation();
-          currentLat = resLocation.latitude;
-          currentLon = resLocation.longitude;
+          currentLat = resLocation?.latitude || 0;
+          currentLon = resLocation?.longitude || 0;
           setUserLocation({ lat: currentLat, lon: currentLon });
         } catch (error) {
           setError("Failed to fetch location");
@@ -8192,14 +8286,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader } from "lucide-react";
+import { Loader, Filter, Heart } from "lucide-react"; // Added Heart icon for the modal
+import { Button } from "@/components/ui/button";
 import PlaceCard from "@/components/place-card";
 import { FSQPlace, Coordinates } from "@/types/places";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import dynamic from "next/dynamic";
 import getClientLocation from "@/helpers/get-client-location";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react"; // Imported signIn
 import { useToast } from "@/hooks/use-toast";
 
 // Dynamically import the Map component with no SSR
@@ -8285,7 +8380,8 @@ export default function DiscoveryMap() {
   const [error, setError] = useState<string | null>(null);
 
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(null);
-  const [showSignIn, setShowSignIn] = useState<boolean>(false); // SignIn overlay state
+  const [showSignIn, setShowSignIn] = useState<boolean>(false);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
 
   const initialLoadComplete = useRef(false);
 
@@ -8332,14 +8428,20 @@ export default function DiscoveryMap() {
     const getUserLocation = async () => {
       try {
         const location = await getClientLocation();
-        setCenter({
-          latitude: location.latitude,
-          longitude: location.longitude,
-        });
-        await getPlaces(location.latitude, location.longitude);
+        if (location) {
+          setCenter({
+            latitude: location.latitude,
+            longitude: location.longitude,
+          });
+          await getPlaces(location.latitude, location.longitude);
+        } else {
+          throw new Error("Location returned null");
+        }
       } catch (error) {
         console.error("Error fetching user location:", error);
-        setError("Failed to get your location. Using default location.");
+        setError(
+          "Failed to get your location. Please enable location services.",
+        );
         initialLoadComplete.current = true;
       }
     };
@@ -8387,6 +8489,8 @@ export default function DiscoveryMap() {
       setCenter({ latitude, longitude });
       setZoom(18);
       setFocusedPlaceId(placeId);
+      // Automatically hide the mobile filter when a place is clicked
+      setShowFilters(false);
     },
     [],
   );
@@ -8395,7 +8499,7 @@ export default function DiscoveryMap() {
     async (place: FSQPlace, e: React.MouseEvent) => {
       e.stopPropagation();
 
-      // Trigger overlay if user is not signed in
+      // IF USER IS NOT LOGGED IN, SHOW OVERLAY AND STOP
       if (!session?.user?.email) {
         setShowSignIn(true);
         return;
@@ -8404,7 +8508,6 @@ export default function DiscoveryMap() {
       const placeId = place.fsq_place_id;
       const isCurrentlyLiked = likedPlaces.has(placeId);
 
-      // Optimistic UI toggle
       setLikedPlaces((prev) => {
         const newSet = new Set(prev);
         if (isCurrentlyLiked) newSet.delete(placeId);
@@ -8452,7 +8555,7 @@ export default function DiscoveryMap() {
 
   const handleDistanceChange = useCallback((value: number[]) => {
     setDistance(value[0]);
-    setZoom(13);
+    setFocusedPlaceId(null);
   }, []);
 
   const handlePlaceClick = useCallback((placeId: string) => {
@@ -8468,8 +8571,8 @@ export default function DiscoveryMap() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Alert variant="destructive" className="w-96">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <Alert variant="destructive" className="w-96 shadow-lg bg-white">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -8479,7 +8582,7 @@ export default function DiscoveryMap() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-gray-50">
         <Loader className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -8487,6 +8590,36 @@ export default function DiscoveryMap() {
 
   return (
     <div className="relative h-[calc(100vh-64px)] w-full overflow-hidden bg-gray-50">
+      {/* SIGN IN OVERLAY (Triggers when logged out user clicks 'Like') */}
+      {showSignIn && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Heart className="w-6 h-6 text-primary fill-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Save your favorites
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Sign in to save places to your personal list and access them
+              anytime.
+            </p>
+            <div className="flex w-full gap-3">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowSignIn(false)}
+              >
+                Cancel
+              </Button>
+              <Button className="w-full" onClick={() => signIn()}>
+                Sign In
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0 w-screen">
         <Map
           center={center}
@@ -8496,63 +8629,93 @@ export default function DiscoveryMap() {
           onPlaceClick={handlePlaceClick}
           selectedPlaceId={focusedPlaceId ?? ""}
           handlePlaceView={handlePlaceCardClick}
+          setShowFilters={setShowFilters}
         />
       </div>
 
       {/* FLOATING TOP BAR (Filters) */}
       <div className="absolute top-4 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
-        {/* CRITICAL FIX: Added `w-full` here to prevent Brave from collapsing the container */}
-        <div className="w-full max-w-3xl flex flex-col md:flex-row gap-3 pointer-events-auto">
-          {/* Distance Slider Panel */}
-          {/* CRITICAL FIX: Changed `flex-1` to `w-full` */}
-          <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl p-4 w-full flex flex-col justify-center">
-            <label className="text-xs font-semibold text-gray-600 mb-3 flex justify-between">
-              <span>Search Radius</span>
-              <span className="text-primary">{distance.toFixed(1)} km</span>
-            </label>
-            <input
-              type="range"
-              min={1}
-              max={5}
-              step={0.5}
-              value={distance}
-              onChange={(e) =>
-                handleDistanceChange([parseFloat(e.target.value)])
-              }
-              className="w-full h-2 bg-primary/20 rounded-lg appearance-none cursor-pointer accent-primary touch-none"
-            />
+        <div className="w-full max-w-3xl flex flex-col pointer-events-none">
+          {/* Mobile Toggle Button */}
+          <div className="flex justify-end md:hidden pointer-events-auto mb-2">
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              className="rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-100 h-9 px-4 transition-all"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              {showFilters ? "Hide Filters" : "Filters"}
+            </Button>
           </div>
 
-          {/* Dropdown Filters */}
-          <div className="flex flex-row gap-3 w-full">
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[72px] md:h-full flex items-center">
-              <Select onValueChange={setCategoryFilter}>
-                <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-sm font-medium">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryTypes.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Filter Container */}
+          <div
+            className={`w-full flex-col md:flex-row gap-2 md:gap-3 pointer-events-auto ${
+              showFilters
+                ? "flex animate-in fade-in slide-in-from-top-2 duration-200"
+                : "hidden md:flex"
+            }`}
+          >
+            {/* Distance Slider Panel */}
+            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl p-3 md:p-4 w-full flex flex-col justify-center">
+              <label className="text-xs font-semibold text-gray-600 mb-2 md:mb-3 flex justify-between">
+                <span>Search Radius</span>
+                <span className="text-primary">{distance.toFixed(1)} km</span>
+              </label>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                step={0.5}
+                value={distance}
+                onChange={(e) =>
+                  handleDistanceChange([parseFloat(e.target.value)])
+                }
+                className="w-full h-2 bg-primary/20 rounded-lg appearance-none cursor-pointer accent-primary touch-none"
+              />
             </div>
 
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-2xl w-full h-[72px] md:h-full flex items-center">
-              <Select onValueChange={setMoodFilter}>
-                <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-sm font-medium">
-                  <SelectValue placeholder="Mood" />
-                </SelectTrigger>
-                <SelectContent>
-                  {moodTypes.map((mood) => (
-                    <SelectItem key={mood} value={mood}>
-                      {mood}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Dropdown Filters */}
+            <div className="flex flex-row gap-2 md:gap-3 w-full">
+              {/* Shrunken mobile dropdowns: h-10 vs h-14 */}
+              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl w-full h-10 md:h-14 flex items-center">
+                <Select
+                  onValueChange={(val) => {
+                    setCategoryFilter(val);
+                    setShowFilters(false); // Auto-hide filters on selection
+                  }}
+                >
+                  <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-xs md:text-sm font-medium px-3">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryTypes.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl w-full h-10 md:h-14 flex items-center">
+                <Select
+                  onValueChange={(val) => {
+                    setMoodFilter(val);
+                    setShowFilters(false); // Auto-hide filters on selection
+                  }}
+                >
+                  <SelectTrigger className="border-0 bg-transparent h-full w-full focus:ring-0 shadow-none text-xs md:text-sm font-medium px-3">
+                    <SelectValue placeholder="Mood" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {moodTypes.map((mood) => (
+                      <SelectItem key={mood} value={mood}>
+                        {mood}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
@@ -8560,7 +8723,7 @@ export default function DiscoveryMap() {
 
       {/* FLOATING BOTTOM CAROUSEL (Mobile) / SIDE PANEL (Desktop) */}
       <div className="absolute bottom-6 inset-x-0 z-40 pointer-events-none">
-        <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory hide-scrollbar pointer-events-auto">
+        <div className="flex overflow-x-auto gap-3 md:gap-4 px-4 pb-4 snap-x snap-mandatory hide-scrollbar pointer-events-auto">
           {filteredPlaces.length === 0 ? (
             <div className="bg-white shadow-lg rounded-xl p-4 mx-auto text-sm text-gray-500">
               No places found in this area. Try expanding your radius.
@@ -8569,7 +8732,7 @@ export default function DiscoveryMap() {
             filteredPlaces.map((place, index) => (
               <div
                 key={place.fsq_place_id}
-                className="snap-center shrink-0 w-[85vw] max-w-[320px] transition-transform duration-300"
+                className="snap-center shrink-0 w-[75vw] max-w-[280px] md:max-w-[320px] transition-transform duration-300"
               >
                 <PlaceCard
                   name={place.name}

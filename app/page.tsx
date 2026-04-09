@@ -12,6 +12,7 @@ import {
   Search,
   Loader2,
   AlertCircle,
+  MapPinOff,
 } from "lucide-react";
 import Image from "next/image";
 import FoodQuiz from "@/components/food-quiz";
@@ -54,9 +55,10 @@ export default function HomePage() {
     lon: number;
   } | null>(null);
 
-  // Loading States
+  // Loading & Permission States
   const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingPrefs, setIsCheckingPrefs] = useState(true); // Prevents the quiz flicker
+  const [isCheckingPrefs, setIsCheckingPrefs] = useState(true);
+  const [locationDenied, setLocationDenied] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -69,36 +71,38 @@ export default function HomePage() {
 
   const { data: session, status } = useSession();
 
-  // Consolidated Initialization Flow
   useEffect(() => {
-    if (status === "loading") return; // Wait for NextAuth to figure out the session
+    if (status === "loading") return;
 
     const initializeApp = async () => {
-      // 1. Explicitly type our variables as strictly numbers
       let currentLat: number;
       let currentLon: number;
 
-      // 2. Fetch location if we don't have it yet
       if (!userLocation) {
         try {
           const resLocation = await getClientLocation();
-          currentLat = resLocation?.latitude || 0;
-          currentLon = resLocation?.longitude || 0;
+          currentLat = resLocation.latitude;
+          currentLon = resLocation.longitude;
           setUserLocation({ lat: currentLat, lon: currentLon });
-        } catch (error) {
-          setError("Failed to fetch location");
+        } catch (error: any) {
+          if (
+            error.message === "PERMISSION_DENIED" ||
+            error.message === "UNSUPPORTED"
+          ) {
+            setLocationDenied(true);
+          } else {
+            setError("Failed to fetch location. Please check your connection.");
+          }
           setIsLoading(false);
-          return; // Stop execution if we can't get location
+          return;
         }
       } else {
-        // If we already have it, TS now strictly knows these are numbers
         currentLat = userLocation.lat;
         currentLon = userLocation.lon;
       }
 
-      setIsLoading(false); // Unblocks the hero section and navbar
+      setIsLoading(false);
 
-      // Helper function to check local storage
       const checkLocalPrefs = async (email: string) => {
         const storedQuizCompleted = localStorage.getItem("quizCompleted");
         const storedQuizAnswers = localStorage.getItem("quizAnswers");
@@ -111,17 +115,20 @@ export default function HomePage() {
           storedDietaryPreferences
         ) {
           setQuizCompleted(JSON.parse(storedQuizCompleted));
-          await fetchRecommendations(
-            email,
-            JSON.parse(storedDietaryPreferences),
-            JSON.parse(storedQuizAnswers),
-            currentLat, // <-- Passed explicitly as numbers
-            currentLon,
-          );
+
+          // Only attempt to fetch recommendations if a valid email exists
+          if (email) {
+            await fetchRecommendations(
+              email,
+              JSON.parse(storedDietaryPreferences),
+              JSON.parse(storedQuizAnswers),
+              currentLat,
+              currentLon,
+            );
+          }
         }
       };
 
-      // 3. Check Database / Local Storage
       if (session?.user?.email) {
         try {
           const res = await fetch(`/api/user/${session.user.email}`);
@@ -142,7 +149,6 @@ export default function HomePage() {
         await checkLocalPrefs("");
       }
 
-      // 4. Mark preferences as fully checked (unblocks the quiz UI)
       setIsCheckingPrefs(false);
     };
 
@@ -160,17 +166,20 @@ export default function HomePage() {
   const handleDietaryPreferencesSubmit = async (preferences: string[]) => {
     setDietaryPreferences(preferences);
     localStorage.setItem("dietaryPreferences", JSON.stringify(preferences));
-    if (!session) {
+
+    // Hard stop if no session
+    if (!session || !session.user?.email) {
       setShowSignIn(true);
-    } else if (session.user?.email) {
-      await fetchRecommendations(
-        session.user.email,
-        preferences,
-        quizAnswers,
-        userLocation?.lat,
-        userLocation?.lon,
-      );
+      return;
     }
+
+    await fetchRecommendations(
+      session.user.email,
+      preferences,
+      quizAnswers,
+      userLocation?.lat,
+      userLocation?.lon,
+    );
   };
 
   const handleChangePreferences = () => {
@@ -190,15 +199,16 @@ export default function HomePage() {
   const greeting =
     hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  // Updated to accept lat/lon directly to avoid stale state issues
+  // Stripped defaults and added hard structural guard
   const fetchRecommendations = async (
-    email: string = "",
-    diet: string[] = dietaryPreferences,
-    quiz: string[] = quizAnswers,
-    lat: number | undefined = userLocation?.lat,
-    lon: number | undefined = userLocation?.lon,
+    email: string,
+    diet: string[],
+    quiz: string[],
+    lat: number | undefined,
+    lon: number | undefined,
   ) => {
-    if (!lat || !lon) return;
+    if (!email || !lat || !lon) return; // Structural hard stop
+
     try {
       setShowRecommendations(true);
       setIsRecommendationLoading(true);
@@ -227,7 +237,41 @@ export default function HomePage() {
     );
   }
 
-  // Initial Full-Screen Loader
+  // Location Denied Blocking UI
+  if (locationDenied) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 text-center">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-gray-100 flex flex-col items-center">
+          <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-6">
+            <MapPinOff className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">
+            Location Required
+          </h2>
+          <p className="text-gray-500 mb-6 leading-relaxed">
+            CheapBites needs your location to find the best spots near you. We{" "}
+            <strong>do not store or save</strong> your location data anywhere.
+          </p>
+          <div className="bg-gray-50 p-4 rounded-xl w-full text-sm text-gray-600 mb-6 text-left">
+            <strong>How to enable:</strong>
+            <br />
+            1. Click the lock/site settings icon in your browser's address bar.
+            <br />
+            2. Allow "Location" access.
+            <br />
+            3. Refresh this page.
+          </div>
+          <Button
+            onClick={() => window.location.reload()}
+            className="w-full h-12 rounded-xl font-bold"
+          >
+            I've enabled it, reload page
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading && !userLocation) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-50">
@@ -275,17 +319,14 @@ export default function HomePage() {
 
         {/* MAIN CONTENT */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-          {/* QUIZ / PREFERENCES AREA */}
           <div className="relative z-20 flex justify-center w-full">
             <div className="w-full max-w-xl">
-              {/* 1. Show a loading skeleton while checking local storage/database */}
               {isCheckingPrefs ? (
                 <div className="shadow-2xl rounded-2xl bg-white p-12 border border-gray-100 min-h-[300px] flex items-center justify-center">
                   <Loader2 className="w-10 h-10 animate-spin text-primary" />
                 </div>
               ) : (
                 !showRecommendations && (
-                  /* 2. Once checked, show either the Quiz or the Dietary Preferences */
                   <div className="shadow-2xl rounded-2xl bg-white overflow-hidden border border-gray-100">
                     {!quizCompleted ? (
                       <FoodQuiz onQuizComplete={handleQuizComplete} />
@@ -300,7 +341,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* RECOMMENDATIONS (Renders smoothly after checking completes) */}
           {showRecommendations && (
             <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <UserRecommendations
