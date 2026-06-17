@@ -61,7 +61,7 @@ const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
               <button
                 key={restriction}
                 onClick={() => toggleRestriction(restriction)}
-                className={`flex items-center px-4 py-2.5 rounded-full text-sm font-semibold border-2 transition-all duration-200 ${
+                className={`flex items-center rounded-md border-2 px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${
                   isSelected
                     ? "border-primary bg-primary text-primary-foreground shadow-md"
                     : "border-gray-200 bg-white text-gray-600 hover:border-primary/50 hover:bg-gray-50"
@@ -78,13 +78,13 @@ const DietaryPreference = ({ onPreferencesSubmit }: DietaryPreferenceProps) => {
           <Button
             variant="outline"
             onClick={handleNone}
-            className="flex-1 h-12 rounded-xl font-semibold text-gray-600"
+            className="h-12 flex-1 rounded-md font-semibold text-gray-600"
           >
             None, I eat everything
           </Button>
           <Button
             onClick={handleSubmit}
-            className="flex-1 h-12 rounded-xl font-bold shadow-md"
+            className="h-12 flex-1 rounded-md font-bold shadow-md"
           >
             Show My Results
           </Button>

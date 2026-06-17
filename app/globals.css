@@ -70,13 +70,43 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+    text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    min-height: 100vh;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
   }
 }
 
 @layer components {
+  .app-surface {
+    @apply border border-gray-200/80 bg-white shadow-sm;
+  }
+
+  .interactive-card {
+    @apply transition duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .custom-scrollbar [data-radix-scroll-area-viewport] > div {
     display: flex !important;
     gap: 1rem !important;

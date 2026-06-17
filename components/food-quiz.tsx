@@ -60,8 +60,8 @@ const FoodQuiz = ({ onQuizComplete }: FoodQuizProps) => {
   return (
     <Card className="border-0 shadow-none">
       {!showQuiz ? (
-        <div className="p-8 text-center flex flex-col items-center justify-center space-y-4">
-          <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-2">
+        <div className="flex flex-col items-center justify-center space-y-4 p-6 text-center sm:p-8">
+          <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Sparkles className="w-8 h-8" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
@@ -74,7 +74,7 @@ const FoodQuiz = ({ onQuizComplete }: FoodQuizProps) => {
           <Button
             onClick={() => setShowQuiz(true)}
             size="lg"
-            className="w-full sm:w-auto mt-4 h-12 px-8 rounded-full font-bold"
+            className="mt-4 h-12 w-full rounded-md px-8 font-bold sm:w-auto"
           >
             Take the Quiz <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
@@ -101,7 +101,7 @@ const FoodQuiz = ({ onQuizComplete }: FoodQuizProps) => {
                 <button
                   key={index}
                   onClick={() => handleQuizAnswer(option)}
-                  className="p-4 rounded-xl border-2 border-gray-100 bg-white text-left font-semibold text-gray-700 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all duration-200 active:scale-95"
+                  className="rounded-lg border-2 border-gray-100 bg-white p-4 text-left font-semibold text-gray-700 transition-all duration-200 hover:border-primary hover:bg-primary/5 hover:text-primary active:scale-[0.98]"
                 >
                   {option}
                 </button>

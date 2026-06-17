@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader, Filter, Heart } from "lucide-react"; // Added Heart icon for the modal
+import { Loader, Filter, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PlaceCard from "@/components/place-card";
 import { FSQPlace, Coordinates } from "@/types/places";
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import dynamic from "next/dynamic";
 import getClientLocation from "@/helpers/get-client-location";
-import { useSession, signIn } from "next-auth/react"; // Imported signIn
+import { useSession, signIn } from "next-auth/react";
 import { useToast } from "@/hooks/use-toast";
 
 // Dynamically import the Map component with no SSR
@@ -93,7 +93,6 @@ export default function DiscoveryMap() {
   });
   const [zoom, setZoom] = useState<number>(50);
   const [categoryFilter, setCategoryFilter] = useState<string>("All");
-  const [filteredPlaces, setFilteredPlaces] = useState<FSQPlace[]>([]);
   const [likedPlaces, setLikedPlaces] = useState<Set<string>>(new Set());
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [moodFilter, setMoodFilter] = useState<string>("All");
@@ -122,11 +121,17 @@ export default function DiscoveryMap() {
     }
   }, [session]);
 
-  const getPlaces = useCallback(async (latitude: number, longitude: number) => {
+  const getPlaces = useCallback(async (
+    latitude: number,
+    longitude: number,
+    signal?: AbortSignal,
+  ) => {
     setIsLoading(true);
+    setError(null);
     try {
       const response = await fetch(
         `/api/places/search/${latitude}/${longitude}`,
+        { signal },
       );
       if (!response.ok) throw new Error("Failed to fetch places data");
       const data = await response.json();
@@ -134,18 +139,22 @@ export default function DiscoveryMap() {
         setError("No places found near you.");
       }
       setPlaces(data.places);
-      setFilteredPlaces(data.places);
     } catch (error) {
+      if (signal?.aborted) return;
       console.error("Error fetching places:", error);
       setError("Failed to fetch places. Please try again later.");
     } finally {
-      setIsLoading(false);
-      initialLoadComplete.current = true;
+      if (!signal?.aborted) {
+        setIsLoading(false);
+        initialLoadComplete.current = true;
+      }
     }
   }, []);
 
   useEffect(() => {
     if (initialLoadComplete.current) return;
+
+    const controller = new AbortController();
 
     const getUserLocation = async () => {
       try {
@@ -155,11 +164,16 @@ export default function DiscoveryMap() {
             latitude: location.latitude,
             longitude: location.longitude,
           });
-          await getPlaces(location.latitude, location.longitude);
+          await getPlaces(
+            location.latitude,
+            location.longitude,
+            controller.signal,
+          );
         } else {
           throw new Error("Location returned null");
         }
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Error fetching user location:", error);
         setError(
           "Failed to get your location. Please enable location services.",
@@ -169,6 +183,8 @@ export default function DiscoveryMap() {
     };
 
     getUserLocation();
+
+    return () => controller.abort();
   }, [getPlaces]);
 
   const filteredPlacesData = useMemo(() => {
@@ -188,10 +204,6 @@ export default function DiscoveryMap() {
       return categoryMatch && moodMatch && withinDistance;
     });
   }, [distance, categoryFilter, moodFilter, places]);
-
-  useEffect(() => {
-    setFilteredPlaces(filteredPlacesData);
-  }, [filteredPlacesData]);
 
   const categoryTypes = useMemo(() => {
     if (!places.length) return ["All"];
@@ -311,12 +323,12 @@ export default function DiscoveryMap() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-64px)] w-full overflow-hidden bg-gray-50">
+    <div className="relative h-[calc(100svh-64px)] min-h-[640px] w-full overflow-hidden bg-gray-50">
       {/* SIGN IN OVERLAY (Triggers when logged out user clicks 'Like') */}
       {showSignIn && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm flex flex-col items-center text-center animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+          <div className="flex w-full max-w-sm flex-col items-center rounded-lg bg-white p-6 text-center shadow-xl animate-in zoom-in-95 duration-200">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Heart className="w-6 h-6 text-primary fill-primary" />
             </div>
             <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -346,7 +358,7 @@ export default function DiscoveryMap() {
         <Map
           center={center}
           zoom={zoom}
-          places={filteredPlaces}
+          places={filteredPlacesData}
           distance={distance}
           onPlaceClick={handlePlaceClick}
           selectedPlaceId={focusedPlaceId ?? ""}
@@ -356,13 +368,13 @@ export default function DiscoveryMap() {
       </div>
 
       {/* FLOATING TOP BAR (Filters) */}
-      <div className="absolute top-4 inset-x-0 z-40 px-4 pointer-events-none flex justify-center">
-        <div className="w-full max-w-3xl flex flex-col pointer-events-none">
+      <div className="pointer-events-none absolute inset-x-0 top-4 z-40 flex justify-center px-4">
+        <div className="pointer-events-none flex w-full max-w-3xl flex-col">
           {/* Mobile Toggle Button */}
-          <div className="flex justify-end md:hidden pointer-events-auto mb-2">
+          <div className="pointer-events-auto mb-2 flex justify-end md:hidden">
             <Button
               onClick={() => setShowFilters(!showFilters)}
-              className="rounded-full shadow-lg bg-white text-gray-800 hover:bg-gray-100 h-9 px-4 transition-all"
+              className="h-10 rounded-md bg-white px-4 text-gray-800 shadow-lg transition-all hover:bg-gray-100"
             >
               <Filter className="w-4 h-4 mr-2" />
               {showFilters ? "Hide Filters" : "Filters"}
@@ -371,14 +383,14 @@ export default function DiscoveryMap() {
 
           {/* Filter Container */}
           <div
-            className={`w-full flex-col md:flex-row gap-2 md:gap-3 pointer-events-auto ${
+            className={`pointer-events-auto w-full flex-col gap-2 md:flex-row md:gap-3 ${
               showFilters
                 ? "flex animate-in fade-in slide-in-from-top-2 duration-200"
                 : "hidden md:flex"
             }`}
           >
             {/* Distance Slider Panel */}
-            <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl p-3 md:p-4 w-full flex flex-col justify-center">
+            <div className="flex w-full flex-col justify-center rounded-lg border border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur-md md:p-4">
               <label className="text-xs font-semibold text-gray-600 mb-2 md:mb-3 flex justify-between">
                 <span>Search Radius</span>
                 <span className="text-primary">{distance.toFixed(1)} km</span>
@@ -399,8 +411,9 @@ export default function DiscoveryMap() {
             {/* Dropdown Filters */}
             <div className="flex flex-row gap-2 md:gap-3 w-full">
               {/* Shrunken mobile dropdowns: h-10 vs h-14 */}
-              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl w-full h-10 md:h-14 flex items-center">
+              <div className="flex h-10 w-full items-center rounded-lg border border-gray-200 bg-white/95 shadow-lg backdrop-blur-md md:h-14">
                 <Select
+                  value={categoryFilter}
                   onValueChange={(val) => {
                     setCategoryFilter(val);
                     setShowFilters(false); // Auto-hide filters on selection
@@ -419,8 +432,9 @@ export default function DiscoveryMap() {
                 </Select>
               </div>
 
-              <div className="bg-white/90 backdrop-blur-md shadow-lg rounded-xl md:rounded-2xl w-full h-10 md:h-14 flex items-center">
+              <div className="flex h-10 w-full items-center rounded-lg border border-gray-200 bg-white/95 shadow-lg backdrop-blur-md md:h-14">
                 <Select
+                  value={moodFilter}
                   onValueChange={(val) => {
                     setMoodFilter(val);
                     setShowFilters(false); // Auto-hide filters on selection
@@ -444,17 +458,17 @@ export default function DiscoveryMap() {
       </div>
 
       {/* FLOATING BOTTOM CAROUSEL (Mobile) / SIDE PANEL (Desktop) */}
-      <div className="absolute bottom-6 inset-x-0 z-40 pointer-events-none">
-        <div className="flex overflow-x-auto gap-3 md:gap-4 px-4 pb-4 snap-x snap-mandatory hide-scrollbar pointer-events-auto">
-          {filteredPlaces.length === 0 ? (
-            <div className="bg-white shadow-lg rounded-xl p-4 mx-auto text-sm text-gray-500">
+      <div className="pointer-events-none absolute inset-x-0 bottom-4 z-40 md:bottom-6">
+        <div className="hide-scrollbar pointer-events-auto flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:gap-4">
+          {filteredPlacesData.length === 0 ? (
+            <div className="mx-auto rounded-lg bg-white p-4 text-sm text-gray-500 shadow-lg">
               No places found in this area. Try expanding your radius.
             </div>
           ) : (
-            filteredPlaces.map((place, index) => (
+            filteredPlacesData.map((place, index) => (
               <div
                 key={place.fsq_place_id}
-                className="snap-center shrink-0 w-[75vw] max-w-[280px] md:max-w-[320px] transition-transform duration-300"
+                className="w-[78vw] max-w-[280px] shrink-0 snap-center transition-transform duration-300 md:max-w-[320px]"
               >
                 <PlaceCard
                   name={place.name}
@@ -478,7 +492,7 @@ export default function DiscoveryMap() {
                   onLike={(e) => toggleLike(place, e)}
                   mood={assignMood(place.categories)}
                   goToPage={(e) => handlePlaceCardClick(place.fsq_place_id)}
-                  priority={index < 3}
+                  priority={index === 0}
                   isFocused={focusedPlaceId === place.fsq_place_id}
                 />
               </div>

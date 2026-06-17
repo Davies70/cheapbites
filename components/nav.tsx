@@ -48,12 +48,12 @@ const Nav = () => {
 
   return (
     <>
-      <nav className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md transition-all">
+      <nav className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/90 backdrop-blur-md transition-all">
         <div className="container mx-auto px-4 h-16 flex justify-between items-center">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 group transition-transform hover:scale-105"
+            className="group flex items-center gap-2 transition-transform hover:scale-[1.02]"
           >
             <div className="bg-primary text-white p-1.5 rounded-lg">
               <Utensils className="w-5 h-5" />
@@ -68,7 +68,7 @@ const Nav = () => {
             <Button
               variant={isActive("/map") ? "secondary" : "ghost"}
               asChild
-              className={`rounded-full px-4 ${isActive("/map") ? "font-semibold text-primary bg-primary/10" : "text-gray-600"}`}
+              className={`rounded-md px-4 ${isActive("/map") ? "font-semibold text-primary bg-primary/10" : "text-gray-600"}`}
             >
               <Link href="/map">
                 <MapPin className="mr-2 h-4 w-4" /> Map
@@ -125,7 +125,7 @@ const Nav = () => {
             ) : (
               <Button
                 onClick={() => setShowSignIn(true)}
-                className="rounded-full ml-2 font-semibold shadow-sm"
+                className="ml-2 rounded-md font-semibold shadow-sm"
               >
                 <User className="mr-2 h-4 w-4" /> Sign In
               </Button>
@@ -138,7 +138,7 @@ const Nav = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden text-gray-600"
+                className="md:hidden rounded-md text-gray-600"
               >
                 <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle menu</span>

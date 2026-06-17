@@ -24,7 +24,7 @@ export default function SignInOverlay({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl relative max-w-sm w-full p-8 text-center animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-sm rounded-lg bg-white p-8 text-center shadow-2xl animate-in zoom-in-95 duration-200">
         {/* Close Button */}
         <Button
           variant="ghost"

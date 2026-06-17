@@ -64,24 +64,31 @@ export default function PlacePage() {
 
   // Fetch place + user data
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchData = async () => {
       try {
-        const res = await fetch(`/api/place/${id}`);
+        const res = await fetch(`/api/place/${id}`, {
+          signal: controller.signal,
+        });
         const data: PlaceResponse = await res.json();
         setPlace(data?.placeResponse ?? null);
       } catch {
+        if (controller.signal.aborted) return;
         toast({
           title: "Error loading place",
           description: "Unable to fetch details for this place.",
           variant: "destructive",
         });
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
 
       if (session?.user?.email) {
         try {
-          const res = await fetch(`/api/user/${session.user.email}`);
+          const res = await fetch(`/api/user/${session.user.email}`, {
+            signal: controller.signal,
+          });
           const data = await res.json();
 
           const review: UserReview | undefined = data.reviews.find(
@@ -95,12 +102,15 @@ export default function PlacePage() {
           setIsVisited(data.visited.some((p: { id: string }) => p.id === id));
           setIsSaved(data.saved.some((p: { id: string }) => p.id === id));
         } catch (e) {
+          if (controller.signal.aborted) return;
           console.error("Error fetching user data:", e);
         }
       }
     };
 
     fetchData();
+
+    return () => controller.abort();
   }, [id, session?.user?.email, toast]);
 
   // Scroll review into view when opened
@@ -349,15 +359,15 @@ export default function PlacePage() {
       : "/placeholder-place.png";
 
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:py-6">
       {/* Header */}
-      <div className="relative h-56 sm:h-72 md:h-96 rounded-lg overflow-hidden shadow-lg">
+      <div className="relative h-56 overflow-hidden rounded-lg shadow-lg sm:h-72 md:h-96">
         <Image
           src={heroImage}
           alt={place?.name || "Place image"}
           fill
           className="object-cover"
-          sizes="100vw"
+          sizes="(max-width: 896px) 100vw, 896px"
           priority
         />
         <div className="absolute inset-0 bg-black/40 flex items-end">
@@ -384,6 +394,7 @@ export default function PlacePage() {
           variant={isSaved ? "default" : "secondary"}
           disabled={!session?.user}
           title={!session?.user ? "Sign in to save" : undefined}
+          className="h-11 rounded-md"
         >
           <BookmarkPlus
             className={`w-4 h-4 mr-2 ${isSaved ? "fill-current" : ""}`}
@@ -395,6 +406,7 @@ export default function PlacePage() {
           variant={isVisited ? "default" : "secondary"}
           disabled={!session?.user}
           title={!session?.user ? "Sign in to mark visited" : undefined}
+          className="h-11 rounded-md"
         >
           <CheckCircle
             className={`w-4 h-4 mr-2 ${isVisited ? "fill-current" : ""}`}
@@ -406,6 +418,7 @@ export default function PlacePage() {
             onClick={session?.user ? handleShowReview : undefined}
             disabled={!session?.user}
             title={!session?.user ? "Sign in to review" : undefined}
+            className="h-11 rounded-md"
           >
             <Pencil className="w-4 h-4 mr-2" />
             Review

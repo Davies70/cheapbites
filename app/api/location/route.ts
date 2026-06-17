@@ -32,7 +32,6 @@ export async function GET(req: Request) {
                 { status: 500, headers: { 'Content-Type': 'application/json' } }
             );
         }
-        console.log('location', location);
         return new Response(
             JSON.stringify({ location }),
             { status: 200, headers: { 'Content-Type': 'application/json' } }

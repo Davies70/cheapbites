@@ -207,17 +207,19 @@ export default function HomePage() {
     lat: number | undefined,
     lon: number | undefined,
   ) => {
-    if (!email || !lat || !lon) return; // Structural hard stop
+    if (!email || !lat || !lon || !quiz[0]) return;
 
     try {
       setShowRecommendations(true);
       setIsRecommendationLoading(true);
+      setRecommendationError(null);
       const dietString = diet.join(",").toLowerCase().replace("-", "");
       const res = await fetch(
         `api/recommendations/${lat}/${lon}/${email}/${quiz[0].toLowerCase()}/${dietString}`,
       );
+      if (!res.ok) throw new Error("Failed to fetch recommendations");
       const data = await res.json();
-      setRecommendations(data.places);
+      setRecommendations(data.places ?? []);
     } catch (error) {
       setRecommendationError("Failed to fetch recommendations");
     } finally {
@@ -241,7 +243,7 @@ export default function HomePage() {
   if (locationDenied) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 px-4 text-center">
-        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full border border-gray-100 flex flex-col items-center">
+        <div className="flex w-full max-w-md flex-col items-center rounded-lg border border-gray-100 bg-white p-8 shadow-xl">
           <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-6">
             <MapPinOff className="w-8 h-8" />
           </div>
@@ -252,7 +254,7 @@ export default function HomePage() {
             CheapBites needs your location to find the best spots near you. We{" "}
             <strong>do not store or save</strong> your location data anywhere.
           </p>
-          <div className="bg-gray-50 p-4 rounded-xl w-full text-sm text-gray-600 mb-6 text-left">
+          <div className="mb-6 w-full rounded-lg bg-gray-50 p-4 text-left text-sm text-gray-600">
             <strong>How to enable:</strong>
             <br />
             1. Click the lock/site settings icon in your browser's address bar.
@@ -263,7 +265,7 @@ export default function HomePage() {
           </div>
           <Button
             onClick={() => window.location.reload()}
-            className="w-full h-12 rounded-xl font-bold"
+            className="h-12 w-full rounded-md font-bold"
           >
             I've enabled it, reload page
           </Button>
@@ -285,7 +287,7 @@ export default function HomePage() {
       <Nav />
       <div className="min-h-screen bg-gray-50 pb-20">
         {/* HERO SECTION */}
-        <div className="relative h-[45vh] md:h-[55vh] flex items-center justify-center text-white">
+        <div className="relative flex min-h-[420px] items-center justify-center text-white md:min-h-[520px]">
           <div className="absolute inset-0 bg-black">
             <Image
               src="/food-spread.jpg"
@@ -293,21 +295,22 @@ export default function HomePage() {
               className="w-full h-full object-cover opacity-50"
               fill
               priority
+              sizes="100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-black/40 to-transparent" />
           </div>
-          <div className="relative z-10 text-center space-y-4 px-4 w-full max-w-3xl">
-            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight drop-shadow-md">
+          <div className="relative z-10 w-full max-w-3xl space-y-4 px-4 text-center">
+            <h1 className="text-4xl font-extrabold tracking-tight drop-shadow-md md:text-5xl lg:text-6xl">
               {greeting},<br className="md:hidden" /> food explorer!
             </h1>
-            <p className="text-lg md:text-2xl font-medium drop-shadow-sm opacity-90">
+            <p className="text-lg font-medium drop-shadow-sm opacity-90 md:text-2xl">
               Discover amazing local eats without breaking the bank.
             </p>
             <div className="pt-4">
               <Button
                 asChild
                 size="lg"
-                className="h-14 px-8 text-lg font-bold rounded-full shadow-xl hover:scale-105 transition-transform"
+                className="h-14 rounded-md px-6 text-base font-bold shadow-xl transition-transform hover:scale-[1.02] sm:px-8 sm:text-lg"
               >
                 <Link href="/map">
                   <Search className="mr-2 h-5 w-5" /> Find Cheap Bites Near Me
@@ -322,12 +325,12 @@ export default function HomePage() {
           <div className="relative z-20 flex justify-center w-full">
             <div className="w-full max-w-xl">
               {isCheckingPrefs ? (
-                <div className="shadow-2xl rounded-2xl bg-white p-12 border border-gray-100 min-h-[300px] flex items-center justify-center">
+                <div className="app-surface flex min-h-[300px] items-center justify-center rounded-lg p-12">
                   <Loader2 className="w-10 h-10 animate-spin text-primary" />
                 </div>
               ) : (
                 !showRecommendations && (
-                  <div className="shadow-2xl rounded-2xl bg-white overflow-hidden border border-gray-100">
+                  <div className="app-surface overflow-hidden rounded-lg">
                     {!quizCompleted ? (
                       <FoodQuiz onQuizComplete={handleQuizComplete} />
                     ) : (
@@ -372,7 +375,7 @@ export default function HomePage() {
                   key={collection.id}
                   className="group"
                 >
-                  <Card className="overflow-hidden border-0 shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl h-full flex flex-col cursor-pointer">
+                  <Card className="interactive-card flex h-full cursor-pointer flex-col overflow-hidden rounded-lg bg-white">
                     <div className="relative h-48 w-full overflow-hidden">
                       <Image
                         src={collection.image}
@@ -433,7 +436,7 @@ export default function HomePage() {
               ].map((feature, index) => (
                 <Card
                   key={index}
-                  className="border-gray-200 shadow-none rounded-2xl"
+                  className="rounded-lg border-gray-200 bg-white shadow-none"
                 >
                   <CardHeader className="pb-2">
                     <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">

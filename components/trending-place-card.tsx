@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { MapPin, Tag, Star } from "lucide-react";
@@ -15,9 +16,10 @@ interface TrendingPlaceCardProps {
   reviewCount?: number;
   distance?: number;
   images?: { prefix: string; suffix: string };
+  priority?: boolean;
 }
 
-export default function TrendingPlaceCard({
+function TrendingPlaceCard({
   name,
   category,
   address,
@@ -26,6 +28,7 @@ export default function TrendingPlaceCard({
   reviewCount,
   distance,
   images,
+  priority = false,
 }: TrendingPlaceCardProps) {
   const openMap = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -37,15 +40,11 @@ export default function TrendingPlaceCard({
     );
   };
 
-  let imageToUse;
-
-  if (!images) {
-    imageToUse = "/placeholder-place.png";
-  } else {
+  const imageToUse = useMemo(() => {
+    if (!images) return "/placeholder-place.png";
     const { prefix, suffix } = images;
-    imageToUse =
-      prefix && suffix ? `${prefix}bg_64${suffix}` : "/placeholder-place.png";
-  }
+    return prefix && suffix ? `${prefix}bg_64${suffix}` : "/placeholder-place.png";
+  }, [images]);
 
   const meterOrKm = (distance: number) =>
     distance < 1000 ? `${distance} m` : `${(distance / 1000).toFixed(1)} km`;
@@ -54,7 +53,7 @@ export default function TrendingPlaceCard({
     // Added "block h-full" so the link fills the parent container's stretched height
     <Link href={`/places/${id}`} className="block h-full" passHref>
       {/* Added "h-full" so the card fills the Link tag */}
-      <Card className="group h-full w-full sm:w-64 md:w-72 flex flex-col overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+      <Card className="interactive-card group h-full w-full sm:w-64 md:w-72 flex flex-col overflow-hidden rounded-lg bg-white cursor-pointer">
         {/* Image - Added shrink-0 to prevent the image from squishing */}
         <div className="relative h-36 sm:h-40 shrink-0">
           <Image
@@ -63,7 +62,7 @@ export default function TrendingPlaceCard({
             fill
             className="object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 640px) 100vw, 300px"
-            priority
+            priority={priority}
           />
           {rating && (
             <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-sm">
@@ -104,3 +103,5 @@ export default function TrendingPlaceCard({
     </Link>
   );
 }
+
+export default memo(TrendingPlaceCard);

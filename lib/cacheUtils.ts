@@ -52,6 +52,7 @@ async function getFromCache(key: string, cacheType: 'places' | 'place') {
     if (cacheEntry.ttl < new Date()) {
       console.log('Cache entry expired');
       await cacheEntry.delete();
+      return null;
     }
 
     console.log('Cache hit');

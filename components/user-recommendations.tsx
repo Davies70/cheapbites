@@ -33,16 +33,16 @@ const UserRecommendations = ({
   }
 
   return (
-    <div className="mt-12">
+    <section className="mt-12">
       {/* Title always stays visible to prevent layout jumping */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-3 sm:space-y-0 px-2">
-        <h2 className="text-2xl font-bold text-gray-900">
+      <div className="mb-6 flex flex-col items-start justify-between gap-3 px-2 sm:flex-row sm:items-center">
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900">
           Your Personalized Recommendations
         </h2>
         <Button
           onClick={onChangePreferences}
           variant="outline"
-          className="w-full sm:w-auto rounded-full font-medium shadow-sm hover:bg-gray-50"
+          className="w-full rounded-md font-medium shadow-sm hover:bg-gray-50 sm:w-auto"
         >
           Change Preferences
         </Button>
@@ -57,7 +57,7 @@ const UserRecommendations = ({
               className="w-[85vw] max-w-[280px] sm:w-72 flex-shrink-0 flex flex-col gap-3"
             >
               {/* Image Skeleton */}
-              <Skeleton className="h-36 sm:h-40 w-full rounded-2xl" />
+              <Skeleton className="h-36 w-full rounded-lg sm:h-40" />
               {/* Text Skeletons */}
               <div className="space-y-2 mt-1">
                 <Skeleton className="h-5 w-3/4 rounded-md" />
@@ -70,12 +70,12 @@ const UserRecommendations = ({
       ) : recommendations && recommendations.length > 0 ? (
         /* 3. Actual Data State */
         <>
-          <ScrollArea className="w-full whitespace-nowrap rounded-md border-0 custom-scrollbar">
-            <div className="flex w-max space-x-4 p-4 snap-x snap-mandatory pt-1">
-              {recommendations.map((place: FSQPlace) => (
+          <ScrollArea className="custom-scrollbar w-full whitespace-nowrap rounded-lg border bg-white">
+            <div className="flex w-max snap-x snap-mandatory space-x-4 p-4">
+              {recommendations.map((place: FSQPlace, index) => (
                 <div
                   key={place.fsq_place_id}
-                  className="w-[85vw] max-w-[280px] sm:w-72 flex-shrink-0 snap-center"
+                  className="w-[82vw] max-w-[280px] flex-shrink-0 snap-center sm:w-72"
                 >
                   <TrendingPlaceCard
                     name={place.name}
@@ -85,25 +85,22 @@ const UserRecommendations = ({
                     id={place.fsq_place_id}
                     distance={place.distance}
                     images={place.categories[0]?.icon}
+                    priority={index === 0}
                   />
                 </div>
               ))}
             </div>
-            <ScrollBar
-              orientation="horizontal"
-              className="custom-scrollbar-thumb"
-            />
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
 
-          {/* Mobile swipe hint */}
-          <p className="text-center text-sm font-medium text-gray-400 mt-2 md:hidden animate-pulse">
+          <p className="mt-2 text-center text-sm font-medium text-gray-400 md:hidden">
             Swipe to explore more
           </p>
         </>
       ) : (
         /* 4. Empty State (If the user's specific dietary requests yield 0 results) */
-        <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center shadow-sm mx-4 my-4 flex flex-col items-center justify-center animate-in fade-in duration-500">
-          <div className="bg-primary/10 p-5 rounded-full mb-5 text-primary">
+        <div className="mx-4 my-4 flex flex-col items-center justify-center rounded-lg border border-gray-100 bg-white p-10 text-center shadow-sm animate-in fade-in duration-500">
+          <div className="mb-5 rounded-full bg-primary/10 p-5 text-primary">
             <SearchX className="w-10 h-10" />
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">
@@ -116,13 +113,13 @@ const UserRecommendations = ({
           <Button
             onClick={onChangePreferences}
             size="lg"
-            className="rounded-full font-bold px-8 h-12 shadow-md"
+            className="h-12 rounded-md px-8 font-bold shadow-md"
           >
             Adjust Preferences
           </Button>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 

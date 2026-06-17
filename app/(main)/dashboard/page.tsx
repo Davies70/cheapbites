@@ -36,7 +36,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const { id } = useParams();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const { toast } = useToast();
@@ -44,21 +44,27 @@ export default function Dashboard() {
   useEffect(() => {
     if (!session?.user?.email) return;
 
+    const controller = new AbortController();
+
     setIsLoading(true);
-    fetch(`/api/user/${session.user.email}`)
+    setError("");
+    fetch(`/api/user/${session.user.email}`, { signal: controller.signal })
       .then((res) => res.json())
       .then((data) => {
         setUser(data);
       })
       .catch((e) => {
+        if (controller.signal.aborted) return;
         console.error("Error fetching user data:", e);
         setError(
           "An error occurred while fetching your data. Please try again.",
         );
       })
       .finally(() => {
-        setIsLoading(false);
+        if (!controller.signal.aborted) setIsLoading(false);
       });
+
+    return () => controller.abort();
   }, [session, id]);
 
   const unsaveRestaurant = async (savedPlace: SavedPlace) => {
@@ -110,7 +116,27 @@ export default function Dashboard() {
     );
   }
 
-  if (isLoading || !user) {
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex min-h-[calc(100svh-160px)] items-center justify-center">
+        <Card className="w-full max-w-md rounded-lg border-gray-200 bg-white text-center shadow-sm">
+          <CardHeader>
+            <CardTitle>Sign in to view your dashboard</CardTitle>
+            <CardDescription>
+              Your saved places, reviews, and recommendations will appear here.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="h-11 rounded-md">
+              <Link href="/">Go to CheapBites</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isLoading || status === "loading" || !user) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -124,9 +150,9 @@ export default function Dashboard() {
   const firstName = session?.user?.name?.split(" ")[0] || "Foodie";
 
   return (
-    <div className="py-8 max-w-5xl mx-auto animate-in fade-in duration-500">
+    <div className="mx-auto max-w-5xl py-6 animate-in fade-in duration-500 sm:py-8">
       {/* 1. Profile Header */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 text-center sm:text-left bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+      <div className="mb-8 flex flex-col items-center gap-6 rounded-lg border border-gray-100 bg-white p-5 text-center shadow-sm sm:flex-row sm:items-start sm:p-6 sm:text-left">
         <Avatar className="h-24 w-24 shadow-md border-4 border-primary/10">
           <AvatarImage
             src={session?.user?.image || ""}
@@ -178,7 +204,7 @@ export default function Dashboard() {
 
       {/* 3. Main Content Tabs */}
       <Tabs defaultValue="saved" className="space-y-6">
-        <TabsList className="grid grid-cols-4 w-full h-14 bg-white shadow-sm border border-gray-100 rounded-2xl p-1">
+        <TabsList className="grid h-14 w-full grid-cols-4 rounded-lg border border-gray-100 bg-white p-1 shadow-sm">
           <TabsTrigger
             value="saved"
             className="rounded-xl text-xs sm:text-sm font-semibold data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-none"
@@ -208,7 +234,7 @@ export default function Dashboard() {
 
         {/* SAVED PLACES */}
         <TabsContent value="saved" className="focus-visible:outline-none">
-          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+          <Card className="overflow-hidden rounded-lg border-0 shadow-md">
             <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
               <CardTitle className="text-xl">Saved Places</CardTitle>
               <CardDescription>
@@ -299,7 +325,7 @@ export default function Dashboard() {
 
         {/* VISITED PLACES */}
         <TabsContent value="visited" className="focus-visible:outline-none">
-          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+          <Card className="overflow-hidden rounded-lg border-0 shadow-md">
             <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
               <CardTitle className="text-xl">Visited Places</CardTitle>
               <CardDescription>
@@ -355,7 +381,7 @@ export default function Dashboard() {
 
         {/* REVIEWS */}
         <TabsContent value="reviews" className="focus-visible:outline-none">
-          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+          <Card className="overflow-hidden rounded-lg border-0 shadow-md">
             <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
               <CardTitle className="text-xl">Your Reviews</CardTitle>
               <CardDescription>
@@ -416,7 +442,7 @@ export default function Dashboard() {
           value="recommendations"
           className="focus-visible:outline-none"
         >
-          <Card className="border-0 shadow-md rounded-3xl overflow-hidden">
+          <Card className="overflow-hidden rounded-lg border-0 shadow-md">
             <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-4">
               <CardTitle className="text-xl">For You</CardTitle>
               <CardDescription>

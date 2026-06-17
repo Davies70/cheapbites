@@ -117,7 +117,7 @@ export async function GET(
         message: 'API Key is missing',
         places: [],
       }),
-      { status: 500 }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
@@ -129,7 +129,7 @@ export async function GET(
         message: 'Invalid parameters',
         places: [],
       }),
-      { status: 400 }
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
@@ -157,12 +157,12 @@ export async function GET(
   if (!placesData || placesData.results.length === 0) {
     return new Response(
       JSON.stringify({
-        ok: false,
-        status: 404,
+        ok: true,
+        status: 200,
         message: `No ${quizCode} places found`,
         places: [],
       }),
-      { status: 404 }
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
@@ -192,7 +192,7 @@ export async function GET(
         message: 'Error adding recommendations',
         places: [],
       }),
-      { status: 500 }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
@@ -203,6 +203,6 @@ export async function GET(
       message: `${quizCode} restaurants fetched successfully`,
       places: user.recommendations,
     }),
-    { status: 200 }
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 }

@@ -25,7 +25,7 @@ export async function GET(
 
     return new Response(JSON.stringify(placeRes), {
       status: 200,
-      headers: { Accept: 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
     });
   }
 
@@ -37,7 +37,7 @@ export async function GET(
         status: 500,
         message: 'API Key is missing',
       }),
-      { status: 500, headers: { Accept: 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
@@ -90,6 +90,6 @@ export async function GET(
 
   return new Response(JSON.stringify(placeRes), {
     status: placeRes.status,
-    headers: { Accept: 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef, useEffect } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import Map, { Marker, Popup, Source, Layer, MapRef } from "react-map-gl/mapbox";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -48,7 +48,7 @@ const createGeoJSONCircle = (
   };
 };
 
-export default function DiscoveryMap({
+function DiscoveryMap({
   center,
   zoom,
   places,
@@ -70,20 +70,25 @@ export default function DiscoveryMap({
   useEffect(() => {
     if (places.length > 0 && !selectedPlaceId && mapRef.current) {
       const bounds = new mapboxgl.LngLatBounds();
+      let hasBounds = false;
 
       if (center.latitude !== 0 && center.longitude !== 0) {
         bounds.extend([center.longitude, center.latitude]);
+        hasBounds = true;
       }
 
       places.forEach((place) => {
         if (place.longitude && place.latitude) {
           bounds.extend([place.longitude, place.latitude]);
+          hasBounds = true;
         }
       });
 
+      if (!hasBounds) return;
+
       mapRef.current.fitBounds(bounds, {
         padding: 60,
-        duration: 1000,
+        duration: 700,
         maxZoom: 15,
       });
     }
@@ -97,7 +102,7 @@ export default function DiscoveryMap({
         mapRef.current?.flyTo({
           center: [place.longitude, place.latitude],
           zoom: 16,
-          duration: 1500,
+          duration: 900,
           essential: true,
         });
         setPopupInfo(place);
@@ -150,6 +155,7 @@ export default function DiscoveryMap({
       )}
 
       {places.map((place) => {
+        if (!place.longitude || !place.latitude) return null;
         const isSelected = place.fsq_place_id === selectedPlaceId;
         return (
           <Marker
@@ -172,7 +178,7 @@ export default function DiscoveryMap({
             >
               <div className="relative drop-shadow-md">
                 <MapPin
-                  size={isSelected ? 32 : 26} // Shrunken sizes for mobile optimization
+                  size={isSelected ? 32 : 26}
                   className={
                     isSelected
                       ? "text-primary fill-primary"
@@ -209,6 +215,7 @@ export default function DiscoveryMap({
                 alt={popupInfo.name}
                 fill
                 className="object-cover"
+                sizes="280px"
               />
             </div>
             <Button
@@ -224,3 +231,5 @@ export default function DiscoveryMap({
     </Map>
   );
 }
+
+export default memo(DiscoveryMap);
