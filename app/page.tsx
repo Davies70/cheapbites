@@ -59,6 +59,9 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCheckingPrefs, setIsCheckingPrefs] = useState(true);
   const [locationDenied, setLocationDenied] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isRequestingLocation, setIsRequestingLocation] = useState(false);
+  const [locationRetryCount, setLocationRetryCount] = useState(0);
 
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -87,8 +90,10 @@ export default function HomePage() {
         } catch (error: any) {
           if (
             error.message === "PERMISSION_DENIED" ||
-            error.message === "UNSUPPORTED"
+            error.message === "UNSUPPORTED" ||
+            error.message === "INSECURE_CONTEXT"
           ) {
+            setLocationError(error.message);
             setLocationDenied(true);
           } else {
             setError("Failed to fetch location. Please check your connection.");
@@ -154,7 +159,30 @@ export default function HomePage() {
 
     initializeApp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, status]);
+  }, [session, status, locationRetryCount]);
+
+  const handleRequestLocation = async () => {
+    setIsRequestingLocation(true);
+    setError(null);
+
+    try {
+      const location = await getClientLocation();
+      setUserLocation({
+        lat: location.latitude,
+        lon: location.longitude,
+      });
+      setLocationError(null);
+      setLocationDenied(false);
+      setIsLoading(true);
+      setIsCheckingPrefs(true);
+      setLocationRetryCount((count) => count + 1);
+    } catch (error: any) {
+      setLocationError(error.message);
+      setLocationDenied(true);
+    } finally {
+      setIsRequestingLocation(false);
+    }
+  };
 
   const handleQuizComplete = (answers: string[]) => {
     setQuizAnswers(answers);
@@ -254,20 +282,32 @@ export default function HomePage() {
             CheapBites needs your location to find the best spots near you. We{" "}
             <strong>do not store or save</strong> your location data anywhere.
           </p>
-          <div className="mb-6 w-full rounded-lg bg-gray-50 p-4 text-left text-sm text-gray-600">
-            <strong>How to enable:</strong>
-            <br />
-            1. Click the lock/site settings icon in your browser's address bar.
-            <br />
-            2. Allow "Location" access.
-            <br />
-            3. Refresh this page.
-          </div>
+          {locationError === "INSECURE_CONTEXT" ? (
+            <div className="mb-6 w-full rounded-lg bg-gray-50 p-4 text-left text-sm text-gray-600">
+              Location access requires HTTPS. If you are testing from your
+              phone using a local network address, open an HTTPS version of the
+              site instead.
+            </div>
+          ) : locationError === "PERMISSION_DENIED" ? (
+            <div className="mb-6 w-full rounded-lg bg-gray-50 p-4 text-left text-sm text-gray-600">
+              Tap the button below to allow location. If you previously blocked
+              it, open this site's browser settings, set Location to Allow, and
+              try again.
+            </div>
+          ) : null}
           <Button
-            onClick={() => window.location.reload()}
+            onClick={handleRequestLocation}
+            disabled={isRequestingLocation || locationError === "INSECURE_CONTEXT"}
             className="h-12 w-full rounded-md font-bold"
           >
-            I've enabled it, reload page
+            {isRequestingLocation ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Requesting location...
+              </>
+            ) : (
+              "Allow location"
+            )}
           </Button>
         </div>
       </div>

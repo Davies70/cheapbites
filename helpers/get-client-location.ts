@@ -5,7 +5,17 @@ export default async function getClientLocation(): Promise<{
   longitude: number;
 }> {
   return new Promise((resolve, reject) => {
-    if (typeof window === "undefined" || !navigator.geolocation) {
+    if (typeof window === "undefined") {
+      reject(new Error("UNSUPPORTED"));
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      reject(new Error("INSECURE_CONTEXT"));
+      return;
+    }
+
+    if (!navigator.geolocation) {
       reject(new Error("UNSUPPORTED"));
       return;
     }
@@ -26,7 +36,7 @@ export default async function getClientLocation(): Promise<{
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 20000,
         maximumAge: 0, // Force a fresh location pull every time
       },
     );
